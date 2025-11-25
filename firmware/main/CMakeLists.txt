@@ -1,0 +1,14 @@
+idf_component_register(
+    SRCS 
+        "main.cpp"
+        "laptimer_task.cpp"
+        "sdcard_task.cpp"
+        "lcd_task.cpp"
+        "drivers/gpio.c"
+        "drivers/spi.c"
+        "drivers/timer.c"
+        "drivers/sdcard.c"
+    INCLUDE_DIRS 
+        "include"
+        "drivers/include"
+)
