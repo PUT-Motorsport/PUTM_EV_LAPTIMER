@@ -1,19 +1,19 @@
 #include "sdcard_task.h"
 
-#include "esp_err.h"
 #include "esp_log.h"
+#include "esp_err.h"
 
 #include "freertos/idf_additions.h"
-#include "main.h"
+
 #include "portmacro.h"
 #include "sd_protocol_types.h"
 #include "sdmmc_cmd.h"
 
+#include "sdcard.h"
+
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "sdcard.h"
 
 bool first_lap_flag = true;
 char session_str[14] = "#0,";
@@ -45,7 +45,7 @@ esp_err_t sdcard_init(sdmmc_card_t **card_pointer)
 
     // try reading laptimer file, if it's missing create one with session number 0
     unsigned int br;
-    char sd_buffer[256] = "\0";
+    char sd_buffer[SD_BUFFER_SIZE] = "\0";
     int session_num = 0;
     if (sdcard_read("laptimer.csv", sd_buffer, sizeof(sd_buffer), &br) !=
         ESP_OK)
@@ -73,7 +73,7 @@ esp_err_t sdcard_deinit(sdmmc_card_t **card_pointer)
     return sdcard_unmount(card_pointer);
 }
 
-esp_err_t sdcard_save_laptime(char laptime_saved_str[13])
+esp_err_t sdcard_save_laptime(char laptime_saved_str[LAPTIME_STRING_LENGTH])
 {
     esp_err_t ret = ESP_OK;
 

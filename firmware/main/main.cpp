@@ -30,10 +30,10 @@ LAP_RESET_BTN - GPIO25
 LAP_MODE_BTN - GPIO26
 */
 
-QueueHandle_t sd_queue = xQueueCreate(LAPTIME_LIST_SIZE, sizeof(char[13]));
+QueueHandle_t sd_queue = xQueueCreate(LAPTIME_LIST_SIZE_LOCAL, sizeof(char[LAPTIME_STRING_LENGTH]));
 QueueHandle_t sd_reinit_semaphore = xSemaphoreCreateBinary();
-QueueHandle_t lcd_laptime_current_queue = xQueueCreate(1, sizeof(wchar_t[13]));
-QueueHandle_t lcd_laptime_lists_queue = xQueueCreate(1, sizeof(wchar_t[2][5][13]));
+QueueHandle_t lcd_laptime_current_queue = xQueueCreate(1, sizeof(wchar_t[LAPTIME_STRING_LENGTH]));
+QueueHandle_t lcd_laptime_lists_queue = xQueueCreate(1, sizeof(wchar_t[2][LAPTIME_LIST_SIZE_LCD][LAPTIME_STRING_LENGTH]));
 QueueHandle_t lcd_laptime_status_queue = xQueueCreate(1, sizeof(bool[3]));
 
 extern "C" void app_main(void)

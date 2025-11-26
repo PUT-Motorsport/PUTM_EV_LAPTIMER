@@ -22,3 +22,5 @@
 /hardware/production/
 firmware/build/**
 firmware/.vscode/**
+firmware/components/hagl/.gitignore
+.vscode/**

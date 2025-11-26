@@ -1,21 +1,22 @@
 #include "lcd_task.h"
 
-#include "main.h"
+#include "esp_log.h"
+#include "esp_err.h"
 
 #include "freertos/idf_additions.h"
 
 #include "hagl.h"
 #include "hagl_hal.h"
-
 #include "font6x9.h"
 #include "font5x8.h"
+
 #include <cwchar>
 
 hagl_backend_t display_struct;
 hagl_backend_t *display = &display_struct;
 
-wchar_t laptime_current_wstr[13] = L"--,--:--:--";
-wchar_t list_wch[2][LAPLIST_SIZE_SHOW][LAPTIME_LENGTH];
+wchar_t laptime_current_wstr[LAPTIME_STRING_LENGTH] = L"--,--:--:--";
+wchar_t list_wch[2][LAPTIME_LIST_SIZE_LCD][LAPTIME_STRING_LENGTH];
 
 void lcd_init() { hagl_hal_init(display); }
 
@@ -124,7 +125,7 @@ void print_current_laptime()
 void print_laptime_lists()
 {
     xQueueReceive(lcd_laptime_lists_queue, list_wch, 0);
-    for (int i = 0; i < LAPLIST_SIZE_SHOW; i++)
+    for (int i = 0; i < LAPTIME_LIST_SIZE_LCD; i++)
     {
         lcd_print_wstr(LAPLIST_POS_X, LAPLIST_POS_Y + LAPLIST_SPACING + i * LAPLIST_SPACING, list_wch[0][i],
                        UI_FONT, WHITE);

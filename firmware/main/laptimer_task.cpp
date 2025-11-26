@@ -2,11 +2,14 @@
 
 #include "esp_log.h"
 #include "esp_err.h"
+
 #include "freertos/idf_additions.h"
+
 #include "gpio.h"
 #include "main.h"
 #include "sdcard.h"
 #include "timer.h"
+
 #include <stdio.h>
 #include <cwchar>
 
@@ -40,17 +43,17 @@ esp_err_t laptime_save_local(Laptime *laptime, Laptime_list *list)
         return ESP_FAIL;
     Laptime *list_last = list->list_last;
     Laptime *list_top = list->list_top;
-    for (int i = LAPTIME_LIST_SIZE - 1; i > 0; i--)
+    for (int i = LAPTIME_LIST_SIZE_LOCAL - 1; i > 0; i--)
     {
         list_last[i] = list_last[i - 1];
     }
     list_last[0] = *laptime;
 
-    for (int i = 0; i < LAPTIME_LIST_SIZE; i++)
+    for (int i = 0; i < LAPTIME_LIST_SIZE_LOCAL; i++)
     {
         if (laptime->time < list_top[i].time || list_top[i].time == 0)
         {
-            for (int j = LAPTIME_LIST_SIZE - 1; j > i; j--)
+            for (int j = LAPTIME_LIST_SIZE_LOCAL - 1; j > i; j--)
             {
                 list_top[j] = list_top[j - 1];
             }
@@ -77,10 +80,10 @@ void laptime_convert_string(Laptime laptime, char *laptime_str, size_t size)
     unsigned int mm = (laptime.time / 6000) % 60;
     unsigned int ss = (laptime.time / 100) % 60;
     unsigned int ms = laptime.time % 100;
-    if (size == 13U)
+    if (size == LAPTIME_STRING_LENGTH)
         snprintf(laptime_str, size, "%02u. %02u:%02u:%02u",
                  laptime.count, mm, ss, ms);
-    else if (size == 14U)
+    else if (size == LAPTIME_STRING_LENGTH_UART)
         snprintf(laptime_str, size, "%02u,%02u:%02u:%02u\n",
                  laptime.count, mm, ss, ms);
 }
@@ -99,10 +102,10 @@ void laptime_convert_wstring(Laptime laptime, wchar_t *laptime_wstr, int size)
     unsigned int mm = (laptime.time / 6000) % 60;
     unsigned int ss = (laptime.time / 100) % 60;
     unsigned int ms = laptime.time % 100;
-    if (size == LAPTIME_LENGTH)
+    if (size == LAPTIME_STRING_LENGTH)
         swprintf(laptime_wstr, size, L"%02u. %02u:%02u:%02u",
                  laptime.count, mm, ss, ms);
-    else if (size == 14)
+    else if (size == LAPTIME_STRING_LENGTH_UART)
         swprintf(laptime_wstr, size, L"%02u,%02u:%02u:%02u\n",
                  laptime.count, mm, ss, ms);
 }
@@ -122,8 +125,8 @@ static void laptime_save_sdcard(char *laptime_str, QueueHandle_t sd_queue)
 
 void send_laptime(Laptime laptime)
 {
-    wchar_t laptime_wstr[LAPTIME_LENGTH];
-    laptime_convert_wstring(laptime, laptime_wstr, LAPTIME_LENGTH);
+    wchar_t laptime_wstr[LAPTIME_STRING_LENGTH];
+    laptime_convert_wstring(laptime, laptime_wstr, LAPTIME_STRING_LENGTH);
     xQueueSend(lcd_laptime_current_queue, laptime_wstr, 0);
 }
 
@@ -161,12 +164,12 @@ esp_err_t send_laptime_lists(Laptime_list *list)
     if (list == NULL || list->list_last == NULL || list->list_last == NULL)
         return ESP_FAIL;
 
-    static wchar_t list_wch[2][5][LAPTIME_LENGTH];
+    static wchar_t list_wch[2][LAPTIME_LIST_SIZE_LCD][LAPTIME_STRING_LENGTH];
 
     for (int i = 0; i < 5; i++)
     {
-        laptime_convert_wstring(list->list_top[i], list_wch[0][i], LAPTIME_LENGTH);
-        laptime_convert_wstring(list->list_last[i], list_wch[1][i], LAPTIME_LENGTH);
+        laptime_convert_wstring(list->list_top[i], list_wch[0][i], LAPTIME_STRING_LENGTH);
+        laptime_convert_wstring(list->list_last[i], list_wch[1][i], LAPTIME_STRING_LENGTH);
     }
     xQueueSend(lcd_laptime_lists_queue, list_wch, 0);
     return ESP_OK;
@@ -242,8 +245,8 @@ void laptimer_task(void *args)
 {
     char laptime_saved_str[14];
 
-    Laptime laptime_list_top[LAPTIME_LIST_SIZE] = {0};
-    Laptime laptime_list_last[LAPTIME_LIST_SIZE] = {0};
+    Laptime laptime_list_top[LAPTIME_LIST_SIZE_LOCAL] = {0};
+    Laptime laptime_list_last[LAPTIME_LIST_SIZE_LOCAL] = {0};
     Laptime_list laptime_list = {laptime_list_top, laptime_list_last};
 
     bool stop_flag_old = stop_flag;

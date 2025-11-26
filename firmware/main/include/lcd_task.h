@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cstdint>
+#include "main.h"
 
 #define LCD_WIDTH 320
 #define LCD_HEIGHT 240
@@ -26,8 +26,6 @@
 #define LAPLIST_SPACING 15
 #define CURRENT_LAPTIME_POS_X 5
 #define CURRENT_LAPTIME_POS_Y 15
-
-#define LAPLIST_SIZE_SHOW 5
 
 #define CURRENT_LAPTIME_FONT 16
 #define UI_FONT 8

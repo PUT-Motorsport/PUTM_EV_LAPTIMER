@@ -2,9 +2,11 @@
 
 #include "freertos/idf_additions.h"
 
-#define LAPTIME_LIST_SIZE 50
+#define LAPTIME_LIST_SIZE_LOCAL 50
+#define LAPTIME_LIST_SIZE_LCD 5
 #define LAPTIME_MIN 500
-#define LAPTIME_LENGTH 13
+#define LAPTIME_STRING_LENGTH 13
+#define LAPTIME_STRING_LENGTH_UART 14
 
 extern QueueHandle_t sd_queue;
 extern QueueHandle_t sd_reinit_semaphore;
