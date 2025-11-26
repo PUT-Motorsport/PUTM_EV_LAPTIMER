@@ -20,3 +20,5 @@
 
 # Fabrication Toolkit
 /hardware/production/
+firmware/build/**
+firmware/.vscode/**
