@@ -130,34 +130,32 @@ void send_laptime(Laptime laptime)
     xQueueSend(lcd_laptime_current_queue, laptime_wstr, 0);
 }
 
-// void send_status()
-// {
-//     switch (lap_mode)
-//     {
-//     case ONE_GATE_MODE:
-//         lcd_print_string(LCD_WIDTH - UI_LETTER_WIDTH * 6 - PADDING, PADDING, L"1 GATE ",
-//                          UI_FONT, GRAY);
-//         break;
-//     case TWO_GATE_MODE:
-//         lcd_print_string(LCD_WIDTH - UI_LETTER_WIDTH * 6 - PADDING, PADDING, L"2 GATE ",
-//                          UI_FONT, GRAY);
-//         break;
-//     default:
-//         break;
-//     }
+void send_status()
+{
+    static bool status[3] = {false};
+    switch (lap_mode)
+    {
+    case ONE_GATE_MODE:
+        status[0] = false;
+        break;
+    case TWO_GATE_MODE:
+        status[0] = true;
+        break;
+    default:
+        break;
+    }
 
-//     if (stop_flag)
-//         lcd_print_string(LCD_WIDTH / 2, PADDING, L"STOP", UI_FONT, RED);
-//     else
-//         lcd_print_string(LCD_WIDTH / 2, PADDING, L"    ", UI_FONT, BLACK);
+    if (stop_flag)
+        status[1] = true;
+    else
+        status[1] = false;
 
-//     if (sd_active_flag)
-//         lcd_print_string(LCD_WIDTH / 2 + UI_LETTER_WIDTH * 5, PADDING, L"SD",
-//                          UI_FONT, GREEN);
-//     else
-//         lcd_print_string(LCD_WIDTH / 2 + UI_LETTER_WIDTH * 5, PADDING, L"  ",
-//                          UI_FONT, BLACK);
-// }
+    if (sd_active_flag)
+        status[2] = true;
+    else
+        status[2] = false;
+    xQueueSend(lcd_laptime_status_queue, status, 0);
+}
 
 esp_err_t send_laptime_lists(Laptime_list *list)
 {
@@ -272,14 +270,13 @@ void laptimer_task(void *args)
                 xSemaphoreGive(sd_reinit_semaphore);
             }
 
-            // show_status();
-            send_laptime(laptime_current);
+            send_status();
         }
 
         if (sdcard_flag_old != sd_active_flag)
         {
             sdcard_flag_old = sd_active_flag;
-            // show_status();
+            send_status();
         }
 
         if (laptime_saved.time > 0)
@@ -291,6 +288,7 @@ void laptimer_task(void *args)
                               sizeof(laptime_saved_str));
             laptime_save_local(&laptime_saved, &laptime_list);
             laptime_save_sdcard(laptime_saved_str, sd_queue);
+            send_laptime(laptime_current);
             send_laptime_lists(&laptime_list);
         }
         vTaskDelay(10 / portTICK_PERIOD_MS);

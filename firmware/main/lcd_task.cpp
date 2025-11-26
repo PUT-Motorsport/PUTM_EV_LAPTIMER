@@ -15,9 +15,6 @@
 hagl_backend_t display_struct;
 hagl_backend_t *display = &display_struct;
 
-wchar_t laptime_current_wstr[LAPTIME_STRING_LENGTH] = L"--,--:--:--";
-wchar_t list_wch[2][LAPTIME_LIST_SIZE_LCD][LAPTIME_STRING_LENGTH];
-
 void lcd_init() { hagl_hal_init(display); }
 
 void lcd_clear() { hagl_clear(display); }
@@ -68,7 +65,7 @@ void lcd_set_clip(int16_t pos_x0, int16_t pos_y0, int16_t pos_x1, int16_t pos_y1
     hagl_set_clip(display, pos_x0, pos_y0, pos_x1, pos_y1);
 }
 
-void lcd_show_ui()
+void print_ui()
 {
     lcd_print_wstr(PADDING, PADDING, L"CURRENT LAP", UI_FONT, WHITE);
     lcd_print_wstr(LAPLIST_POS_X, LAPLIST_POS_Y,
@@ -83,34 +80,39 @@ void lcd_show_ui()
                    LCD_HEIGHT, WHITE);
 }
 
-// void lcd_print_status()
-// {
-//     switch (lap_mode)
-//     {
-//     case ONE_GATE_MODE:
-//         lcd_print_string(LCD_WIDTH - UI_LETTER_WIDTH * 6 - PADDING, PADDING, L"1 GATE ",
-//                          UI_FONT, GRAY);
-//         break;
-//     case TWO_GATE_MODE:
-//         lcd_print_string(LCD_WIDTH - UI_LETTER_WIDTH * 6 - PADDING, PADDING, L"2 GATE ",
-//                          UI_FONT, GRAY);
-//         break;
-//     default:
-//         break;
-//     }
+void print_status()
+{
+    static bool status[3] = {false};
+    xQueueReceive(lcd_laptime_status_queue, status, 0);
+    bool mode = status[0];
+    bool stop_flag = status[1];
+    bool sd_flag = status[2];
+    switch (mode)
+    {
+    case false:
+        lcd_print_wstr(LCD_WIDTH - UI_LETTER_WIDTH * 6 - PADDING, PADDING, L"1 GATE ",
+                       UI_FONT, GRAY);
+        break;
+    case true:
+        lcd_print_wstr(LCD_WIDTH - UI_LETTER_WIDTH * 6 - PADDING, PADDING, L"2 GATE ",
+                       UI_FONT, GRAY);
+        break;
+    default:
+        break;
+    }
 
-//     if (stop_flag)
-//         lcd_print_string(LCD_WIDTH / 2, PADDING, L"STOP", UI_FONT, RED);
-//     else
-//         lcd_print_string(LCD_WIDTH / 2, PADDING, L"    ", UI_FONT, BLACK);
+    if (stop_flag)
+        lcd_print_wstr(LCD_WIDTH / 2, PADDING, L"STOP", UI_FONT, RED);
+    else
+        lcd_print_wstr(LCD_WIDTH / 2, PADDING, L"    ", UI_FONT, BLACK);
 
-//     if (sd_active_flag)
-//         lcd_print_string(LCD_WIDTH / 2 + UI_LETTER_WIDTH * 5, PADDING, L"SD",
-//                          UI_FONT, GREEN);
-//     else
-//         lcd_print_string(LCD_WIDTH / 2 + UI_LETTER_WIDTH * 5, PADDING, L"  ",
-//                          UI_FONT, BLACK);
-// }
+    if (sd_flag)
+        lcd_print_wstr(LCD_WIDTH / 2 + UI_LETTER_WIDTH * 5, PADDING, L"SD",
+                       UI_FONT, GREEN);
+    else
+        lcd_print_wstr(LCD_WIDTH / 2 + UI_LETTER_WIDTH * 5, PADDING, L"  ",
+                       UI_FONT, BLACK);
+}
 
 // bool lcdIsBusy() { return dmaBusyFlag; }
 
@@ -118,12 +120,14 @@ void lcd_show_ui()
 
 void print_current_laptime()
 {
+    static wchar_t laptime_current_wstr[LAPTIME_STRING_LENGTH] = L"--,--:--:--";
     xQueueReceive(lcd_laptime_current_queue, laptime_current_wstr, 0);
     lcd_print_wstr(CURRENT_LAPTIME_POS_X, CURRENT_LAPTIME_POS_Y, laptime_current_wstr, CURRENT_LAPTIME_FONT, WHITE);
 }
 
 void print_laptime_lists()
 {
+    static wchar_t list_wch[2][LAPTIME_LIST_SIZE_LCD][LAPTIME_STRING_LENGTH];
     xQueueReceive(lcd_laptime_lists_queue, list_wch, 0);
     for (int i = 0; i < LAPTIME_LIST_SIZE_LCD; i++)
     {
@@ -140,14 +144,14 @@ void lcd_task(void *args)
 
     lcd_init();
     lcd_clear();
-    lcd_set_clip(0, 0, LCD_HEIGHT, LCD_WIDTH);
-    lcd_show_ui();
+    lcd_set_clip(0, 0, LCD_WIDTH, LCD_HEIGHT);
+    print_ui();
 
     for (;;)
     {
         print_current_laptime();
         print_laptime_lists();
-        lcd_copy();
+        print_status();
         vTaskDelay(20 / portTICK_PERIOD_MS);
     }
     vTaskDelete(NULL);
