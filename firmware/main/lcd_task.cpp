@@ -8,7 +8,7 @@
 #include "hagl.h"
 #include "hagl_hal.h"
 #include "font6x9.h"
-#include "font5x8.h"
+#include "font9x15-ISO8859-1.h"
 
 #include <cwchar>
 
@@ -29,7 +29,7 @@ bool lcd_print_wstr(int16_t pos_x, int16_t pos_y, const wchar_t *string,
     switch (font_size)
     {
     case 8:
-        font = font5x8;
+        font = font6x9;
         break;
     // case 12:
     //     font = &Font12;
@@ -38,7 +38,7 @@ bool lcd_print_wstr(int16_t pos_x, int16_t pos_y, const wchar_t *string,
         font = font6x9;
         break;
     // case 20:
-    //     font = &Font20;
+    //     font = font9x15_ISO8859_1;
     //     break;
     // case 24:
     //     font = &Font24;

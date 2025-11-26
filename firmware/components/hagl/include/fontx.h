@@ -42,39 +42,42 @@ SPDX-License-Identifier: MIT
 #include <stddef.h>
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif /* __cplusplus */
 
-#define FONTX_OK                   (0)
-#define FONTX_ERR_GLYPH_NOT_FOUND  (1)
-#define FONTX_NAME                 (6)
-#define FONTX_WIDTH               (14)
-#define FONTX_HEIGHT              (15)
-#define FONTX_TYPE                (16)
-#define FONTX_TYPE_SBCS            (0)
-#define FONTX_TYPE_DBCS            (1)
-#define FONTX_GLYPH_DATA_START    (17)
-#define FONTX_BLOCK_TABLE_SIZE    (17)
-#define FONTX_BLOCK_TABLE_START   (18)
+#define FONTX_OK (0)
+#define FONTX_ERR_GLYPH_NOT_FOUND (1)
+#define FONTX_NAME (6)
+#define FONTX_WIDTH (14)
+#define FONTX_HEIGHT (15)
+#define FONTX_TYPE (16)
+#define FONTX_TYPE_SBCS (0)
+#define FONTX_TYPE_DBCS (1)
+#define FONTX_GLYPH_DATA_START (17)
+#define FONTX_BLOCK_TABLE_SIZE (17)
+#define FONTX_BLOCK_TABLE_START (18)
 
-/* Pitch is bytes per row. Size is size in bytes. */
-typedef struct {
-    uint8_t width;
-    uint8_t height;
-    uint8_t size;
-    uint8_t pitch;
-    const uint8_t *buffer;
-} fontx_glyph_t;
+    /* Pitch is bytes per row. Size is size in bytes. */
+    typedef struct
+    {
+        uint8_t width;
+        uint8_t height;
+        uint8_t size;
+        uint8_t pitch;
+        const uint8_t *buffer;
+    } fontx_glyph_t;
 
-typedef struct {
-    char name[9];
-    uint8_t width;
-    uint8_t height;
-    uint8_t type;
-} fontx_meta_t;
+    typedef struct
+    {
+        char name[9];
+        uint8_t width;
+        uint8_t height;
+        uint8_t type;
+    } fontx_meta_t;
 
-uint8_t fontx_meta(fontx_meta_t *meta, const uint8_t *font);
-uint8_t fontx_glyph(fontx_glyph_t *glyph, wchar_t code, const uint8_t *font);
+    uint8_t fontx_meta(fontx_meta_t *meta, const uint8_t *font);
+    uint8_t fontx_glyph(fontx_glyph_t *glyph, wchar_t code, const uint8_t *font);
 
 #ifdef __cplusplus
 }
