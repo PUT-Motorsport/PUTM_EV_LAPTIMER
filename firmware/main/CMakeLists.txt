@@ -9,6 +9,7 @@ idf_component_register(
         "drivers/timer.c"
         "drivers/sdcard.c"
         "fonts/font6x10-ISO8859-1.c"
+        "fonts/font10x20-ISO8859-1.c"
     INCLUDE_DIRS 
         "include"
         "drivers/include"

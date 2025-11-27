@@ -93,7 +93,8 @@ void sdcard_task(void *args)
 {
     sdmmc_card_t *card_handle = NULL;
     sdcard_init(&card_handle);
-    char buf[13];
+    ESP_LOGI("SD", "stack water mark: %u", uxTaskGetStackHighWaterMark(NULL));
+    char buf[LAPTIME_STRING_LENGTH];
     for (;;)
     {
         if (sd_active_flag == true && sd_fail_flag == false)

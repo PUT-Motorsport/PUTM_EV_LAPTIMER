@@ -7,8 +7,8 @@
 
 #include "hagl.h"
 #include "hagl_hal.h"
-#include "font6x9.h"
-// #include "font6x10-ISO8859-1.h"
+#include "font10x20-ISO8859-1.h"
+#include "font6x10-ISO8859-1.h"
 
 #include <cwchar>
 
@@ -29,16 +29,16 @@ bool lcd_print_str(int16_t pos_x, int16_t pos_y, const char *string,
     switch (font_size)
     {
     case 8:
-        font = font6x9;
+        font = font6x10_ISO8859_1;
         break;
     // case 12:
     //     font = &Font12;
     //     break;
     case 16:
-        font = font6x9;
+        font = font6x10_ISO8859_1;
         break;
     case 20:
-        font = font6x9;
+        font = font10x20_ISO8859_1;
         break;
     // case 24:
     //     font = &Font24;
@@ -82,8 +82,9 @@ void print_ui()
 
 void print_status()
 {
-    static bool status[3] = {false};
-    xQueueReceive(lcd_laptime_status_queue, status, 0);
+    bool status[3] = {false};
+    if (xQueueReceive(lcd_laptime_status_queue, status, 0) != pdTRUE)
+        return;
     bool mode = status[0];
     bool stop_flag = status[1];
     bool sd_flag = status[2];
@@ -121,13 +122,15 @@ void print_status()
 void print_current_laptime()
 {
     static char laptime_current_str[LAPTIME_STRING_LENGTH] = "--,--:--:--";
-    xQueueReceive(lcd_laptime_current_queue, laptime_current_str, 0);
+    if (xQueueReceive(lcd_laptime_current_queue, laptime_current_str, 0) != pdTRUE)
+        return;
     lcd_print_str(CURRENT_LAPTIME_POS_X, CURRENT_LAPTIME_POS_Y, laptime_current_str, CURRENT_LAPTIME_FONT, WHITE);
 }
 
 void print_laptime_lists()
 {
-    xSemaphoreTake(lcd_laptime_lists_semaphore, 0);
+    if (xSemaphoreTake(lcd_laptime_lists_semaphore, 0) != pdTRUE)
+        return;
     for (int i = 0; i < LAPTIME_LIST_SIZE_LCD; i++)
     {
         lcd_print_str(LAPLIST_POS_X, LAPLIST_POS_Y + LAPLIST_SPACING + i * LAPLIST_SPACING, lcd_list_buffer[0][i],
@@ -136,6 +139,7 @@ void print_laptime_lists()
                       LAPLIST_POS_Y + LAPLIST_SPACING + i * LAPLIST_SPACING, lcd_list_buffer[1][i],
                       UI_FONT, WHITE);
     }
+    xSemaphoreGive(lcd_laptime_lists_semaphore);
 }
 
 void lcd_task(void *args)
@@ -145,6 +149,7 @@ void lcd_task(void *args)
     lcd_clear();
     lcd_set_clip(0, 0, LCD_WIDTH, LCD_HEIGHT);
     print_ui();
+    ESP_LOGI("LCD", "stack water mark: %u", uxTaskGetStackHighWaterMark(NULL));
 
     for (;;)
     {
