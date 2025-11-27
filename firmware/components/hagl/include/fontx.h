@@ -77,7 +77,7 @@ extern "C"
     } fontx_meta_t;
 
     uint8_t fontx_meta(fontx_meta_t *meta, const uint8_t *font);
-    uint8_t fontx_glyph(fontx_glyph_t *glyph, wchar_t code, const uint8_t *font);
+    uint8_t fontx_glyph(fontx_glyph_t *glyph, char code, const uint8_t *font);
 
 #ifdef __cplusplus
 }

@@ -41,63 +41,67 @@ SPDX-License-Identifier: MIT
 #include "hagl/color.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif /* __cplusplus */
 
-/**
- * Draw a single character
- *
- * Output will be clipped to the current clip window. Library itself
- * includes only a couple of fonts. You can find more fonts at:
- *
- * https://github.com/tuupola/embedded-fonts
- *
- * @param surface
- * @param code  unicode code point
- * @param x0
- * @param y0
- * @param color
- * @param font  pointer to a FONTX font
- * @return width of the drawn character
- */
-uint8_t
-hagl_put_char(void const *surface, wchar_t code, int16_t x0, int16_t y0, hagl_color_t color, const unsigned char *font);
+    /**
+     * Draw a single character
+     *
+     * Output will be clipped to the current clip window. Library itself
+     * includes only a couple of fonts. You can find more fonts at:
+     *
+     * https://github.com/tuupola/embedded-fonts
+     *
+     * @param surface
+     * @param code  unicode code point
+     * @param x0
+     * @param y0
+     * @param color
+     * @param font  pointer to a FONTX font
+     * @return width of the drawn character
+     */
+    uint8_t
+    hagl_put_char(void const *surface, char code, int16_t x0, int16_t y0, hagl_color_t color, const unsigned char *font);
 
-/**
- * Draw a string
- *
- * Output will be clipped to the current clip window. Library itself
- * includes only a couple of fonts. You can find more fonts at:
- *
- * https://github.com/tuupola/embedded-fonts
- *
- * @param surface
- * @param str pointer to an wide char string
- * @param x0
- * @param y0
- * @param color
- * @param font pointer to a FONTX font
- * @return width of the drawn string
- */
-uint16_t
-hagl_put_text(void const *surface, const wchar_t *str, int16_t x0, int16_t y0, hagl_color_t color, const unsigned char *font);
+    /**
+     * Draw a string
+     *
+     * Output will be clipped to the current clip window. Library itself
+     * includes only a couple of fonts. You can find more fonts at:
+     *
+     * https://github.com/tuupola/embedded-fonts
+     *
+     * @param surface
+     * @param str pointer to an wide char string
+     * @param x0
+     * @param y0
+     * @param color
+     * @param font pointer to a FONTX font
+     * @return width of the drawn string
+     */
+    uint16_t
+    hagl_put_text(void const *surface, const char *str, int16_t x0, int16_t y0, hagl_color_t color, const unsigned char *font);
 
-/**
- * Extract a glyph into a bitmap
- *
- * This can be used for example for extracting game sprites from fontsets
- * such as UNSCII.
- *
- * @param surface
- * @param code Unicode code point
- * @param color
- * @param bitmap Pointer to a bitmap
- * @param font Pointer to a FONTX font
- * @return Width of the drawn string
- */
-uint8_t
-hagl_get_glyph(void const *surface, wchar_t code, hagl_color_t color, hagl_bitmap_t *bitmap, const uint8_t *font);
+    /**
+     * Extract a glyph into a bitmap
+     *
+     * This can be used for example for extracting game sprites from fontsets
+     * such as UNSCII.
+     *
+     * @param surface
+     * @param code Unicode code point
+     * @param color
+     * @param bitmap Pointer to a bitmap
+     * @param font Pointer to a FONTX font
+     * @return Width of the drawn string
+     */
+    uint8_t
+    hagl_get_glyph(void const *surface, char code, hagl_color_t color, hagl_bitmap_t *bitmap, const uint8_t *font);
 
+    uint8_t hagl_put_char_scaled(void const *_surface, char code, int16_t x0, int16_t y0, hagl_color_t color, const uint8_t *font, uint8_t scale);
+
+    uint16_t hagl_put_text_scaled(void const *surface, const char *str, int16_t x0, int16_t y0, hagl_color_t color, const uint8_t *font, uint8_t scale);
 
 #ifdef __cplusplus
 }

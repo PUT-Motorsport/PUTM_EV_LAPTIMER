@@ -39,7 +39,7 @@ SPDX-License-Identifier: MIT
 #include "fontx.h"
 
 uint8_t
-hagl_get_glyph(void const *_surface, wchar_t code, hagl_color_t color, hagl_bitmap_t *bitmap, const uint8_t *font)
+hagl_get_glyph(void const *_surface, char code, hagl_color_t color, hagl_bitmap_t *bitmap, const uint8_t *font)
 {
     const hagl_surface_t *surface = _surface;
     uint8_t status, set;
@@ -47,7 +47,8 @@ hagl_get_glyph(void const *_surface, wchar_t code, hagl_color_t color, hagl_bitm
 
     status = fontx_glyph(&glyph, code, font);
 
-    if (0 != status) {
+    if (0 != status)
+    {
         return status;
     }
 
@@ -58,14 +59,19 @@ hagl_get_glyph(void const *_surface, wchar_t code, hagl_color_t color, hagl_bitm
     bitmap->pitch = bitmap->width * (bitmap->depth / 8);
     bitmap->size = bitmap->pitch * bitmap->height;
 
-    hagl_color_t *ptr = (hagl_color_t *) bitmap->buffer;
+    hagl_color_t *ptr = (hagl_color_t *)bitmap->buffer;
 
-    for (uint8_t y = 0; y < glyph.height; y++) {
-        for (uint8_t x = 0; x < glyph.width; x++) {
+    for (uint8_t y = 0; y < glyph.height; y++)
+    {
+        for (uint8_t x = 0; x < glyph.width; x++)
+        {
             set = *(glyph.buffer) & (0x80 >> (x % 8));
-            if (set) {
+            if (set)
+            {
                 *(ptr++) = color;
-            } else {
+            }
+            else
+            {
                 *(ptr++) = 0x0000;
             }
         }
@@ -76,7 +82,7 @@ hagl_get_glyph(void const *_surface, wchar_t code, hagl_color_t color, hagl_bitm
 }
 
 uint8_t
-hagl_put_char(void const *_surface, wchar_t code, int16_t x0, int16_t y0, hagl_color_t color, const uint8_t *font)
+hagl_put_char(void const *_surface, char code, int16_t x0, int16_t y0, hagl_color_t color, const uint8_t *font)
 {
     static uint8_t *buffer = NULL;
     const hagl_surface_t *surface = _surface;
@@ -86,25 +92,32 @@ hagl_put_char(void const *_surface, wchar_t code, int16_t x0, int16_t y0, hagl_c
 
     status = fontx_glyph(&glyph, code, font);
 
-    if (0 != status) {
+    if (0 != status)
+    {
         return 0;
     }
 
     /* Initialize character buffer when first called. */
-    if (NULL == buffer) {
+    if (NULL == buffer)
+    {
         buffer = calloc(HAGL_CHAR_BUFFER_SIZE, sizeof(uint8_t));
     }
 
-    hagl_bitmap_init(&bitmap,  glyph.width, glyph.height, surface->depth, (uint8_t *)buffer);
+    hagl_bitmap_init(&bitmap, glyph.width, glyph.height, surface->depth, (uint8_t *)buffer);
 
-    hagl_color_t *ptr = (hagl_color_t *) bitmap.buffer;
+    hagl_color_t *ptr = (hagl_color_t *)bitmap.buffer;
 
-    for (uint8_t y = 0; y < glyph.height; y++) {
-        for (uint8_t x = 0; x < glyph.width; x++) {
+    for (uint8_t y = 0; y < glyph.height; y++)
+    {
+        for (uint8_t x = 0; x < glyph.width; x++)
+        {
             set = *(glyph.buffer + x / 8) & (0x80 >> (x % 8));
-            if (set) {
+            if (set)
+            {
                 *(ptr++) = color;
-            } else {
+            }
+            else
+            {
                 *(ptr++) = 0x0000;
             }
         }
@@ -117,12 +130,55 @@ hagl_put_char(void const *_surface, wchar_t code, int16_t x0, int16_t y0, hagl_c
 }
 
 /*
- * Write a string of text by calling hagl_put_char() repeadetly. CR and LF
- * continue from the next line.
+ * Draw a scaled character by repeating each glyph pixel scale × scale times.
  */
+uint8_t
+hagl_put_char_scaled(void const *_surface, char code, int16_t x0, int16_t y0, hagl_color_t color, const uint8_t *font, uint8_t scale)
+{
+    const hagl_surface_t *surface = _surface;
+    uint8_t status, set;
+    fontx_glyph_t glyph;
 
+    status = fontx_glyph(&glyph, code, font);
+    if (0 != status)
+    {
+        return 0;
+    }
+
+    /* Iterate through glyph bitmap and draw scaled pixels */
+    for (uint8_t gy = 0; gy < glyph.height; gy++)
+    {
+        for (uint8_t gx = 0; gx < glyph.width; gx++)
+        {
+
+            set = *(glyph.buffer + gx / 8) & (0x80 >> (gx % 8));
+
+            if (set)
+            {
+                /* Draw a scale × scale block */
+                for (uint8_t sy = 0; sy < scale; sy++)
+                {
+                    for (uint8_t sx = 0; sx < scale; sx++)
+                    {
+                        hagl_put_pixel(surface,
+                                       x0 + gx * scale + sx,
+                                       y0 + gy * scale + sy,
+                                       color);
+                    }
+                }
+            }
+        }
+        glyph.buffer += glyph.pitch;
+    }
+
+    return glyph.width * scale;
+}
+
+/*
+ * Draw scaled text using hagl_put_char_scaled().
+ */
 uint16_t
-hagl_put_text(void const *surface, const wchar_t *str, int16_t x0, int16_t y0, hagl_color_t color, const unsigned char *font)
+hagl_put_text_scaled(void const *surface, const char *str, int16_t x0, int16_t y0, hagl_color_t color, const uint8_t *font, uint8_t scale)
 {
     wchar_t temp;
     uint8_t status;
@@ -130,16 +186,57 @@ hagl_put_text(void const *surface, const wchar_t *str, int16_t x0, int16_t y0, h
     fontx_meta_t meta;
 
     status = fontx_meta(&meta, font);
-    if (0 != status) {
+    if (0 != status)
+    {
         return 0;
     }
 
-    do {
+    do
+    {
         temp = *str++;
-        if (13 == temp || 10 == temp) {
+        if (13 == temp || 10 == temp)
+        {
+            x0 = 0;
+            y0 += meta.height * scale;
+        }
+        else
+        {
+            x0 += hagl_put_char_scaled(surface, temp, x0, y0, color, font, scale);
+        }
+    } while (*str != 0);
+
+    return x0 - original;
+}
+
+/*
+ * Write a string of text by calling hagl_put_char() repeadetly. CR and LF
+ * continue from the next line.
+ */
+
+uint16_t
+hagl_put_text(void const *surface, const char *str, int16_t x0, int16_t y0, hagl_color_t color, const unsigned char *font)
+{
+    wchar_t temp;
+    uint8_t status;
+    uint16_t original = x0;
+    fontx_meta_t meta;
+
+    status = fontx_meta(&meta, font);
+    if (0 != status)
+    {
+        return 0;
+    }
+
+    do
+    {
+        temp = *str++;
+        if (13 == temp || 10 == temp)
+        {
             x0 = 0;
             y0 += meta.height;
-        } else {
+        }
+        else
+        {
             x0 += hagl_put_char(surface, temp, x0, y0, color, font);
         }
     } while (*str != 0);

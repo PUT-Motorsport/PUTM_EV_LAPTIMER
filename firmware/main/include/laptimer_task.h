@@ -24,4 +24,6 @@ enum Lapmode
 
 void laptimer_task(void *args);
 
+void laptime_convert_string(Laptime laptime, char *laptime_str, size_t size);
+
 esp_err_t isr_init();

@@ -125,9 +125,9 @@ static void laptime_save_sdcard(char *laptime_str, QueueHandle_t sd_queue)
 
 void send_laptime(Laptime laptime)
 {
-    wchar_t laptime_wstr[LAPTIME_STRING_LENGTH];
-    laptime_convert_wstring(laptime, laptime_wstr, LAPTIME_STRING_LENGTH);
-    xQueueSend(lcd_laptime_current_queue, laptime_wstr, 0);
+    char laptime_str[LAPTIME_STRING_LENGTH];
+    laptime_convert_string(laptime, laptime_str, LAPTIME_STRING_LENGTH);
+    xQueueSend(lcd_laptime_current_queue, laptime_str, 0);
 }
 
 void send_status()
@@ -162,14 +162,13 @@ esp_err_t send_laptime_lists(Laptime_list *list)
     if (list == NULL || list->list_last == NULL || list->list_last == NULL)
         return ESP_FAIL;
 
-    static wchar_t list_wch[2][LAPTIME_LIST_SIZE_LCD][LAPTIME_STRING_LENGTH];
-
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < LAPTIME_LIST_SIZE_LOCAL; i++)
     {
-        laptime_convert_wstring(list->list_top[i], list_wch[0][i], LAPTIME_STRING_LENGTH);
-        laptime_convert_wstring(list->list_last[i], list_wch[1][i], LAPTIME_STRING_LENGTH);
+        laptime_convert_string(list->list_top[i], lcd_list_buffer[0][i], LAPTIME_STRING_LENGTH);
+        laptime_convert_string(list->list_last[i], lcd_list_buffer[1][i], LAPTIME_STRING_LENGTH);
     }
-    xQueueSend(lcd_laptime_lists_queue, list_wch, 0);
+
+    xSemaphoreGive(lcd_laptime_lists_semaphore);
     return ESP_OK;
 }
 
