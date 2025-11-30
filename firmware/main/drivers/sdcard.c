@@ -3,6 +3,8 @@
 #include "esp_log.h"
 #include "esp_vfs_fat.h"
 #include "sdmmc_cmd.h"
+#include "driver/spi_common.h"
+
 #include "main.h"
 
 #include <stdio.h>
@@ -30,7 +32,7 @@ esp_err_t sdcard_mount(sdmmc_card_t **out_card)
         .quadhd_io_num = -1,
         .max_transfer_sz = 4 * 1000,
     };
-    esp_err_t ret = spi_bus_initialize(SPI2_HOST, &sdcard_spi_config, SPI_DMA_CH1);
+    esp_err_t ret = spi_bus_initialize(SPI2_HOST, &sdcard_spi_config, SPI_DMA_CH_AUTO);
     if (ret != ESP_OK)
     {
         ESP_LOGE(TAG, "SPI INIT FAIL");

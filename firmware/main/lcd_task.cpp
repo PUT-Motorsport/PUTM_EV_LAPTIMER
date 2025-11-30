@@ -30,18 +30,20 @@
 #define BRRED 0x07FC
 #define GRAY 0x3084
 
-#define PADDING 5
-#define LAPLIST_POS_X 5
-#define LAPLIST_POS_Y 40
-#define LAPLIST_SPACING 15
-#define CURRENT_LAPTIME_POS_X 5
-#define CURRENT_LAPTIME_POS_Y 15
+#define PADDING 10
+#define LAPTIME_LISTS_POS_X 10
+#define LAPTIME_LISTS_POS_Y 100
+#define LAPTIME_LISTS_SPACING 20
+#define LAPTIME_CURRENT_POS_X (LCD_WIDTH / 2 - LAPTIME_CURRENT_LETTER_WIDTH * 7)
+#define LAPTIME_CURRENT_POS_Y 45
 
-#define CURRENT_LAPTIME_FONT font10x20_ISO8859_1
+#define LAPTIME_CURRENT_FONT font10x20_ISO8859_1
+#define LAPTIME_LISTS_FONT font10x20_ISO8859_1
 #define UI_FONT font6x10_ISO8859_1
 
-#define CURRENT_LAPTIME_LETTER_WIDTH 11
-#define UI_LETTER_WIDTH 5
+#define LAPTIME_CURRENT_LETTER_WIDTH 10
+#define LAPTIME_LISTS_LETTER_WIDTH 10
+#define UI_LETTER_WIDTH 6
 
 hagl_backend_t display_struct;
 hagl_backend_t *display = &display_struct;
@@ -78,15 +80,15 @@ void lcd_set_clip(int16_t pos_x0, int16_t pos_y0, int16_t pos_x1, int16_t pos_y1
 void print_ui()
 {
     lcd_print_str(PADDING, PADDING, "CURRENT LAP", UI_FONT, WHITE);
-    lcd_print_str(LAPLIST_POS_X, LAPLIST_POS_Y,
+    lcd_print_str(LAPTIME_LISTS_POS_X, LAPTIME_LISTS_POS_Y,
                   "LAST 5 LAPS", UI_FONT,
                   WHITE);
-    lcd_print_str(LAPLIST_POS_X + LCD_WIDTH / 2, LAPLIST_POS_Y,
+    lcd_print_str(LAPTIME_LISTS_POS_X + LCD_WIDTH / 2, LAPTIME_LISTS_POS_Y,
                   "TOP  5 LAPS", UI_FONT,
                   WHITE);
-    lcd_print_line(0, LAPLIST_POS_Y - PADDING, LCD_WIDTH, LAPLIST_POS_Y - PADDING,
+    lcd_print_line(0, LAPTIME_LISTS_POS_Y - PADDING, LCD_WIDTH, LAPTIME_LISTS_POS_Y - PADDING,
                    WHITE);
-    lcd_print_line(LCD_WIDTH / 2, LAPLIST_POS_Y - PADDING, LCD_WIDTH / 2,
+    lcd_print_line(LCD_WIDTH / 2, LAPTIME_LISTS_POS_Y - PADDING, LCD_WIDTH / 2,
                    LCD_HEIGHT, WHITE);
 }
 
@@ -130,7 +132,7 @@ void print_current_laptime()
     static char laptime_current_str[LAPTIME_STRING_LENGTH] = "--,--:--:--";
     if (xQueueReceive(lcd_laptime_current_queue, laptime_current_str, 0) != pdTRUE)
         return;
-    lcd_print_str(CURRENT_LAPTIME_POS_X, CURRENT_LAPTIME_POS_Y, laptime_current_str, CURRENT_LAPTIME_FONT, WHITE);
+    hagl_put_text(display, laptime_current_str, LAPTIME_CURRENT_POS_X, LAPTIME_CURRENT_POS_Y, WHITE, LAPTIME_CURRENT_FONT);
 }
 
 void print_laptime_lists()
@@ -139,11 +141,11 @@ void print_laptime_lists()
         return;
     for (int i = 0; i < LAPTIME_LIST_SIZE_LCD; i++)
     {
-        lcd_print_str(LAPLIST_POS_X, LAPLIST_POS_Y + LAPLIST_SPACING + i * LAPLIST_SPACING, lcd_list_buffer[1][i],
-                      UI_FONT, WHITE);
-        lcd_print_str(LCD_WIDTH / 2 + LAPLIST_POS_X,
-                      LAPLIST_POS_Y + LAPLIST_SPACING + i * LAPLIST_SPACING, lcd_list_buffer[0][i],
-                      UI_FONT, WHITE);
+        lcd_print_str(LAPTIME_LISTS_POS_X, LAPTIME_LISTS_POS_Y + LAPTIME_LISTS_SPACING + i * LAPTIME_LISTS_SPACING, lcd_list_buffer[1][i],
+                      LAPTIME_LISTS_FONT, WHITE);
+        lcd_print_str(LCD_WIDTH / 2 + LAPTIME_LISTS_POS_X,
+                      LAPTIME_LISTS_POS_Y + LAPTIME_LISTS_SPACING + i * LAPTIME_LISTS_SPACING, lcd_list_buffer[0][i],
+                      LAPTIME_LISTS_FONT, WHITE);
     }
     xSemaphoreGive(lcd_laptime_lists_semaphore);
 }
