@@ -12,6 +12,37 @@
 
 #include <cwchar>
 
+#define LCD_WIDTH 320
+#define LCD_HEIGHT 240
+
+#define WHITE 0xFFFF
+#define BLACK 0x0000
+#define BLUE 0x1F00
+#define BRED 0x1FF8
+#define GRED 0xE0FF
+#define GBLUE 0xFF07
+#define RED 0x00F8
+#define MAGENTA 0x1FF8
+#define GREEN 0xE007
+#define CYAN 0xFF7F
+#define YELLOW 0xE0FF
+#define BROWN 0x40BC
+#define BRRED 0x07FC
+#define GRAY 0x3084
+
+#define PADDING 5
+#define LAPLIST_POS_X 5
+#define LAPLIST_POS_Y 40
+#define LAPLIST_SPACING 15
+#define CURRENT_LAPTIME_POS_X 5
+#define CURRENT_LAPTIME_POS_Y 15
+
+#define CURRENT_LAPTIME_FONT font10x20_ISO8859_1
+#define UI_FONT font6x10_ISO8859_1
+
+#define CURRENT_LAPTIME_LETTER_WIDTH 11
+#define UI_LETTER_WIDTH 5
+
 hagl_backend_t display_struct;
 hagl_backend_t *display = &display_struct;
 
@@ -21,31 +52,10 @@ void lcd_clear() { hagl_clear(display); }
 void lcd_copy() { hagl_flush(display); }
 
 bool lcd_print_str(int16_t pos_x, int16_t pos_y, const char *string,
-                   int font_size, int16_t color)
+                   const unsigned char *font, int16_t color)
 {
     if (string == NULL || pos_y > LCD_HEIGHT || pos_x > LCD_WIDTH)
         return 1;
-    const unsigned char *font;
-    switch (font_size)
-    {
-    case 8:
-        font = font6x10_ISO8859_1;
-        break;
-    // case 12:
-    //     font = &Font12;
-    //     break;
-    case 16:
-        font = font6x10_ISO8859_1;
-        break;
-    case 20:
-        font = font10x20_ISO8859_1;
-        break;
-    // case 24:
-    //     font = &Font24;
-    //     break;
-    default:
-        return 1;
-    }
     hagl_put_text(display, string, pos_x, pos_y, color, font);
     return 0;
 }
@@ -115,10 +125,6 @@ void print_status()
                       UI_FONT, BLACK);
 }
 
-// bool lcdIsBusy() { return dmaBusyFlag; }
-
-// void lcdSetFree() { dmaBusyFlag = false; }
-
 void print_current_laptime()
 {
     static char laptime_current_str[LAPTIME_STRING_LENGTH] = "--,--:--:--";
@@ -133,10 +139,10 @@ void print_laptime_lists()
         return;
     for (int i = 0; i < LAPTIME_LIST_SIZE_LCD; i++)
     {
-        lcd_print_str(LAPLIST_POS_X, LAPLIST_POS_Y + LAPLIST_SPACING + i * LAPLIST_SPACING, lcd_list_buffer[0][i],
+        lcd_print_str(LAPLIST_POS_X, LAPLIST_POS_Y + LAPLIST_SPACING + i * LAPLIST_SPACING, lcd_list_buffer[1][i],
                       UI_FONT, WHITE);
         lcd_print_str(LCD_WIDTH / 2 + LAPLIST_POS_X,
-                      LAPLIST_POS_Y + LAPLIST_SPACING + i * LAPLIST_SPACING, lcd_list_buffer[1][i],
+                      LAPLIST_POS_Y + LAPLIST_SPACING + i * LAPLIST_SPACING, lcd_list_buffer[0][i],
                       UI_FONT, WHITE);
     }
     xSemaphoreGive(lcd_laptime_lists_semaphore);
@@ -149,7 +155,6 @@ void lcd_task(void *args)
     lcd_clear();
     lcd_set_clip(0, 0, LCD_WIDTH, LCD_HEIGHT);
     print_ui();
-    ESP_LOGI("LCD", "stack water mark: %u", uxTaskGetStackHighWaterMark(NULL));
 
     for (;;)
     {

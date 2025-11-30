@@ -80,12 +80,15 @@ esp_err_t sdcard_save_laptime(char laptime_saved_str[LAPTIME_STRING_LENGTH])
     if (laptime_saved_str == NULL || sd_active_flag == false)
         return ESP_ERR_INVALID_ARG;
 
-    // if it's first lap, create new session label
     ret = sdcard_append("laptimer.csv", session_str);
     if (ret)
         return ret;
 
     ret = sdcard_append("laptimer.csv", laptime_saved_str);
+    if (ret == ESP_OK)
+        ESP_LOGI(TAG, "LAPTIME SAVE OK");
+    else
+        ESP_LOGI(TAG, "LAPTIME SAVE FAIL");
     return ret;
 }
 
@@ -93,7 +96,6 @@ void sdcard_task(void *args)
 {
     sdmmc_card_t *card_handle = NULL;
     sdcard_init(&card_handle);
-    ESP_LOGI("SD", "stack water mark: %u", uxTaskGetStackHighWaterMark(NULL));
     char buf[LAPTIME_STRING_LENGTH];
     for (;;)
     {
@@ -116,6 +118,5 @@ void sdcard_task(void *args)
                 sd_fail_flag = false;
         }
     }
-    ESP_LOGI(TAG, "TASK ABORT");
     vTaskDelete(NULL);
 }

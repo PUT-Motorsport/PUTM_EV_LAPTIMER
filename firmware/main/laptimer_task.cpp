@@ -25,7 +25,7 @@ volatile bool stop_flag = true;
 
 Lapmode lap_mode_check()
 {
-    if (gpio_get_level(LAP_MODE_BTN) == 0)
+    if (gpio_get_level(LAP_MODE_PIN) == 0)
         return ONE_GATE_MODE;
     else
         return TWO_GATE_MODE;
@@ -88,33 +88,10 @@ void laptime_convert_string(Laptime laptime, char *laptime_str, size_t size)
                  laptime.count, mm, ss, ms);
 }
 
-void laptime_convert_wstring(Laptime laptime, wchar_t *laptime_wstr, int size)
-{
-    if (laptime_wstr == NULL)
-        return;
-
-    if (laptime.time == 0)
-    {
-        swprintf(laptime_wstr, size, L"--. --:--:--");
-        return;
-    }
-
-    unsigned int mm = (laptime.time / 6000) % 60;
-    unsigned int ss = (laptime.time / 100) % 60;
-    unsigned int ms = laptime.time % 100;
-    if (size == LAPTIME_STRING_LENGTH)
-        swprintf(laptime_wstr, size, L"%02u. %02u:%02u:%02u",
-                 laptime.count, mm, ss, ms);
-    else if (size == LAPTIME_STRING_LENGTH_UART)
-        swprintf(laptime_wstr, size, L"%02u,%02u:%02u:%02u\n",
-                 laptime.count, mm, ss, ms);
-}
-
 static void laptime_save_uart(char *laptime_str, size_t size)
 {
     if (laptime_str == NULL)
         return;
-    //   HAL_UART_Transmit_DMA(&huart3, (uint8_t *)lapTimeString, size);
     printf("%s", laptime_str);
 }
 
@@ -128,6 +105,7 @@ void send_laptime(Laptime laptime)
     char laptime_str[LAPTIME_STRING_LENGTH];
     laptime_convert_string(laptime, laptime_str, LAPTIME_STRING_LENGTH);
     xQueueSend(lcd_laptime_current_queue, laptime_str, 0);
+    xQueueSend(wifi_laptime_current_queue, laptime_str, 0);
 }
 
 void send_status()
@@ -155,6 +133,7 @@ void send_status()
     else
         status[2] = false;
     xQueueSend(lcd_laptime_status_queue, status, 0);
+    xQueueSend(wifi_laptime_status_queue, status, 0);
 }
 
 esp_err_t send_laptime_lists(Laptime_list *list)
@@ -162,13 +141,20 @@ esp_err_t send_laptime_lists(Laptime_list *list)
     if (list == NULL || list->list_last == NULL || list->list_last == NULL)
         return ESP_FAIL;
 
-    for (int i = 0; i < LAPTIME_LIST_SIZE_LOCAL; i++)
+    for (int i = 0; i < LAPTIME_LIST_SIZE_WIFI; i++)
     {
-        laptime_convert_string(list->list_top[i], lcd_list_buffer[0][i], LAPTIME_STRING_LENGTH);
-        laptime_convert_string(list->list_last[i], lcd_list_buffer[1][i], LAPTIME_STRING_LENGTH);
+        if (i < LAPTIME_LIST_SIZE_LCD)
+        {
+            laptime_convert_string(list->list_top[i], lcd_list_buffer[0][i], LAPTIME_STRING_LENGTH);
+            laptime_convert_string(list->list_last[i], lcd_list_buffer[1][i], LAPTIME_STRING_LENGTH);
+        }
+
+        laptime_convert_string(list->list_top[i], wifi_list_buffer[0][i], LAPTIME_STRING_LENGTH);
+        laptime_convert_string(list->list_last[i], wifi_list_buffer[1][i], LAPTIME_STRING_LENGTH);
     }
 
     xSemaphoreGive(lcd_laptime_lists_semaphore);
+    xSemaphoreGive(wifi_laptime_lists_semaphore);
     return ESP_OK;
 }
 
