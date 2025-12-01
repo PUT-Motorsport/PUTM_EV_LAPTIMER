@@ -100,7 +100,7 @@ void laptime_convert_string(Laptime laptime, char laptime_str[LAPTIME_STRING_LEN
 
     if (laptime.time == 0)
     {
-        snprintf(laptime_str, size, "--. --:--:--");
+        snprintf(laptime_str, size, "--, --:--:--");
         return;
     }
 
@@ -108,7 +108,7 @@ void laptime_convert_string(Laptime laptime, char laptime_str[LAPTIME_STRING_LEN
     unsigned int ss = (laptime.time / 100) % 60;
     unsigned int ms = laptime.time % 100;
     if (size == LAPTIME_STRING_LENGTH)
-        snprintf(laptime_str, size, "%02u. %02u:%02u:%02u",
+        snprintf(laptime_str, size, "%02u, %02u:%02u:%02u",
                  laptime.count, mm, ss, ms);
 }
 
@@ -270,8 +270,8 @@ esp_err_t isr_init()
  */
 void laptimer_task(void *args)
 {
-    char laptimer_current_str[LAPTIME_STRING_LENGTH] = {"--. --:--:--"};
-    char laptime_saved_str[LAPTIME_STRING_LENGTH] = {"--. --:--:--"};
+    char laptimer_current_str[LAPTIME_STRING_LENGTH] = {"--, --:--:--"};
+    char laptime_saved_str[LAPTIME_STRING_LENGTH] = {"--, --:--:--"};
 
     Laptime laptime_list_top[LAPTIME_LIST_SIZE_LOCAL] = {0};
     Laptime laptime_list_last[LAPTIME_LIST_SIZE_LOCAL] = {0};

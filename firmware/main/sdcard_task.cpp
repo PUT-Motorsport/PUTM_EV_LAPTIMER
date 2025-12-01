@@ -96,6 +96,7 @@ esp_err_t sdcard_save_laptime(char laptime_saved_str[LAPTIME_STRING_LENGTH])
         return ret;
 
     ret = sdcard_append("laptimer.csv", laptime_saved_str);
+    ret = sdcard_append("laptimer.csv", "\n");
     if (ret == ESP_OK)
         ESP_LOGI(TAG, "LAPTIME SAVE OK");
     else
