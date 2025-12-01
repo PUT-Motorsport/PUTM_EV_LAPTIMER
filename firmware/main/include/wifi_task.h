@@ -1,10 +1,13 @@
 #pragma once
 
+#include "main.h"
+
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-void wifi_task(void *args);
+    void wifi_task(void *args);
 
 #ifdef __cplusplus
 }

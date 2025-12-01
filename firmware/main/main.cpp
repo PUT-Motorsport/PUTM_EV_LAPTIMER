@@ -1,6 +1,4 @@
-#include "esp_err.h"
-
-#include "freertos/idf_additions.h"
+#include "main.h"
 
 #include "laptimer_task.h"
 #include "sdcard_task.h"
@@ -9,26 +7,6 @@
 
 #include "gpio.h"
 #include "timer.h"
-#include <esp_log.h>
-
-/*
-SD_SPI_CLK - GPIO14
-SD_SPI_MISO - GPIO26
-SD_SPI_MOSI - GPIO13
-SD_SPI_CS - GPIO27
-
-LCD_SPI_CLK - GPIO18
-LCD_SPI_MOSI - GPIO23
-LCD_SPI_CS - GPIO5
-LCD_DC - GPIO17
-LCD_RESET - GPIO16
-LCD_BL - GPIO21
-
-LAP_GATE1_BTN - GPIO32
-LAP_GATE2_BTN - GPIO33
-LAP_RESET_BTN - GPIO35
-LAP_MODE_BTN - GPIO25
-*/
 
 QueueHandle_t sd_queue = xQueueCreate(LAPTIME_LIST_SIZE_LOCAL, sizeof(char[LAPTIME_STRING_LENGTH]));
 QueueHandle_t sd_reinit_semaphore = xSemaphoreCreateBinary();
@@ -44,6 +22,9 @@ QueueHandle_t wifi_laptime_status_queue = xQueueCreate(1, sizeof(bool[3]));
 char lcd_list_buffer[2][LAPTIME_LIST_SIZE_LCD][LAPTIME_STRING_LENGTH] = {0};
 char wifi_list_buffer[2][LAPTIME_LIST_SIZE_WIFI][LAPTIME_STRING_LENGTH] = {0};
 
+/**
+ * @brief Main task initializes core peripherals and creates program tasks
+ */
 extern "C" void app_main(void)
 {
     ESP_ERROR_CHECK(gpio_init());

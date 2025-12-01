@@ -1,10 +1,5 @@
 #include "laptimer_task.h"
 
-#include "esp_log.h"
-#include "esp_err.h"
-
-#include "freertos/idf_additions.h"
-
 #include "gpio.h"
 #include "main.h"
 #include "sdcard.h"
@@ -15,14 +10,31 @@
 
 static const char *TAG = "LAPTIMER_TASK";
 
+/**
+ * @brief Global variable used to store current laptime that is readed from timer in main loop and saved in ISR
+ */
 Laptime laptime_current = {1, 0};
 
+/**
+ * @brief Global variable used to store saved laptime after current laptime is saved in ISR,
+ * laptime is then saved on lists and sent to other tasks
+ */
 Laptime laptime_saved = {1, 0};
 
+/**
+ * @brief Global variable determines behavior of gate inputs
+ */
 volatile Lapmode lap_mode = ONE_GATE_MODE;
 
+/**
+ * @brief Global variable indicates stopped laptime, set true by LAP_RESET_BTN and set false by LAP_GATE1_BTN
+ */
 volatile bool stop_flag = true;
 
+/**
+ * @brief Checks active state of LAP_MODE_PIN
+ * @return Active mode
+ */
 Lapmode lap_mode_check()
 {
     if (gpio_get_level(LAP_MODE_PIN) == 0)
@@ -31,12 +43,21 @@ Lapmode lap_mode_check()
         return TWO_GATE_MODE;
 }
 
+/**
+ * @brief Resets received laptime time and count
+ */
 void laptime_reset(Laptime *laptime)
 {
     laptime->time = 0;
     laptime->count++;
 }
 
+/**
+ * @brief Saves received laptime on local best/last lists sorted
+ * @param laptime Laptime to save
+ * @param list Structure that stores local laptimes
+ * @return
+ */
 esp_err_t laptime_save_local(Laptime *laptime, Laptime_list *list)
 {
     if (list == NULL || list->list_last == NULL || list->list_last == NULL || laptime == NULL)
@@ -66,7 +87,13 @@ esp_err_t laptime_save_local(Laptime *laptime, Laptime_list *list)
     return ESP_OK;
 }
 
-void laptime_convert_string(Laptime laptime, char *laptime_str, size_t size)
+/**
+ * @brief Converts laptime from int measured in 10ms to string that is ready to display
+ * @param laptime Laptime to convert
+ * @param laptime_str String for converted laptime
+ * @param size Size of string
+ */
+void laptime_convert_string(Laptime laptime, char laptime_str[LAPTIME_STRING_LENGTH], size_t size)
 {
     if (laptime_str == NULL)
         return;
@@ -83,31 +110,24 @@ void laptime_convert_string(Laptime laptime, char *laptime_str, size_t size)
     if (size == LAPTIME_STRING_LENGTH)
         snprintf(laptime_str, size, "%02u. %02u:%02u:%02u",
                  laptime.count, mm, ss, ms);
-    else if (size == LAPTIME_STRING_LENGTH_UART)
-        snprintf(laptime_str, size, "%02u,%02u:%02u:%02u\n",
-                 laptime.count, mm, ss, ms);
 }
 
+/**
+ * @brief To be changed (it should send laptime over UART, not use printf)
+ * @param laptime_str
+ * @param size
+ */
 static void laptime_save_uart(char *laptime_str, size_t size)
 {
     if (laptime_str == NULL)
         return;
     printf("%s", laptime_str);
+    printf("\n");
 }
 
-static void laptime_save_sdcard(char *laptime_str, QueueHandle_t sd_queue)
-{
-    xQueueSend(sd_queue, laptime_str, 0);
-}
-
-void send_laptime(Laptime laptime)
-{
-    char laptime_str[LAPTIME_STRING_LENGTH];
-    laptime_convert_string(laptime, laptime_str, LAPTIME_STRING_LENGTH);
-    xQueueSend(lcd_laptime_current_queue, laptime_str, 0);
-    xQueueSend(wifi_laptime_current_queue, laptime_str, 0);
-}
-
+/**
+ * @brief Checks active flags and sends them to lcd_task and wifi_task
+ */
 void send_status()
 {
     static bool status[3] = {false};
@@ -136,6 +156,10 @@ void send_status()
     xQueueSend(wifi_laptime_status_queue, status, 0);
 }
 
+/**
+ * @brief Converts local laptime lists to strings, saves them to global arrays and allows lcd_task and wifi_task to read them
+ * @param list Structure that stores local laptimes
+ */
 esp_err_t send_laptime_lists(Laptime_list *list)
 {
     if (list == NULL || list->list_last == NULL || list->list_last == NULL)
@@ -158,6 +182,11 @@ esp_err_t send_laptime_lists(Laptime_list *list)
     return ESP_OK;
 }
 
+/**
+ * @brief ISR for first gate depends on active mode
+ * lap_mode == ONE_GATE_MODE - first gate saves laptime and starts new lap on every negative edge
+ * lap_mode == TWO_GATE_MODE - first gate only starts new lap on negative edge if stop_flag is true
+ */
 void gate1_btn_isr()
 {
     switch (lap_mode)
@@ -187,6 +216,11 @@ void gate1_btn_isr()
     }
 }
 
+/**
+ * @brief ISR for second gate depends on active mode
+ * lap_mode == ONE_GATE_MODE - second gate is not active
+ * lap_mode == TWO_GATE_MODE - second gates saves laptime on negative edge if stop_flag is false
+ */
 void gate2_btn_isr()
 {
     switch (lap_mode)
@@ -206,6 +240,9 @@ void gate2_btn_isr()
     }
 }
 
+/**
+ * @brief ISR for reset button, resets current laptime and activates stop_flag
+ */
 void reset_btn_isr()
 {
     laptime_current.time = 0;
@@ -224,9 +261,17 @@ esp_err_t isr_init()
     return ESP_OK;
 }
 
+/**
+ * @brief Laptimer main logic task in main loop:
+ * 1. Updates current laptime if stop_flag is false
+ * 2. On every stop_flag change checks if laptime mode changed
+ * 3. Tries to reinit sdcard when LAP_RESET_BTN is clicked
+ * 4. When laptime is saved, stores it locally and sends through UART, sd card, shows it on LCD and WIFI page
+ */
 void laptimer_task(void *args)
 {
-    char laptime_saved_str[14];
+    char laptimer_current_str[LAPTIME_STRING_LENGTH] = {"--. --:--:--"};
+    char laptime_saved_str[LAPTIME_STRING_LENGTH] = {"--. --:--:--"};
 
     Laptime laptime_list_top[LAPTIME_LIST_SIZE_LOCAL] = {0};
     Laptime laptime_list_last[LAPTIME_LIST_SIZE_LOCAL] = {0};
@@ -235,7 +280,8 @@ void laptimer_task(void *args)
     bool stop_flag_old = stop_flag;
     bool sdcard_flag_old = sd_active_flag;
 
-    send_laptime(laptime_current);
+    xQueueSend(lcd_laptime_current_queue, laptimer_current_str, 0);
+    xQueueSend(wifi_laptime_current_queue, laptimer_current_str, 0);
     send_laptime_lists(&laptime_list);
 
     for (;;)
@@ -243,7 +289,9 @@ void laptimer_task(void *args)
         if (stop_flag == false)
         {
             laptime_current.time = timer_get_time(laptime_timer);
-            send_laptime(laptime_current);
+            laptime_convert_string(laptime_current, laptimer_current_str, LAPTIME_STRING_LENGTH);
+            xQueueSend(lcd_laptime_current_queue, laptimer_current_str, 0);
+            xQueueSend(wifi_laptime_current_queue, laptimer_current_str, 0);
         }
 
         if (stop_flag != stop_flag_old)
@@ -272,8 +320,7 @@ void laptimer_task(void *args)
             laptime_save_uart(laptime_saved_str,
                               sizeof(laptime_saved_str));
             laptime_save_local(&laptime_saved, &laptime_list);
-            laptime_save_sdcard(laptime_saved_str, sd_queue);
-            send_laptime(laptime_current);
+            xQueueSend(sd_queue, laptime_saved_str, 0);
             send_laptime_lists(&laptime_list);
         }
         vTaskDelay(10 / portTICK_PERIOD_MS);

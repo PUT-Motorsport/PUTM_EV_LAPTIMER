@@ -1,10 +1,5 @@
 #include "lcd_task.h"
 
-#include "esp_log.h"
-#include "esp_err.h"
-
-#include "freertos/idf_additions.h"
-
 #include "hagl.h"
 #include "hagl_hal.h"
 #include "font10x20-ISO8859-1.h"
@@ -48,8 +43,8 @@
 hagl_backend_t display_struct;
 hagl_backend_t *display = &display_struct;
 
+/// @brief Interface for hagl functions
 void lcd_init() { hagl_hal_init(display); }
-
 void lcd_clear() { hagl_clear(display); }
 void lcd_copy() { hagl_flush(display); }
 
@@ -77,6 +72,9 @@ void lcd_set_clip(int16_t pos_x0, int16_t pos_y0, int16_t pos_x1, int16_t pos_y1
     hagl_set_clip(display, pos_x0, pos_y0, pos_x1, pos_y1);
 }
 
+/**
+ * @brief Prints static ui elements on LCD
+ */
 void print_ui()
 {
     lcd_print_str(PADDING, PADDING, "CURRENT LAP", UI_FONT, WHITE);
@@ -92,6 +90,9 @@ void print_ui()
                    LCD_HEIGHT, WHITE);
 }
 
+/**
+ * @brief Prints status flag values received from queue on LCD
+ */
 void print_status()
 {
     bool status[3] = {false};
@@ -127,6 +128,9 @@ void print_status()
                       UI_FONT, BLACK);
 }
 
+/**
+ * @brief Prints current laptime received from queue on LCD
+ */
 void print_current_laptime()
 {
     static char laptime_current_str[LAPTIME_STRING_LENGTH] = "--,--:--:--";
@@ -135,6 +139,9 @@ void print_current_laptime()
     hagl_put_text(display, laptime_current_str, LAPTIME_CURRENT_POS_X, LAPTIME_CURRENT_POS_Y, WHITE, LAPTIME_CURRENT_FONT);
 }
 
+/**
+ * @brief Reads laptime lists from global variable after receiving samphore and prints them on LCD
+ */
 void print_laptime_lists()
 {
     if (xSemaphoreTake(lcd_laptime_lists_semaphore, 0) != pdTRUE)
@@ -150,6 +157,10 @@ void print_laptime_lists()
     xSemaphoreGive(lcd_laptime_lists_semaphore);
 }
 
+/**
+ * @brief LCD task initializes screen and graphics library,
+ * then prints values received from laptimer_task on screen
+ */
 void lcd_task(void *args)
 {
 

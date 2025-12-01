@@ -1,18 +1,30 @@
 #include "wifi_task.h"
+
 #include "wifi_ap.h"
-#include "main.h"
-#include "esp_log.h"
 #include "esp_http_server.h"
 #include "cJSON.h"
 #include <string.h>
 
-bool new_lists_flag = true;
-
 static const char *TAG = "WIFI_TASK";
 
+/**
+ * @brief Flag activated by semaphore received from laptimer_task on every laptime lists update
+ */
+bool new_lists_flag = true;
+
+/**
+ * @brief Current laptime string used to display on website, readed periodically by data_get_handler
+ */
 static char current_laptime[LAPTIME_STRING_LENGTH] = "--,--:--:--";
+
+/**
+ * @brief Status flags used to display on website, readed periodically by data_get_handler
+ */
 static bool status_flags[3] = {false, false, false};
 
+/**
+ * @brief Mutex usde by data_get_handler to ensure that it can read data safely
+ */
 static SemaphoreHandle_t data_mutex = NULL;
 
 /* HTML Content */
@@ -77,6 +89,11 @@ static esp_err_t root_get_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
+/**
+ * @brief Handler updates data on website after receiving mutex
+ * @param req HTTP request structure
+ * @return Error check
+ */
 static esp_err_t data_get_handler(httpd_req_t *req)
 {
     cJSON *root = cJSON_CreateObject();
@@ -118,6 +135,10 @@ static esp_err_t data_get_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
+/**
+ * @brief Initialization of web server
+ * @return Handle to http instance
+ */
 static httpd_handle_t start_webserver(void)
 {
     httpd_handle_t server = NULL;
@@ -147,6 +168,10 @@ static httpd_handle_t start_webserver(void)
     return NULL;
 }
 
+/**
+ * @brief WIFI task initializes access point and web server,
+ *  then in loop updates values displayed on http website with values received from laptimer_task
+ */
 void wifi_task(void *args)
 {
     wifi_init_softap();

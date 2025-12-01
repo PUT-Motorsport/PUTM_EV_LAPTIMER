@@ -1,10 +1,5 @@
 #include "sdcard_task.h"
 
-#include "esp_log.h"
-#include "esp_err.h"
-
-#include "freertos/idf_additions.h"
-
 #include "portmacro.h"
 #include "sd_protocol_types.h"
 #include "sdmmc_cmd.h"
@@ -15,15 +10,19 @@
 #include <stdlib.h>
 #include <string.h>
 
-bool first_lap_flag = true;
-char session_str[14] = "#0,";
+char session_str[14] = {0};
 
 static const char *TAG = "SDCARD_TASK";
 
+/**
+ * @brief Mounts sd card in file system, checks communication and creates new .csv file if doesn't exist
+ * @param card_pointer Pointer to sd card handle
+ * @return Error check
+ */
 esp_err_t sdcard_init(sdmmc_card_t **card_pointer)
 {
     esp_err_t ret = ESP_OK;
-    // sd hardware initialization
+    /// SD hardware initialization
     ret = sdcard_mount(card_pointer);
     if (ret)
     {
@@ -36,23 +35,25 @@ esp_err_t sdcard_init(sdmmc_card_t **card_pointer)
         return ESP_FAIL;
     }
 
-    // try communication with sd
+    /// Try to communicate with sd card
     ret = sdmmc_get_status(card_handle);
     if (ret)
     {
         return ret;
     }
 
-    // try reading laptimer file, if it's missing create one with session number 0
     unsigned int br;
     char sd_buffer[SD_BUFFER_SIZE] = "\0";
     int session_num = 0;
+
+    /// Try to read laptimer file, if it's missing create one with session number 0
     if (sdcard_read("laptimer.csv", sd_buffer, sizeof(sd_buffer), &br) !=
         ESP_OK)
     {
         ESP_LOGI(TAG, "CREATING NEW FILE");
         ret = sdcard_write("laptimer.csv", "SESSION, LAP, TIME\n");
     }
+    // If file exists, check last session number and increment it
     else
     {
         sd_buffer[br] = '\0';
@@ -68,11 +69,21 @@ esp_err_t sdcard_init(sdmmc_card_t **card_pointer)
     return ret;
 }
 
+/**
+ * @brief Unmounts sd card
+ * @param card_pointer Pointer to sd card handle
+ * @return Error check
+ */
 esp_err_t sdcard_deinit(sdmmc_card_t **card_pointer)
 {
     return sdcard_unmount(card_pointer);
 }
 
+/**
+ * @brief Saves received laptime on sd card, if card doesn't respond return error
+ * @param laptime_saved_str
+ * @return Error check
+ */
 esp_err_t sdcard_save_laptime(char laptime_saved_str[LAPTIME_STRING_LENGTH])
 {
     esp_err_t ret = ESP_OK;
@@ -92,6 +103,12 @@ esp_err_t sdcard_save_laptime(char laptime_saved_str[LAPTIME_STRING_LENGTH])
     return ret;
 }
 
+/**
+ * @brief SD card task initializes sd card and file system, then in loop:
+ * - Tries to save laptime received from queue
+ * - Deinitalizes sd card if save failed
+ * - Tries to reinitialize card when receive semaphore from laptimer_task
+ */
 void sdcard_task(void *args)
 {
     sdmmc_card_t *card_handle = NULL;
