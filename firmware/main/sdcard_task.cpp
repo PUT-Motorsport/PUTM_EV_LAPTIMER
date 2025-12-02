@@ -10,7 +10,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-char session_str[14] = {0};
+char session_str[14] = {"#00"};
+int session_num = 0;
 
 static const char *TAG = "SDCARD_TASK";
 
@@ -43,7 +44,6 @@ esp_err_t sdcard_init(sdmmc_card_t **card_pointer)
 
     unsigned int br;
     char sd_buffer[SD_BUFFER_SIZE] = "\0";
-    int session_num = 0;
 
     /// Try to read laptimer file, if it's missing create one with session number 0
     if (sdcard_read("laptimer.csv", sd_buffer, sizeof(sd_buffer), &br) !=
@@ -53,7 +53,7 @@ esp_err_t sdcard_init(sdmmc_card_t **card_pointer)
         ret = sdcard_write("laptimer.csv", "SESSION, LAP, TIME\n");
     }
     // If file exists, check last session number and increment it
-    else
+    else if (session_num == 0)
     {
         sd_buffer[br] = '\0';
         char *last_ch = strrchr(sd_buffer, '#');
@@ -103,6 +103,24 @@ esp_err_t sdcard_save_laptime(char laptime_saved_str[LAPTIME_STRING_LENGTH])
     return ret;
 }
 
+esp_err_t sdcard_check_integrity(char laptime_check_str[LAPTIME_STRING_LENGTH])
+{
+    if (laptime_check_str == NULL)
+        return ESP_FAIL;
+
+    esp_err_t ret = ESP_OK;
+    unsigned int br;
+    char sd_buffer[SD_BUFFER_SIZE] = "\0";
+    ret = sdcard_read("laptimer.csv", sd_buffer, sizeof(sd_buffer), &br);
+    if (ret)
+        return ret;
+    if (strstr(sd_buffer, laptime_check_str) != NULL)
+        ret = ESP_OK;
+    else
+        ret = ESP_FAIL;
+    return ret;
+}
+
 /**
  * @brief SD card task initializes sd card and file system, then in loop:
  * - Tries to save laptime received from queue
@@ -114,14 +132,16 @@ void sdcard_task(void *args)
     sdmmc_card_t *card_handle = NULL;
     sdcard_spi_init();
     sdcard_init(&card_handle);
-    char buf[LAPTIME_STRING_LENGTH];
+    char laptime_saved_str[LAPTIME_STRING_LENGTH] = {0};
     for (;;)
     {
         if (sd_active_flag == true && sd_fail_flag == false)
         {
-            if (xQueueReceive(sd_queue, buf, portMAX_DELAY) == pdTRUE)
+            if (xQueueReceive(sd_queue, laptime_saved_str, portMAX_DELAY) == pdTRUE)
             {
-                sdcard_save_laptime(buf);
+                sdcard_save_laptime(laptime_saved_str);
+                if (sdcard_check_integrity(laptime_saved_str) == ESP_FAIL)
+                    sdcard_save_laptime(laptime_saved_str);
             }
         }
         else if (sd_active_flag == false && sd_fail_flag == false)
@@ -135,9 +155,8 @@ void sdcard_task(void *args)
             {
                 if (sdcard_init(&card_handle) == ESP_OK)
                     sd_fail_flag = false;
-                // xSemaphoreGive(sd_reinit_semaphore);
             }
         }
+        vTaskDelay(50 / portTICK_PERIOD_MS);
     }
-    vTaskDelete(NULL);
 }

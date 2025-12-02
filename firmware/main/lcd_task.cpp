@@ -176,5 +176,4 @@ void lcd_task(void *args)
         print_status();
         vTaskDelay(20 / portTICK_PERIOD_MS);
     }
-    vTaskDelete(NULL);
 }

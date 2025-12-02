@@ -209,5 +209,4 @@ void wifi_task(void *args)
 
         vTaskDelay(pdMS_TO_TICKS(20));
     }
-    vTaskDelete(NULL);
 }
