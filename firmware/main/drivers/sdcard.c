@@ -18,12 +18,8 @@ static const char *TAG = "SDCARD";
 volatile bool sd_active_flag = false;
 volatile bool sd_fail_flag = false;
 
-esp_err_t sdcard_mount(sdmmc_card_t **out_card)
+esp_err_t sdcard_spi_init()
 {
-    if (out_card == NULL)
-    {
-        return ESP_ERR_INVALID_ARG;
-    }
     spi_bus_config_t sdcard_spi_config = {
         .mosi_io_num = SD_SPI_MOSI,
         .miso_io_num = SD_SPI_MISO,
@@ -39,6 +35,15 @@ esp_err_t sdcard_mount(sdmmc_card_t **out_card)
         return ret;
     }
     ESP_LOGI(TAG, "SPI INIT OK");
+    return ret;
+}
+
+esp_err_t sdcard_mount(sdmmc_card_t **out_card)
+{
+    if (out_card == NULL)
+    {
+        return ESP_ERR_INVALID_ARG;
+    }
     esp_vfs_fat_mount_config_t mount_config = {
         .format_if_mount_failed = false,
         .max_files = 5,
@@ -52,8 +57,8 @@ esp_err_t sdcard_mount(sdmmc_card_t **out_card)
     slot_config.gpio_cs = SD_SPI_CS;
     slot_config.host_id = host.slot;
 
-    ret = esp_vfs_fat_sdspi_mount(SD_CARD_MOUNT_PATH, &host, &slot_config,
-                                  &mount_config, out_card);
+    esp_err_t ret = esp_vfs_fat_sdspi_mount(SD_CARD_MOUNT_PATH, &host, &slot_config,
+                                            &mount_config, out_card);
 
     if (ret == ESP_OK && out_card != NULL && *out_card == NULL)
     {

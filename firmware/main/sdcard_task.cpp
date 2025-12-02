@@ -22,7 +22,6 @@ static const char *TAG = "SDCARD_TASK";
 esp_err_t sdcard_init(sdmmc_card_t **card_pointer)
 {
     esp_err_t ret = ESP_OK;
-    /// SD hardware initialization
     ret = sdcard_mount(card_pointer);
     if (ret)
     {
@@ -113,6 +112,7 @@ esp_err_t sdcard_save_laptime(char laptime_saved_str[LAPTIME_STRING_LENGTH])
 void sdcard_task(void *args)
 {
     sdmmc_card_t *card_handle = NULL;
+    sdcard_spi_init();
     sdcard_init(&card_handle);
     char buf[LAPTIME_STRING_LENGTH];
     for (;;)
@@ -131,9 +131,12 @@ void sdcard_task(void *args)
         }
         else if (sd_active_flag == false && sd_fail_flag == true)
         {
-            xSemaphoreTake(sd_reinit_semaphore, portMAX_DELAY);
-            if (sdcard_init(&card_handle) == ESP_OK)
-                sd_fail_flag = false;
+            if (xSemaphoreTake(sd_reinit_semaphore, portMAX_DELAY) == pdTRUE)
+            {
+                if (sdcard_init(&card_handle) == ESP_OK)
+                    sd_fail_flag = false;
+                // xSemaphoreGive(sd_reinit_semaphore);
+            }
         }
     }
     vTaskDelete(NULL);
