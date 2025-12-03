@@ -13,11 +13,11 @@ QueueHandle_t sd_reinit_semaphore = xSemaphoreCreateBinary();
 
 QueueHandle_t lcd_laptime_current_queue = xQueueCreate(1, sizeof(char[LAPTIME_STRING_LENGTH]));
 QueueHandle_t lcd_laptime_lists_semaphore = xSemaphoreCreateBinary();
-QueueHandle_t lcd_laptime_status_queue = xQueueCreate(1, sizeof(bool[3]));
+QueueHandle_t lcd_laptime_status_queue = xQueueCreate(1, sizeof(bool[STATUS_LIST_LENGTH]));
 
 QueueHandle_t wifi_laptime_current_queue = xQueueCreate(1, sizeof(char[LAPTIME_STRING_LENGTH]));
 QueueHandle_t wifi_laptime_lists_semaphore = xSemaphoreCreateBinary();
-QueueHandle_t wifi_laptime_status_queue = xQueueCreate(1, sizeof(bool[3]));
+QueueHandle_t wifi_laptime_status_queue = xQueueCreate(1, sizeof(bool[STATUS_LIST_LENGTH]));
 
 char lcd_list_buffer[2][LAPTIME_LIST_SIZE_LCD][LAPTIME_STRING_LENGTH] = {0};
 char wifi_list_buffer[2][LAPTIME_LIST_SIZE_WIFI][LAPTIME_STRING_LENGTH] = {0};

@@ -148,10 +148,10 @@ void print_laptime_lists()
         return;
     for (int i = 0; i < LAPTIME_LIST_SIZE_LCD; i++)
     {
-        lcd_print_str(LAPTIME_LISTS_POS_X, LAPTIME_LISTS_POS_Y + LAPTIME_LISTS_SPACING + i * LAPTIME_LISTS_SPACING, lcd_list_buffer[1][i],
-                      LAPTIME_LISTS_FONT, WHITE);
         lcd_print_str(LCD_WIDTH / 2 + LAPTIME_LISTS_POS_X,
                       LAPTIME_LISTS_POS_Y + LAPTIME_LISTS_SPACING + i * LAPTIME_LISTS_SPACING, lcd_list_buffer[0][i],
+                      LAPTIME_LISTS_FONT, WHITE);
+        lcd_print_str(LAPTIME_LISTS_POS_X, LAPTIME_LISTS_POS_Y + LAPTIME_LISTS_SPACING + i * LAPTIME_LISTS_SPACING, lcd_list_buffer[1][i],
                       LAPTIME_LISTS_FONT, WHITE);
     }
     xSemaphoreGive(lcd_laptime_lists_semaphore);

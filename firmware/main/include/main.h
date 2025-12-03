@@ -70,6 +70,9 @@
 /// @brief Length of string needed to store converted laptime
 #define LAPTIME_STRING_LENGTH 13
 
+/// @brief Number of status flags displayed on LCD and webpage (gate mode, stop flag, sd flag)
+#define STATUS_LIST_LENGTH 3
+
 /**
  * @defgroup freertos
  * @brief FreeRTOS intertask communication
@@ -112,6 +115,10 @@ extern QueueHandle_t wifi_laptime_lists_semaphore;
 extern QueueHandle_t lcd_laptime_status_queue;
 extern QueueHandle_t wifi_laptime_status_queue;
 
-/// @brief Global variables locally store laptime lists used by lcd_task and wifi_task
+/**
+ * @brief Global variables locally store laptime lists used by lcd_task and wifi_task
+ * [0] - top laptimes list
+ * [1] - last laptimes list
+ */
 extern char lcd_list_buffer[2][LAPTIME_LIST_SIZE_LCD][LAPTIME_STRING_LENGTH];
 extern char wifi_list_buffer[2][LAPTIME_LIST_SIZE_WIFI][LAPTIME_STRING_LENGTH];
