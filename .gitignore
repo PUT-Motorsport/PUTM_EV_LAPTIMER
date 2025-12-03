@@ -26,3 +26,4 @@ firmware/components/hagl/.gitignore
 .vscode/**
 .DS_Store
 firmware/sdkconfig.old
+firmware/components/fonts

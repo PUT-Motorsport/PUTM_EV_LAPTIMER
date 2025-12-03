@@ -6,8 +6,11 @@
 
 struct Laptime
 {
-    volatile unsigned int count;
-    volatile unsigned long time;
+    volatile uint16_t count = 1;
+    volatile uint64_t time = 0;
+    uint64_t penalty_time = 0;
+    uint16_t doo_count = 0;
+    uint16_t oc_count = 0;
 };
 
 struct Laptime_list

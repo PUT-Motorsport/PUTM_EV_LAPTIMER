@@ -13,13 +13,13 @@ static const char *TAG = "LAPTIMER_TASK";
 /**
  * @brief Global variable used to store current laptime that is readed from timer in main loop and saved in ISR
  */
-Laptime laptime_current = {1, 0};
+Laptime laptime_current;
 
 /**
  * @brief Global variable used to store saved laptime after current laptime is saved in ISR,
  * laptime is then saved on lists and sent to other tasks
  */
-Laptime laptime_saved = {1, 0};
+Laptime laptime_saved;
 
 /**
  * @brief Global variable determines behavior of gate inputs
@@ -31,9 +31,6 @@ volatile Lapmode lap_mode = ONE_GATE_MODE;
  */
 volatile bool stop_flag = true;
 
-uint32_t doo_count = 0;
-uint32_t oc_count = 0;
-uint32_t penalty_sum = 0;
 volatile uint64_t doo_press_time = 0;
 volatile uint64_t oc_press_time = 0;
 volatile bool doo_long_flag = false;
@@ -56,8 +53,11 @@ Lapmode lap_mode_check()
  */
 void laptime_reset(Laptime *laptime)
 {
-    laptime->time = 0;
     laptime->count++;
+    laptime->time = 0;
+    laptime->penalty_time = 0;
+    laptime->doo_count = 0;
+    laptime->oc_count = 0;
 }
 
 /**
@@ -90,8 +90,6 @@ esp_err_t laptime_save_local(Laptime *laptime, Laptime_list *list)
             break;
         }
     }
-    laptime->count = 0;
-    laptime->time = 0;
     return ESP_OK;
 }
 
@@ -198,18 +196,18 @@ void penalty_check()
         {
             if ((pdTICKS_TO_MS(xTaskGetTickCount()) - doo_press_time) > 1000)
             {
-                if (penalty_sum >= DOO_TIME_PENALTY && doo_count > 0)
+                if (laptime_current.penalty_time >= DOO_TIME_PENALTY && laptime_current.doo_count > 0)
                 {
-                    doo_count--;
-                    penalty_sum -= DOO_TIME_PENALTY;
+                    laptime_current.doo_count--;
+                    laptime_current.penalty_time -= DOO_TIME_PENALTY;
                 }
                 doo_long_flag = false;
             }
         }
         else
         {
-            doo_count++;
-            penalty_sum += DOO_TIME_PENALTY;
+            laptime_current.doo_count++;
+            laptime_current.penalty_time += DOO_TIME_PENALTY;
             doo_long_flag = false;
         }
     }
@@ -220,18 +218,18 @@ void penalty_check()
         {
             if ((pdTICKS_TO_MS(xTaskGetTickCount()) - oc_press_time) > 1000)
             {
-                if (penalty_sum >= OC_TIME_PENALTY && oc_count > 0)
+                if (laptime_current.penalty_time >= OC_TIME_PENALTY && laptime_current.oc_count > 0)
                 {
-                    oc_count--;
-                    penalty_sum -= OC_TIME_PENALTY;
+                    laptime_current.oc_count--;
+                    laptime_current.penalty_time -= OC_TIME_PENALTY;
                 }
                 oc_long_flag = false;
             }
         }
         else
         {
-            oc_count++;
-            penalty_sum += OC_TIME_PENALTY;
+            laptime_current.oc_count++;
+            laptime_current.penalty_time += OC_TIME_PENALTY;
             oc_long_flag = false;
         }
     }
@@ -300,8 +298,11 @@ void gate2_pin_isr()
  */
 void reset_pin_isr()
 {
-    laptime_current.time = 0;
     stop_flag = true;
+    laptime_current.time = 0;
+    laptime_current.penalty_time = 0;
+    laptime_current.doo_count = 0;
+    laptime_current.oc_count = 0;
 }
 
 void doo_pin_isr()
@@ -394,13 +395,15 @@ void laptimer_task(void *args)
 
         if (laptime_saved.time > 0)
         {
-            ESP_LOGI(TAG, "DOO: %u, OC: %u, Penalty sum: %u\n", doo_count, oc_count, penalty_sum);
+            ESP_LOGI(TAG, "DOO: %u, OC: %u, Penalty sum: %llu\n", laptime_saved.doo_count, laptime_saved.oc_count, laptime_saved.penalty_time);
+
             laptime_convert_string(laptime_saved, laptime_saved_str,
                                    sizeof(laptime_saved_str));
 
             laptime_save_uart(laptime_saved_str,
                               sizeof(laptime_saved_str));
             laptime_save_local(&laptime_saved, &laptime_list);
+            laptime_reset(&laptime_saved);
             xQueueSend(sd_queue, laptime_saved_str, 0);
             send_laptime_lists(&laptime_list);
         }

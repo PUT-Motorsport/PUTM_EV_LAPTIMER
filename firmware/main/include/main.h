@@ -80,14 +80,14 @@
 #define LAPTIME_MIN 500
 
 /// @brief Length of string needed to store converted laptime
-#define LAPTIME_STRING_LENGTH 13
+#define LAPTIME_STRING_LENGTH 21
 
 /// @brief Number of status flags displayed on LCD and webpage (gate mode, stop flag, sd flag)
 #define STATUS_LIST_LENGTH 3
 
 /// @brief Time penalty added to current laptime by LAP_DOO_PIN and LAP_OC_PIN in ms
-#define DOO_TIME_PENALTY 200
-#define OC_TIME_PENALTY 1000
+#define DOO_TIME_PENALTY (uint64_t)200
+#define OC_TIME_PENALTY (uint64_t)1000
 
 /**
  * @defgroup freertos
