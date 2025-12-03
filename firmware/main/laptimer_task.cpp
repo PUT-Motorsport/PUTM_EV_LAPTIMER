@@ -49,18 +49,6 @@ Lapmode lap_mode_check()
 }
 
 /**
- * @brief Resets received laptime time and count
- */
-void laptime_reset(Laptime *laptime)
-{
-    laptime->count++;
-    laptime->time = 0;
-    laptime->penalty_time = 0;
-    laptime->doo_count = 0;
-    laptime->oc_count = 0;
-}
-
-/**
  * @brief Saves received laptime on local best/last lists sorted
  * @param laptime Laptime to save
  * @param list Structure that stores local laptimes
@@ -99,24 +87,24 @@ esp_err_t laptime_save_local(Laptime *laptime, Laptime_list *list)
  * @param laptime_str String for converted laptime
  * @param size Size of string
  */
-void laptime_convert_string(Laptime laptime, char laptime_str[LAPTIME_STRING_LENGTH], size_t size)
-{
-    if (laptime_str == NULL)
-        return;
+// void laptime_convert_string(Laptime laptime, char laptime_str[LAPTIME_STRING_LENGTH], size_t size)
+// {
+//     if (laptime_str == NULL)
+//         return;
 
-    if (laptime.time == 0)
-    {
-        snprintf(laptime_str, size, "--, --:--:--");
-        return;
-    }
+//     if (laptime.time == 0)
+//     {
+//         snprintf(laptime_str, size, "--, --:--:--");
+//         return;
+//     }
 
-    unsigned int mm = (laptime.time / 6000) % 60;
-    unsigned int ss = (laptime.time / 100) % 60;
-    unsigned int ms = laptime.time % 100;
-    if (size == LAPTIME_STRING_LENGTH)
-        snprintf(laptime_str, size, "%02u, %02u:%02u:%02u",
-                 laptime.count, mm, ss, ms);
-}
+//     unsigned int mm = (laptime.time / 6000) % 60;
+//     unsigned int ss = (laptime.time / 100) % 60;
+//     unsigned int ms = laptime.time % 100;
+//     if (size == LAPTIME_STRING_LENGTH)
+//         snprintf(laptime_str, size, "%02u, %02u:%02u:%02u",
+//                  laptime.count, mm, ss, ms);
+// }
 
 /**
  * @brief To be changed (it should send laptime over UART, not use printf)
@@ -175,12 +163,12 @@ esp_err_t send_laptime_lists(Laptime_list *list)
     {
         if (i < LAPTIME_LIST_SIZE_LCD)
         {
-            laptime_convert_string(list->list_top[i], lcd_list_buffer[0][i], LAPTIME_STRING_LENGTH);
-            laptime_convert_string(list->list_last[i], lcd_list_buffer[1][i], LAPTIME_STRING_LENGTH);
+            list->list_top[i].convert_string(lcd_list_buffer[0][i], LAPTIME_STRING_LENGTH);
+            list->list_last[i].convert_string(lcd_list_buffer[1][i], LAPTIME_STRING_LENGTH);
         }
 
-        laptime_convert_string(list->list_top[i], wifi_list_buffer[0][i], LAPTIME_STRING_LENGTH);
-        laptime_convert_string(list->list_last[i], wifi_list_buffer[1][i], LAPTIME_STRING_LENGTH);
+        list->list_top[i].convert_string(wifi_list_buffer[0][i], LAPTIME_STRING_LENGTH);
+        list->list_last[i].convert_string(wifi_list_buffer[1][i], LAPTIME_STRING_LENGTH);
     }
 
     xSemaphoreGive(lcd_laptime_lists_semaphore);
@@ -249,7 +237,7 @@ void gate1_pin_isr()
         {
             laptime_saved = laptime_current;
             timer_reset(laptime_timer);
-            laptime_reset(&laptime_current);
+            laptime_current.new_lap();
         }
         else if (stop_flag == true)
         {
@@ -285,7 +273,7 @@ void gate2_pin_isr()
         {
             laptime_saved = laptime_current;
             stop_flag = true;
-            laptime_reset(&laptime_current);
+            laptime_current.new_lap();
         }
         break;
     default:
@@ -299,10 +287,7 @@ void gate2_pin_isr()
 void reset_pin_isr()
 {
     stop_flag = true;
-    laptime_current.time = 0;
-    laptime_current.penalty_time = 0;
-    laptime_current.doo_count = 0;
-    laptime_current.oc_count = 0;
+    laptime_current.reset();
 }
 
 void doo_pin_isr()
@@ -370,7 +355,7 @@ void laptimer_task(void *args)
         {
             laptime_current.time = timer_get_time(laptime_timer);
             penalty_check();
-            laptime_convert_string(laptime_current, laptimer_current_str, LAPTIME_STRING_LENGTH);
+            laptime_current.convert_string(laptimer_current_str, LAPTIME_STRING_LENGTH);
             xQueueSend(lcd_laptime_current_queue, laptimer_current_str, 0);
             xQueueSend(wifi_laptime_current_queue, laptimer_current_str, 0);
         }
@@ -397,13 +382,13 @@ void laptimer_task(void *args)
         {
             ESP_LOGI(TAG, "DOO: %u, OC: %u, Penalty sum: %llu\n", laptime_saved.doo_count, laptime_saved.oc_count, laptime_saved.penalty_time);
 
-            laptime_convert_string(laptime_saved, laptime_saved_str,
-                                   sizeof(laptime_saved_str));
+            laptime_saved.convert_string(laptime_saved_str,
+                                         sizeof(laptime_saved_str));
 
             laptime_save_uart(laptime_saved_str,
                               sizeof(laptime_saved_str));
             laptime_save_local(&laptime_saved, &laptime_list);
-            laptime_reset(&laptime_saved);
+            laptime_saved.reset();
             xQueueSend(sd_queue, laptime_saved_str, 0);
             send_laptime_lists(&laptime_list);
         }
