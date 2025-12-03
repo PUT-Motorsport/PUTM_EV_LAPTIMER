@@ -141,7 +141,7 @@ void sdcard_task(void *args)
             {
                 sdcard_save_laptime(laptime_saved_str);
                 if (sdcard_check_integrity(laptime_saved_str) == ESP_FAIL)
-                    sdcard_save_laptime(laptime_saved_str);
+                    sd_active_flag = true;
             }
         }
         else if (sd_active_flag == false && sd_fail_flag == false)
