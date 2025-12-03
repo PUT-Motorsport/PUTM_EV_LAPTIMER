@@ -27,9 +27,17 @@ Laptime laptime_saved = {1, 0};
 volatile Lapmode lap_mode = ONE_GATE_MODE;
 
 /**
- * @brief Global variable indicates stopped laptime, set true by LAP_RESET_BTN and set false by LAP_GATE1_BTN
+ * @brief Global variable indicates stopped laptime, set true by LAP_RESET_PIN and set false by LAP_GATE1_PIN
  */
 volatile bool stop_flag = true;
+
+uint32_t doo_count = 0;
+uint32_t oc_count = 0;
+uint32_t penalty_sum = 0;
+volatile uint64_t doo_press_time = 0;
+volatile uint64_t oc_press_time = 0;
+volatile bool doo_long_flag = false;
+volatile bool oc_long_flag = false;
 
 /**
  * @brief Checks active state of LAP_MODE_PIN
@@ -182,12 +190,59 @@ esp_err_t send_laptime_lists(Laptime_list *list)
     return ESP_OK;
 }
 
+void penalty_check()
+{
+    if (doo_long_flag == true)
+    {
+        if (gpio_get_level(LAP_DOO_PIN) == 0)
+        {
+            if ((pdTICKS_TO_MS(xTaskGetTickCount()) - doo_press_time) > 1000)
+            {
+                if (penalty_sum >= DOO_TIME_PENALTY && doo_count > 0)
+                {
+                    doo_count--;
+                    penalty_sum -= DOO_TIME_PENALTY;
+                }
+                doo_long_flag = false;
+            }
+        }
+        else
+        {
+            doo_count++;
+            penalty_sum += DOO_TIME_PENALTY;
+            doo_long_flag = false;
+        }
+    }
+
+    if (oc_long_flag == true)
+    {
+        if (gpio_get_level(LAP_OC_PIN) == 0)
+        {
+            if ((pdTICKS_TO_MS(xTaskGetTickCount()) - oc_press_time) > 1000)
+            {
+                if (penalty_sum >= OC_TIME_PENALTY && oc_count > 0)
+                {
+                    oc_count--;
+                    penalty_sum -= OC_TIME_PENALTY;
+                }
+                oc_long_flag = false;
+            }
+        }
+        else
+        {
+            oc_count++;
+            penalty_sum += OC_TIME_PENALTY;
+            oc_long_flag = false;
+        }
+    }
+}
+
 /**
  * @brief ISR for first gate depends on active mode
  * lap_mode == ONE_GATE_MODE - first gate saves laptime and starts new lap on every negative edge
  * lap_mode == TWO_GATE_MODE - first gate only starts new lap on negative edge if stop_flag is true
  */
-void gate1_btn_isr()
+void gate1_pin_isr()
 {
     switch (lap_mode)
     {
@@ -221,7 +276,7 @@ void gate1_btn_isr()
  * lap_mode == ONE_GATE_MODE - second gate is not active
  * lap_mode == TWO_GATE_MODE - second gates saves laptime on negative edge if stop_flag is false
  */
-void gate2_btn_isr()
+void gate2_pin_isr()
 {
     switch (lap_mode)
     {
@@ -243,20 +298,43 @@ void gate2_btn_isr()
 /**
  * @brief ISR for reset button, resets current laptime and activates stop_flag
  */
-void reset_btn_isr()
+void reset_pin_isr()
 {
     laptime_current.time = 0;
     stop_flag = true;
 }
 
+void doo_pin_isr()
+{
+    uint64_t tick = pdTICKS_TO_MS(xTaskGetTickCountFromISR());
+    if ((tick - doo_press_time) > 80 && doo_long_flag == false)
+    {
+        doo_long_flag = true;
+        doo_press_time = tick;
+    }
+}
+
+void oc_pin_isr()
+{
+    uint64_t tick = pdTICKS_TO_MS(xTaskGetTickCountFromISR());
+    if ((tick - oc_press_time) > 80 && oc_long_flag == false)
+    {
+        oc_long_flag = true;
+        oc_press_time = tick;
+    }
+}
 esp_err_t isr_init()
 {
-    ESP_ERROR_CHECK(gpio_isr_handler_add(LAP_GATE1_BTN,
-                                         (gpio_isr_t)gate1_btn_isr, NULL));
-    ESP_ERROR_CHECK(gpio_isr_handler_add(LAP_GATE2_BTN,
-                                         (gpio_isr_t)gate2_btn_isr, NULL));
-    ESP_ERROR_CHECK(gpio_isr_handler_add(LAP_RESET_BTN,
-                                         (gpio_isr_t)reset_btn_isr, NULL));
+    ESP_ERROR_CHECK(gpio_isr_handler_add(LAP_GATE1_PIN,
+                                         (gpio_isr_t)gate1_pin_isr, NULL));
+    ESP_ERROR_CHECK(gpio_isr_handler_add(LAP_GATE2_PIN,
+                                         (gpio_isr_t)gate2_pin_isr, NULL));
+    ESP_ERROR_CHECK(gpio_isr_handler_add(LAP_RESET_PIN,
+                                         (gpio_isr_t)reset_pin_isr, NULL));
+    ESP_ERROR_CHECK(gpio_isr_handler_add(LAP_DOO_PIN,
+                                         (gpio_isr_t)doo_pin_isr, NULL));
+    ESP_ERROR_CHECK(gpio_isr_handler_add(LAP_OC_PIN,
+                                         (gpio_isr_t)oc_pin_isr, NULL));
     ESP_LOGI("ISR", "INIT OK");
     return ESP_OK;
 }
@@ -265,11 +343,12 @@ esp_err_t isr_init()
  * @brief Laptimer main logic task in main loop:
  * 1. Updates current laptime if stop_flag is false
  * 2. On every stop_flag change checks if laptime mode changed
- * 3. Tries to reinit sdcard when LAP_RESET_BTN is clicked
+ * 3. Tries to reinit sdcard when LAP_RESET_PIN is clicked
  * 4. When laptime is saved, stores it locally and sends through UART, sd card, shows it on LCD and WIFI page
  */
 void laptimer_task(void *args)
 {
+
     char laptimer_current_str[LAPTIME_STRING_LENGTH] = {"--, --:--:--"};
     char laptime_saved_str[LAPTIME_STRING_LENGTH] = {"--, --:--:--"};
 
@@ -289,6 +368,7 @@ void laptimer_task(void *args)
         if (stop_flag == false)
         {
             laptime_current.time = timer_get_time(laptime_timer);
+            penalty_check();
             laptime_convert_string(laptime_current, laptimer_current_str, LAPTIME_STRING_LENGTH);
             xQueueSend(lcd_laptime_current_queue, laptimer_current_str, 0);
             xQueueSend(wifi_laptime_current_queue, laptimer_current_str, 0);
@@ -314,6 +394,7 @@ void laptimer_task(void *args)
 
         if (laptime_saved.time > 0)
         {
+            ESP_LOGI(TAG, "DOO: %u, OC: %u, Penalty sum: %u\n", doo_count, oc_count, penalty_sum);
             laptime_convert_string(laptime_saved, laptime_saved_str,
                                    sizeof(laptime_saved_str));
 
@@ -323,6 +404,7 @@ void laptimer_task(void *args)
             xQueueSend(sd_queue, laptime_saved_str, 0);
             send_laptime_lists(&laptime_list);
         }
+
         vTaskDelay(10 / portTICK_PERIOD_MS);
     }
 }

@@ -36,9 +36,25 @@ esp_err_t gpio_init(void)
         .intr_type = GPIO_INTR_DISABLE,
     };
 
+    gpio_config_t lap_doo_btn_config = {
+        .pin_bit_mask = 1ULL << 0,
+        .mode = GPIO_MODE_INPUT,
+        .pull_up_en = true,
+        .pull_down_en = false,
+        .intr_type = GPIO_INTR_NEGEDGE,
+    };
+
+    gpio_config_t lap_oc_btn_config = {
+        .pin_bit_mask = 1ULL << 4,
+        .mode = GPIO_MODE_INPUT,
+        .pull_up_en = true,
+        .pull_down_en = false,
+        .intr_type = GPIO_INTR_NEGEDGE,
+    };
+
     const gpio_config_t *configs[] = {&gate1_btn_config, &gate2_btn_config,
                                       &reset_btn_config,
-                                      &lap_mode_btn_config};
+                                      &lap_mode_btn_config, &lap_doo_btn_config, &lap_oc_btn_config};
 
     for (int i = 0; i < sizeof(configs) / sizeof(configs[0]); i++)
     {

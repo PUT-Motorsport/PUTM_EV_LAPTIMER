@@ -11,21 +11,21 @@
 
 /**
  * @ingroup pinout_defines
- * @brief Input for first gate that starts new lap when detects negative edge
+ * @brief Input for first gate that starts new lap on negative edge
  */
-#define LAP_GATE1_BTN GPIO_NUM_32
+#define LAP_GATE1_PIN GPIO_NUM_32
 
 /**
  * @ingroup pinout_defines
- * @brief Input for second gate that stops lap when detects negative edge in 2 gate mode
+ * @brief Input for second gate that stops lap on negative edge in 2 gate mode
  */
-#define LAP_GATE2_BTN GPIO_NUM_33
+#define LAP_GATE2_PIN GPIO_NUM_33
 
 /**
  * @ingroup pinout_defines
- * @brief Input for button that resets current laptime, tries to reinitialize sd card and checks status of LAP_MODE_PIN
+ * @brief Input for button that resets current laptime, tries to reinitialize sd card and checks status of LAP_MODE_PIN on negative edge
  */
-#define LAP_RESET_BTN GPIO_NUM_35
+#define LAP_RESET_PIN GPIO_NUM_35
 
 /**
  * @ingroup pinout_defines
@@ -34,6 +34,18 @@
  * HIGH - 2 gate mode
  */
 #define LAP_MODE_PIN GPIO_NUM_25
+
+/**
+ * @ingroup pinout_defines
+ * @brief Input for button that adds Down or Out time penalty to current laptime (2s for Endurance) on negative edge
+ */
+#define LAP_DOO_PIN GPIO_NUM_0
+
+/**
+ * @ingroup pinout_defines
+ * @brief Input for button that adds Off-Course time penalty to current laptime (10s for Endurance) on negative edge
+ */
+#define LAP_OC_PIN GPIO_NUM_4
 
 /// @ingroup pinout_defines
 /// @brief SDCARD pinout
@@ -72,6 +84,10 @@
 
 /// @brief Number of status flags displayed on LCD and webpage (gate mode, stop flag, sd flag)
 #define STATUS_LIST_LENGTH 3
+
+/// @brief Time penalty added to current laptime by LAP_DOO_PIN and LAP_OC_PIN in ms
+#define DOO_TIME_PENALTY 200
+#define OC_TIME_PENALTY 1000
 
 /**
  * @defgroup freertos
