@@ -49,8 +49,8 @@ public:
 
 struct Laptime_list
 {
-    Laptime *list_top;
-    Laptime *list_last;
+    Laptime list_top[LAPTIME_LIST_SIZE_LOCAL] = {0};
+    Laptime list_last[LAPTIME_LIST_SIZE_LOCAL] = {0};
 };
 
 enum Lapmode

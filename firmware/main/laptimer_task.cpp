@@ -54,27 +54,25 @@ Lapmode lap_mode_check()
  * @param list Structure that stores local laptimes
  * @return
  */
-esp_err_t laptime_save_local(Laptime *laptime, Laptime_list *list)
+esp_err_t laptime_save_local(Laptime laptime, Laptime_list *list)
 {
-    if (list == NULL || list->list_last == NULL || list->list_last == NULL || laptime == NULL)
+    if (list == NULL)
         return ESP_FAIL;
-    Laptime *list_last = list->list_last;
-    Laptime *list_top = list->list_top;
     for (int i = LAPTIME_LIST_SIZE_LOCAL - 1; i > 0; i--)
     {
-        list_last[i] = list_last[i - 1];
+        list->list_last[i] = list->list_last[i - 1];
     }
-    list_last[0] = *laptime;
+    list->list_last[0] = laptime;
 
     for (int i = 0; i < LAPTIME_LIST_SIZE_LOCAL; i++)
     {
-        if (laptime->time < list_top[i].time || list_top[i].time == 0)
+        if (laptime.time < list->list_top[i].time || list->list_top[i].time == 0)
         {
             for (int j = LAPTIME_LIST_SIZE_LOCAL - 1; j > i; j--)
             {
-                list_top[j] = list_top[j - 1];
+                list->list_top[j] = list->list_top[j - 1];
             }
-            list_top[i] = *laptime;
+            list->list_top[i] = laptime;
             break;
         }
     }
@@ -156,7 +154,7 @@ void send_status()
  */
 esp_err_t send_laptime_lists(Laptime_list *list)
 {
-    if (list == NULL || list->list_last == NULL || list->list_last == NULL)
+    if (list == NULL)
         return ESP_FAIL;
 
     for (int i = 0; i < LAPTIME_LIST_SIZE_WIFI; i++)
@@ -338,9 +336,9 @@ void laptimer_task(void *args)
     char laptimer_current_str[LAPTIME_STRING_LENGTH] = {"--, --:--:--"};
     char laptime_saved_str[LAPTIME_STRING_LENGTH] = {"--, --:--:--"};
 
-    Laptime laptime_list_top[LAPTIME_LIST_SIZE_LOCAL] = {0};
-    Laptime laptime_list_last[LAPTIME_LIST_SIZE_LOCAL] = {0};
-    Laptime_list laptime_list = {laptime_list_top, laptime_list_last};
+    // Laptime laptime_list_top[LAPTIME_LIST_SIZE_LOCAL] = {0};
+    // Laptime laptime_list_last[LAPTIME_LIST_SIZE_LOCAL] = {0};
+    Laptime_list laptime_list;
 
     bool stop_flag_old = stop_flag;
     bool sdcard_flag_old = sd_active_flag;
@@ -387,7 +385,7 @@ void laptimer_task(void *args)
 
             laptime_save_uart(laptime_saved_str,
                               sizeof(laptime_saved_str));
-            laptime_save_local(&laptime_saved, &laptime_list);
+            laptime_save_local(laptime_saved, &laptime_list);
             laptime_saved.reset();
             xQueueSend(sd_queue, laptime_saved_str, 0);
             send_laptime_lists(&laptime_list);
