@@ -86,8 +86,8 @@
 #define STATUS_LIST_LENGTH 3
 
 /// @brief Time penalty added to current laptime by LAP_DOO_PIN and LAP_OC_PIN in ms
-#define DOO_TIME_PENALTY (uint64_t)200
-#define OC_TIME_PENALTY (uint64_t)1000
+#define DOO_TIME_PENALTY (uint32_t)200
+#define OC_TIME_PENALTY (uint32_t)1000
 
 /**
  * @defgroup freertos
@@ -113,6 +113,9 @@ extern QueueHandle_t sd_reinit_semaphore;
  */
 extern QueueHandle_t lcd_laptime_current_queue;
 extern QueueHandle_t wifi_laptime_current_queue;
+
+extern QueueHandle_t lcd_laptime_penalty_queue;
+extern QueueHandle_t wifi_laptime_penalty_queue;
 
 /**
  * @ingroup freertos

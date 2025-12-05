@@ -3,7 +3,7 @@
 #include "hagl.h"
 #include "hagl_hal.h"
 #include "font10x20-ISO8859-1.h"
-#include "font6x10-ISO8859-1.h"
+#include "font9x15-ISO8859-1.h"
 
 #include <cwchar>
 
@@ -34,11 +34,11 @@
 
 #define LAPTIME_CURRENT_FONT font10x20_ISO8859_1
 #define LAPTIME_LISTS_FONT font10x20_ISO8859_1
-#define UI_FONT font6x10_ISO8859_1
+#define UI_FONT font9x15_ISO8859_1
 
 #define LAPTIME_CURRENT_LETTER_WIDTH 10
 #define LAPTIME_LISTS_LETTER_WIDTH 10
-#define UI_LETTER_WIDTH 6
+#define UI_LETTER_WIDTH 9
 
 hagl_backend_t display_struct;
 hagl_backend_t *display = &display_struct;
@@ -133,10 +133,21 @@ void print_status()
  */
 void print_current_laptime()
 {
-    static char laptime_current_str[LAPTIME_STRING_LENGTH] = "--,--:--:--";
+    static char laptime_current_str[LAPTIME_STRING_LENGTH] = "--, --:--.--";
     if (xQueueReceive(lcd_laptime_current_queue, laptime_current_str, 0) != pdTRUE)
         return;
-    hagl_put_text(display, laptime_current_str, LAPTIME_CURRENT_POS_X, LAPTIME_CURRENT_POS_Y, WHITE, LAPTIME_CURRENT_FONT);
+    lcd_print_str(LAPTIME_CURRENT_POS_X, LAPTIME_CURRENT_POS_Y, laptime_current_str, LAPTIME_CURRENT_FONT, WHITE);
+}
+
+void print_penalty()
+{
+    static char laptime_current_penalty_str[25] = "+00:00";
+    static char laptime_penalty_count_str[17] = "OC: 0   DOO: 0";
+    if (xQueueReceive(lcd_laptime_penalty_queue, laptime_current_penalty_str, 0) == pdTRUE)
+    {
+        lcd_print_str(LAPTIME_CURRENT_POS_X + LAPTIME_CURRENT_LETTER_WIDTH * 13, LAPTIME_CURRENT_POS_Y, laptime_current_penalty_str, UI_FONT, YELLOW);
+    }
+    lcd_print_str(LAPTIME_LISTS_POS_X, LAPTIME_CURRENT_POS_Y + 25, laptime_penalty_count_str, UI_FONT, YELLOW);
 }
 
 /**
@@ -172,6 +183,7 @@ void lcd_task(void *args)
     for (;;)
     {
         print_current_laptime();
+        print_penalty();
         print_laptime_lists();
         print_status();
         vTaskDelay(20 / portTICK_PERIOD_MS);

@@ -31,8 +31,8 @@ volatile Lapmode lap_mode = ONE_GATE_MODE;
  */
 volatile bool stop_flag = true;
 
-volatile uint64_t doo_press_time = 0;
-volatile uint64_t oc_press_time = 0;
+volatile TickType_t doo_press_time = 0;
+volatile TickType_t oc_press_time = 0;
 volatile bool doo_long_flag = false;
 volatile bool oc_long_flag = false;
 
@@ -176,51 +176,27 @@ esp_err_t send_laptime_lists(Laptime_list *list)
 
 void penalty_check()
 {
+    uint32_t penalty_time_temp = laptime_current.penalty_time;
+    TickType_t tick = xTaskGetTickCount();
+    static bool doo_after_press_flag = false;
+    static bool oc_after_press_flag = false;
+
     if (doo_long_flag == true)
     {
-        if (gpio_get_level(LAP_DOO_PIN) == 0)
-        {
-            if ((pdTICKS_TO_MS(xTaskGetTickCount()) - doo_press_time) > 1000)
-            {
-                if (laptime_current.penalty_time >= DOO_TIME_PENALTY && laptime_current.doo_count > 0)
-                {
-                    laptime_current.doo_count--;
-                    laptime_current.penalty_time -= DOO_TIME_PENALTY;
-                }
-                doo_long_flag = false;
-            }
-        }
-        else
-        {
-            laptime_current.doo_count++;
-            laptime_current.penalty_time += DOO_TIME_PENALTY;
-            doo_long_flag = false;
-        }
+        doo_long_flag = laptime_current.penalty(gpio_get_level(LAP_DOO_PIN), &doo_after_press_flag, tick - doo_press_time, DOO_TIME_PENALTY);
     }
-
     if (oc_long_flag == true)
     {
-        if (gpio_get_level(LAP_OC_PIN) == 0)
-        {
-            if ((pdTICKS_TO_MS(xTaskGetTickCount()) - oc_press_time) > 1000)
-            {
-                if (laptime_current.penalty_time >= OC_TIME_PENALTY && laptime_current.oc_count > 0)
-                {
-                    laptime_current.oc_count--;
-                    laptime_current.penalty_time -= OC_TIME_PENALTY;
-                }
-                oc_long_flag = false;
-            }
-        }
-        else
-        {
-            laptime_current.oc_count++;
-            laptime_current.penalty_time += OC_TIME_PENALTY;
-            oc_long_flag = false;
-        }
+        oc_long_flag = laptime_current.penalty(gpio_get_level(LAP_OC_PIN), &oc_after_press_flag, tick - oc_press_time, OC_TIME_PENALTY);
+    }
+
+    if (penalty_time_temp != laptime_current.penalty_time || laptime_current.penalty_time == 0)
+    {
+        static char laptime_penalty_str[11];
+        laptime_current.penalty_string(laptime_penalty_str, sizeof(laptime_penalty_str));
+        xQueueSend(lcd_laptime_penalty_queue, laptime_penalty_str, 0);
     }
 }
-
 /**
  * @brief ISR for first gate depends on active mode
  * lap_mode == ONE_GATE_MODE - first gate saves laptime and starts new lap on every negative edge
@@ -290,8 +266,8 @@ void reset_pin_isr()
 
 void doo_pin_isr()
 {
-    uint64_t tick = pdTICKS_TO_MS(xTaskGetTickCountFromISR());
-    if ((tick - doo_press_time) > 80 && doo_long_flag == false)
+    TickType_t tick = xTaskGetTickCountFromISR();
+    if ((tick - doo_press_time) > pdMS_TO_TICKS(100) && doo_long_flag == false)
     {
         doo_long_flag = true;
         doo_press_time = tick;
@@ -300,8 +276,8 @@ void doo_pin_isr()
 
 void oc_pin_isr()
 {
-    uint64_t tick = pdTICKS_TO_MS(xTaskGetTickCountFromISR());
-    if ((tick - oc_press_time) > 80 && oc_long_flag == false)
+    TickType_t tick = xTaskGetTickCountFromISR();
+    if ((tick - oc_press_time) > pdMS_TO_TICKS(100) && oc_long_flag == false)
     {
         oc_long_flag = true;
         oc_press_time = tick;
@@ -333,11 +309,9 @@ esp_err_t isr_init()
 void laptimer_task(void *args)
 {
 
-    char laptimer_current_str[LAPTIME_STRING_LENGTH] = {"--, --:--:--"};
-    char laptime_saved_str[LAPTIME_STRING_LENGTH] = {"--, --:--:--"};
+    char laptimer_current_str[LAPTIME_STRING_LENGTH] = {"--, --:--.--"};
+    char laptime_saved_str[LAPTIME_STRING_LENGTH] = {"--, --:--.--"};
 
-    // Laptime laptime_list_top[LAPTIME_LIST_SIZE_LOCAL] = {0};
-    // Laptime laptime_list_last[LAPTIME_LIST_SIZE_LOCAL] = {0};
     Laptime_list laptime_list;
 
     bool stop_flag_old = stop_flag;
@@ -345,6 +319,7 @@ void laptimer_task(void *args)
 
     xQueueSend(lcd_laptime_current_queue, laptimer_current_str, 0);
     xQueueSend(wifi_laptime_current_queue, laptimer_current_str, 0);
+    penalty_check();
     send_laptime_lists(&laptime_list);
 
     for (;;)
