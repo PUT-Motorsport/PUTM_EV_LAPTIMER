@@ -133,7 +133,7 @@ void print_status()
  */
 void print_current_laptime()
 {
-    static char laptime_current_str[LAPTIME_STRING_LENGTH] = "--, --:--.--";
+    char laptime_current_str[LAPTIME_STRING_LENGTH] = "--, --:--.--";
     if (xQueueReceive(lcd_laptime_current_queue, laptime_current_str, 0) != pdTRUE)
         return;
     lcd_print_str(LAPTIME_CURRENT_POS_X, LAPTIME_CURRENT_POS_Y, laptime_current_str, LAPTIME_CURRENT_FONT, WHITE);
@@ -141,13 +141,14 @@ void print_current_laptime()
 
 void print_penalty()
 {
-    static char laptime_current_penalty_str[25] = "+00:00";
-    static char laptime_penalty_count_str[17] = "OC: 0   DOO: 0";
-    if (xQueueReceive(lcd_laptime_penalty_queue, laptime_current_penalty_str, 0) == pdTRUE)
+    Penalty_data penalty;
+    char laptime_penalty_count_str[25] = {"OC: 0   DOO: 0"};
+    if (xQueueReceive(lcd_laptime_penalty_queue, &penalty, 0) == pdTRUE)
     {
-        lcd_print_str(LAPTIME_CURRENT_POS_X + LAPTIME_CURRENT_LETTER_WIDTH * 13, LAPTIME_CURRENT_POS_Y, laptime_current_penalty_str, UI_FONT, YELLOW);
+        lcd_print_str(LAPTIME_CURRENT_POS_X + LAPTIME_CURRENT_LETTER_WIDTH * 13, LAPTIME_CURRENT_POS_Y, penalty.time, UI_FONT, YELLOW);
+        snprintf(laptime_penalty_count_str, sizeof(laptime_penalty_count_str), "OC: %u   DOO: %u", penalty.oc_count, penalty.doo_count);
+        lcd_print_str(LAPTIME_LISTS_POS_X, LAPTIME_CURRENT_POS_Y + 25, laptime_penalty_count_str, UI_FONT, YELLOW);
     }
-    lcd_print_str(LAPTIME_LISTS_POS_X, LAPTIME_CURRENT_POS_Y + 25, laptime_penalty_count_str, UI_FONT, YELLOW);
 }
 
 /**

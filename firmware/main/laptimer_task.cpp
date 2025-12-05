@@ -79,36 +79,6 @@ esp_err_t laptime_save_local(Laptime laptime, Laptime_list *list)
     return ESP_OK;
 }
 
-/**
- * @brief Converts laptime from int measured in 10ms to string that is ready to display
- * @param laptime Laptime to convert
- * @param laptime_str String for converted laptime
- * @param size Size of string
- */
-// void laptime_convert_string(Laptime laptime, char laptime_str[LAPTIME_STRING_LENGTH], size_t size)
-// {
-//     if (laptime_str == NULL)
-//         return;
-
-//     if (laptime.time == 0)
-//     {
-//         snprintf(laptime_str, size, "--, --:--:--");
-//         return;
-//     }
-
-//     unsigned int mm = (laptime.time / 6000) % 60;
-//     unsigned int ss = (laptime.time / 100) % 60;
-//     unsigned int ms = laptime.time % 100;
-//     if (size == LAPTIME_STRING_LENGTH)
-//         snprintf(laptime_str, size, "%02u, %02u:%02u:%02u",
-//                  laptime.count, mm, ss, ms);
-// }
-
-/**
- * @brief To be changed (it should send laptime over UART, not use printf)
- * @param laptime_str
- * @param size
- */
 static void laptime_save_uart(char *laptime_str, size_t size)
 {
     if (laptime_str == NULL)
@@ -183,18 +153,19 @@ void penalty_check()
 
     if (doo_long_flag == true)
     {
-        doo_long_flag = laptime_current.penalty(gpio_get_level(LAP_DOO_PIN), &doo_after_press_flag, tick - doo_press_time, DOO_TIME_PENALTY);
+        doo_long_flag = laptime_current.penalty_check(gpio_get_level(LAP_DOO_PIN), &doo_after_press_flag, tick - doo_press_time, DOO_TIME_PENALTY);
     }
     if (oc_long_flag == true)
     {
-        oc_long_flag = laptime_current.penalty(gpio_get_level(LAP_OC_PIN), &oc_after_press_flag, tick - oc_press_time, OC_TIME_PENALTY);
+        oc_long_flag = laptime_current.penalty_check(gpio_get_level(LAP_OC_PIN), &oc_after_press_flag, tick - oc_press_time, OC_TIME_PENALTY);
     }
 
     if (penalty_time_temp != laptime_current.penalty_time || laptime_current.penalty_time == 0)
     {
-        static char laptime_penalty_str[11];
+        char laptime_penalty_str[11] = "+00:00";
         laptime_current.penalty_string(laptime_penalty_str, sizeof(laptime_penalty_str));
-        xQueueSend(lcd_laptime_penalty_queue, laptime_penalty_str, 0);
+        Penalty_data penalty = {laptime_penalty_str, laptime_current.oc_count, laptime_current.doo_count};
+        xQueueSend(lcd_laptime_penalty_queue, &penalty, 0);
     }
 }
 /**

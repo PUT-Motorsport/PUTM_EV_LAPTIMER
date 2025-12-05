@@ -27,7 +27,7 @@ public:
         this->reset();
     }
 
-    bool penalty(bool btn_state, bool *press_flag_state, TickType_t press_time, uint32_t penalty)
+    bool penalty_check(bool btn_state, bool *press_flag_state, TickType_t press_time, uint32_t penalty)
     {
         uint16_t *count;
         switch (penalty)
@@ -69,6 +69,11 @@ public:
         return true;
     }
 
+    /**
+     * @brief Converts laptime from int measured in 10ms to string that is ready to display
+     * @param laptime_str String for converted laptime
+     * @param size Size of string
+     */
     void convert_string(char laptime_str[LAPTIME_STRING_LENGTH], size_t size)
     {
         if (laptime_str == NULL)

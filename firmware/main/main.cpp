@@ -12,7 +12,7 @@ QueueHandle_t sd_queue = xQueueCreate(LAPTIME_LIST_SIZE_LOCAL, sizeof(char[LAPTI
 QueueHandle_t sd_reinit_semaphore = xSemaphoreCreateBinary();
 
 QueueHandle_t lcd_laptime_current_queue = xQueueCreate(1, sizeof(char[LAPTIME_STRING_LENGTH]));
-QueueHandle_t lcd_laptime_penalty_queue = xQueueCreate(1, sizeof(char[25]));
+QueueHandle_t lcd_laptime_penalty_queue = xQueueCreate(1, sizeof(Penalty_data));
 QueueHandle_t lcd_laptime_lists_semaphore = xSemaphoreCreateBinary();
 QueueHandle_t lcd_laptime_status_queue = xQueueCreate(1, sizeof(bool[STATUS_LIST_LENGTH]));
 

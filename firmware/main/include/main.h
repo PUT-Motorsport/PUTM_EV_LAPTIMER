@@ -89,6 +89,13 @@
 #define DOO_TIME_PENALTY (uint32_t)200
 #define OC_TIME_PENALTY (uint32_t)1000
 
+struct Penalty_data
+{
+    char *time;
+    uint16_t oc_count;
+    uint16_t doo_count;
+};
+
 /**
  * @defgroup freertos
  * @brief FreeRTOS intertask communication
