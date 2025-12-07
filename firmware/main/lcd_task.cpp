@@ -133,7 +133,7 @@ void print_status()
  */
 void print_current_laptime()
 {
-    char laptime_current_str[LAPTIME_STRING_LENGTH] = "--, --:--.--";
+    char laptime_current_str[LAPTIME_STR_LENGTH] = "--, --:--.--";
     if (xQueueReceive(lcd_laptime_current_queue, laptime_current_str, 0) != pdTRUE)
         return;
     lcd_print_str(LAPTIME_CURRENT_POS_X, LAPTIME_CURRENT_POS_Y, laptime_current_str, LAPTIME_CURRENT_FONT, WHITE);
@@ -141,13 +141,11 @@ void print_current_laptime()
 
 void print_penalty()
 {
-    Penalty_data penalty;
-    char laptime_penalty_count_str[25] = {"OC: 0   DOO: 0"};
-    if (xQueueReceive(lcd_laptime_penalty_queue, &penalty, 0) == pdTRUE)
+    if (xSemaphoreTake(lcd_laptime_penalty_semaphore, 0) == pdTRUE)
     {
-        lcd_print_str(LAPTIME_CURRENT_POS_X + LAPTIME_CURRENT_LETTER_WIDTH * 13, LAPTIME_CURRENT_POS_Y, penalty.time, UI_FONT, YELLOW);
-        snprintf(laptime_penalty_count_str, sizeof(laptime_penalty_count_str), "OC: %u   DOO: %u", penalty.oc_count, penalty.doo_count);
-        lcd_print_str(LAPTIME_LISTS_POS_X, LAPTIME_CURRENT_POS_Y + 25, laptime_penalty_count_str, UI_FONT, YELLOW);
+        lcd_print_str(LAPTIME_CURRENT_POS_X + LAPTIME_CURRENT_LETTER_WIDTH * 13, LAPTIME_CURRENT_POS_Y, penalty_time_str, UI_FONT, YELLOW);
+        lcd_print_str(LAPTIME_LISTS_POS_X, LAPTIME_CURRENT_POS_Y + 25, penalty_count_str, UI_FONT, YELLOW);
+        xSemaphoreGive(lcd_laptime_penalty_semaphore);
     }
 }
 
@@ -161,9 +159,9 @@ void print_laptime_lists()
     for (int i = 0; i < LAPTIME_LIST_SIZE_LCD; i++)
     {
         lcd_print_str(LCD_WIDTH / 2 + LAPTIME_LISTS_POS_X,
-                      LAPTIME_LISTS_POS_Y + LAPTIME_LISTS_SPACING + i * LAPTIME_LISTS_SPACING, lcd_list_buffer[0][i],
+                      LAPTIME_LISTS_POS_Y + LAPTIME_LISTS_SPACING + i * LAPTIME_LISTS_SPACING, list_top_str[i],
                       LAPTIME_LISTS_FONT, WHITE);
-        lcd_print_str(LAPTIME_LISTS_POS_X, LAPTIME_LISTS_POS_Y + LAPTIME_LISTS_SPACING + i * LAPTIME_LISTS_SPACING, lcd_list_buffer[1][i],
+        lcd_print_str(LAPTIME_LISTS_POS_X, LAPTIME_LISTS_POS_Y + LAPTIME_LISTS_SPACING + i * LAPTIME_LISTS_SPACING, list_last_str[i],
                       LAPTIME_LISTS_FONT, WHITE);
     }
     xSemaphoreGive(lcd_laptime_lists_semaphore);

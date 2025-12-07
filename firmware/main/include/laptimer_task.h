@@ -74,7 +74,7 @@ public:
      * @param laptime_str String for converted laptime
      * @param size Size of string
      */
-    void convert_string(char laptime_str[LAPTIME_STRING_LENGTH], size_t size)
+    void convert_string(char laptime_str[LAPTIME_STR_LENGTH], size_t size)
     {
         if (laptime_str == NULL)
             return;
@@ -88,7 +88,7 @@ public:
         unsigned int mm = (this->time / 6000) % 60;
         unsigned int ss = (this->time / 100) % 60;
         unsigned int ms = this->time % 100;
-        if (size == LAPTIME_STRING_LENGTH)
+        if (size == LAPTIME_STR_LENGTH)
             snprintf(laptime_str, size, "%02u, %02u:%02u:%02u",
                      this->count, mm, ss, ms);
     }

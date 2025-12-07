@@ -4,6 +4,7 @@
 #include "esp_http_server.h"
 #include "cJSON.h"
 #include <string.h>
+#include "main.h"
 
 static const char *TAG = "WIFI_TASK";
 
@@ -11,11 +12,12 @@ static const char *TAG = "WIFI_TASK";
  * @brief Flag activated by semaphore received from laptimer_task on every laptime lists update
  */
 bool new_lists_flag = true;
+bool new_penalty_flag = true;
 
 /**
  * @brief Current laptime string used to display on website, readed periodically by data_get_handler
  */
-static char current_laptime[LAPTIME_STRING_LENGTH] = "--,--:--:--";
+static char current_laptime[LAPTIME_STR_LENGTH] = "--,--:--:--";
 
 /**
  * @brief Status flags used to display on website, readed periodically by data_get_handler
@@ -41,8 +43,11 @@ body { font-family: monospace; background: #111; color: #eee; text-align: center
 .status span { padding: 5px; margin: 5px; border: 1px solid #444; }
 .on { background: #0a0; color: #fff; }
 .off { background: #333; color: #888; }
-table { margin: 0 auto; width: 90%; max-width: 600px; }
-td { padding: 5px; border-bottom: 1px solid #333; }
+table { margin: 0 auto; width: 95%; max-width: 800px; font-size: 0.8em; }
+th, td { padding: 5px; border-bottom: 1px solid #333; }
+.penalty { color: #ffeb3b; }
+.penalty-val { font-size: 1.5em; font-weight: bold; }
+.pen-col { color: #ffeb3b; font-size: 0.9em; }
 </style>
 </head>
 <body>
@@ -51,19 +56,36 @@ td { padding: 5px; border-bottom: 1px solid #333; }
   <div class="label">CURRENT LAP</div>
   <div class="val" id="curr">--,--:--:--</div>
 </div>
+<div class="penalty">
+  <div class="penalty-val" id="pen_time">+00:00</div>
+  <div id="pen_cnt">OC: 00   DOO: 00</div>
+</div>
 <div class="status">
   <span id="mode">1 GATE</span>
   <span id="stop">STOP</span>
   <span id="sd">SD</span>
 </div>
 <table>
-<thead><tr><th>LAST 5</th><th>TOP 5</th></tr></thead>
+<thead>
+<tr>
+<th>LAST 5</th>
+<th colspan="3">TOP 5</th>
+</tr>
+<tr>
+<th>Time</th>
+<th>Time</th>
+<th>Pen. Time</th>
+<th>Pen. Count</th>
+</tr>
+</thead>
 <tbody id="lists"></tbody>
 </table>
 <script>
 function update() {
   fetch('/api/data').then(r => r.json()).then(d => {
     document.getElementById('curr').innerText = d.current;
+    document.getElementById('pen_time').innerText = d.penalty_time || "+00:00";
+    document.getElementById('pen_cnt').innerText = d.penalty_count || "OC: 00   DOO: 00";
     document.getElementById('mode').innerText = d.status.mode ? "2 GATE" : "1 GATE";
     document.getElementById('stop').className = d.status.stop ? "on" : "off";
     document.getElementById('sd').className = d.status.sd ? "on" : "off";
@@ -71,7 +93,22 @@ function update() {
     let html = "";
     if (d.last && d.top) {
         for(let i=0; i<15; i++) {
-            html += `<tr><td>${d.last[i] || '-'}</td><td>${d.top[i] || '-'}</td></tr>`;
+            let last_t = d.last[i] || '-';
+            let top_t = d.top[i] || '-';
+            let pen_t = (d.last_pen_time && d.last_pen_time[i]) ? d.last_pen_time[i] : '';
+            let pen_c = (d.last_pen_cnt && d.last_pen_cnt[i]) ? d.last_pen_cnt[i] : '';
+            
+            if ((last_t === '-' || last_t.includes('--:--.--')) && 
+                (top_t === '-' || top_t.includes('--:--.--'))) {
+                continue;
+            }
+
+            html += `<tr>
+                <td>${last_t}</td>
+                <td>${top_t}</td>
+                <td class="pen-col">${pen_t}</td>
+                <td class="pen-col">${pen_c}</td>
+            </tr>`;
         }
     }
     document.getElementById('lists').innerHTML = html;
@@ -110,19 +147,33 @@ static esp_err_t data_get_handler(httpd_req_t *req)
 
         cJSON *last_arr = cJSON_CreateArray();
         cJSON *top_arr = cJSON_CreateArray();
+        cJSON *last_pen_time_arr = cJSON_CreateArray();
+        cJSON *last_pen_cnt_arr = cJSON_CreateArray();
 
         if (new_lists_flag == true)
         {
             for (int i = 0; i < LAPTIME_LIST_SIZE_WIFI; i++)
             {
-                cJSON_AddItemToArray(last_arr, cJSON_CreateString(wifi_list_buffer[1][i]));
-                cJSON_AddItemToArray(top_arr, cJSON_CreateString(wifi_list_buffer[0][i]));
+                cJSON_AddItemToArray(last_arr, cJSON_CreateString(list_last_str[i]));
+                cJSON_AddItemToArray(top_arr, cJSON_CreateString(list_top_str[i]));
+                cJSON_AddItemToArray(last_pen_time_arr, cJSON_CreateString(list_penalty_time_str[i]));
+                cJSON_AddItemToArray(last_pen_cnt_arr, cJSON_CreateString(list_penalty_count_str[i]));
             }
             new_lists_flag = false;
             xSemaphoreGive(wifi_laptime_lists_semaphore);
         }
         cJSON_AddItemToObject(root, "last", last_arr);
         cJSON_AddItemToObject(root, "top", top_arr);
+        cJSON_AddItemToObject(root, "last_pen_time", last_pen_time_arr);
+        cJSON_AddItemToObject(root, "last_pen_cnt", last_pen_cnt_arr);
+
+        if (new_penalty_flag == true)
+        {
+            cJSON_AddStringToObject(root, "penalty_time", penalty_time_str);
+            cJSON_AddStringToObject(root, "penalty_count", penalty_count_str);
+            new_penalty_flag = false;
+            xSemaphoreGive(wifi_laptime_penalty_semaphore);
+        }
 
         xSemaphoreGive(data_mutex);
     }
@@ -177,7 +228,7 @@ void wifi_task(void *args)
     wifi_init_softap();
     start_webserver();
 
-    char temp_laptime[LAPTIME_STRING_LENGTH];
+    char temp_laptime[LAPTIME_STR_LENGTH];
     bool temp_status[3];
 
     data_mutex = xSemaphoreCreateMutex();
@@ -188,7 +239,7 @@ void wifi_task(void *args)
         {
             if (xSemaphoreTake(data_mutex, portMAX_DELAY))
             {
-                strncpy(current_laptime, temp_laptime, LAPTIME_STRING_LENGTH);
+                strncpy(current_laptime, temp_laptime, LAPTIME_STR_LENGTH);
                 xSemaphoreGive(data_mutex);
             }
         }
@@ -205,6 +256,11 @@ void wifi_task(void *args)
         if (xSemaphoreTake(wifi_laptime_lists_semaphore, 0) == pdTRUE && new_lists_flag == false)
         {
             new_lists_flag = true;
+        }
+
+        if (xSemaphoreTake(wifi_laptime_penalty_semaphore, 0) == pdTRUE && new_penalty_flag == false)
+        {
+            new_penalty_flag = true;
         }
 
         vTaskDelay(pdMS_TO_TICKS(20));

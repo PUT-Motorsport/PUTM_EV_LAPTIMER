@@ -9,9 +9,6 @@ extern "C"
 {
 #endif
 
-    extern volatile bool sd_active_flag;
-    extern volatile bool sd_fail_flag;
-
     esp_err_t sdcard_spi_init();
     esp_err_t sdcard_mount(sdmmc_card_t **out_card);
     esp_err_t sdcard_unmount(sdmmc_card_t **out_card);

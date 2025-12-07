@@ -1,5 +1,7 @@
 #include "laptimer_task.h"
 
+#include "sdcard_task.h"
+
 #include "gpio.h"
 #include "main.h"
 #include "sdcard.h"
@@ -129,14 +131,10 @@ esp_err_t send_laptime_lists(Laptime_list *list)
 
     for (int i = 0; i < LAPTIME_LIST_SIZE_WIFI; i++)
     {
-        if (i < LAPTIME_LIST_SIZE_LCD)
-        {
-            list->list_top[i].convert_string(lcd_list_buffer[0][i], LAPTIME_STRING_LENGTH);
-            list->list_last[i].convert_string(lcd_list_buffer[1][i], LAPTIME_STRING_LENGTH);
-        }
-
-        list->list_top[i].convert_string(wifi_list_buffer[0][i], LAPTIME_STRING_LENGTH);
-        list->list_last[i].convert_string(wifi_list_buffer[1][i], LAPTIME_STRING_LENGTH);
+        list->list_top[i].convert_string(list_top_str[i], LAPTIME_STR_LENGTH);
+        list->list_last[i].convert_string(list_last_str[i], LAPTIME_STR_LENGTH);
+        list->list_top[i].penalty_string(list_penalty_time_str[i], PENALTY_TIME_STR_LENGTH);
+        snprintf(list_penalty_count_str[i], PENALTY_COUNT_STR_LENGTH, "OC: %2u   DOO: %2u", list->list_top[i].oc_count, list->list_top[i].doo_count);
     }
 
     xSemaphoreGive(lcd_laptime_lists_semaphore);
@@ -144,7 +142,7 @@ esp_err_t send_laptime_lists(Laptime_list *list)
     return ESP_OK;
 }
 
-void penalty_check()
+bool penalty_check()
 {
     uint32_t penalty_time_temp = laptime_current.penalty_time;
     TickType_t tick = xTaskGetTickCount();
@@ -161,12 +159,16 @@ void penalty_check()
     }
 
     if (penalty_time_temp != laptime_current.penalty_time || laptime_current.penalty_time == 0)
-    {
-        char laptime_penalty_str[11] = "+00:00";
-        laptime_current.penalty_string(laptime_penalty_str, sizeof(laptime_penalty_str));
-        Penalty_data penalty = {laptime_penalty_str, laptime_current.oc_count, laptime_current.doo_count};
-        xQueueSend(lcd_laptime_penalty_queue, &penalty, 0);
-    }
+        return true;
+    return false;
+}
+
+void send_penalty()
+{
+    laptime_current.penalty_string(penalty_time_str, sizeof(penalty_time_str));
+    snprintf(penalty_count_str, sizeof(penalty_count_str), "OC: %2u   DOO: %2u", laptime_current.oc_count, laptime_current.doo_count);
+    xSemaphoreGive(lcd_laptime_penalty_semaphore);
+    xSemaphoreGive(wifi_laptime_penalty_semaphore);
 }
 /**
  * @brief ISR for first gate depends on active mode
@@ -181,6 +183,7 @@ void gate1_pin_isr()
         if (stop_flag == false && laptime_current.time > LAPTIME_MIN)
         {
             laptime_saved = laptime_current;
+            laptime_saved.time += laptime_current.penalty_time;
             timer_reset(laptime_timer);
             laptime_current.new_lap();
         }
@@ -217,6 +220,7 @@ void gate2_pin_isr()
         if (stop_flag == false && laptime_current.time > LAPTIME_MIN)
         {
             laptime_saved = laptime_current;
+            laptime_saved.time += laptime_current.penalty_time;
             stop_flag = true;
             laptime_current.new_lap();
         }
@@ -280,13 +284,14 @@ esp_err_t isr_init()
 void laptimer_task(void *args)
 {
 
-    char laptimer_current_str[LAPTIME_STRING_LENGTH] = {"--, --:--.--"};
-    char laptime_saved_str[LAPTIME_STRING_LENGTH] = {"--, --:--.--"};
+    char laptimer_current_str[LAPTIME_STR_LENGTH] = {"--, --:--.--"};
+    char laptime_saved_str[LAPTIME_STR_LENGTH] = {"--, --:--.--"};
 
     Laptime_list laptime_list;
 
     bool stop_flag_old = stop_flag;
     bool sdcard_flag_old = sd_active_flag;
+    bool status_flag = true;
 
     xQueueSend(lcd_laptime_current_queue, laptimer_current_str, 0);
     xQueueSend(wifi_laptime_current_queue, laptimer_current_str, 0);
@@ -298,8 +303,9 @@ void laptimer_task(void *args)
         if (stop_flag == false)
         {
             laptime_current.time = timer_get_time(laptime_timer);
-            penalty_check();
-            laptime_current.convert_string(laptimer_current_str, LAPTIME_STRING_LENGTH);
+            if (penalty_check() == true)
+                status_flag = true;
+            laptime_current.convert_string(laptimer_current_str, LAPTIME_STR_LENGTH);
             xQueueSend(lcd_laptime_current_queue, laptimer_current_str, 0);
             xQueueSend(wifi_laptime_current_queue, laptimer_current_str, 0);
         }
@@ -312,14 +318,13 @@ void laptimer_task(void *args)
             {
                 xSemaphoreGive(sd_reinit_semaphore);
             }
-
-            send_status();
+            status_flag = true;
         }
 
         if (sdcard_flag_old != sd_active_flag)
         {
             sdcard_flag_old = sd_active_flag;
-            send_status();
+            status_flag = true;
         }
 
         if (laptime_saved.time > 0)
@@ -335,6 +340,12 @@ void laptimer_task(void *args)
             laptime_saved.reset();
             xQueueSend(sd_queue, laptime_saved_str, 0);
             send_laptime_lists(&laptime_list);
+        }
+        if (status_flag == true)
+        {
+            send_status();
+            send_penalty();
+            status_flag = false;
         }
 
         vTaskDelay(10 / portTICK_PERIOD_MS);

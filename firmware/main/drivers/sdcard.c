@@ -15,8 +15,6 @@
 #define MAX_CHAR_SIZE 64
 
 static const char *TAG = "SDCARD";
-volatile bool sd_active_flag = false;
-volatile bool sd_fail_flag = false;
 
 esp_err_t sdcard_spi_init()
 {
@@ -73,7 +71,6 @@ esp_err_t sdcard_mount(sdmmc_card_t **out_card)
     }
     ESP_LOGI(TAG, "MOUNT OK");
     sdmmc_card_print_info(stdout, *out_card);
-    sd_active_flag = true;
     return ESP_OK;
 }
 
@@ -102,10 +99,6 @@ static int build_path(const char *filename, char *out_path, size_t out_path_len)
 
 esp_err_t sdcard_write(const char *filename, const char *text)
 {
-    if (!sd_active_flag)
-    {
-        return ESP_FAIL;
-    }
     if (filename == NULL || text == NULL)
         return ESP_ERR_INVALID_ARG;
 
@@ -119,7 +112,6 @@ esp_err_t sdcard_write(const char *filename, const char *text)
     FILE *f = fopen(path, "w");
     if (f == NULL)
     {
-        sd_active_flag = false;
         ESP_LOGE(TAG, "FOPEN FAIL: %s", path);
         return ESP_FAIL;
     }
@@ -129,7 +121,6 @@ esp_err_t sdcard_write(const char *filename, const char *text)
 
     if (fclose(f) != 0)
     {
-        sd_active_flag = false;
         ESP_LOGE(TAG, "FCLOSE FAIL");
         return ESP_FAIL;
     }
@@ -140,10 +131,7 @@ esp_err_t sdcard_write(const char *filename, const char *text)
 
 esp_err_t sdcard_append(const char *filename, const char *text)
 {
-    if (!sd_active_flag)
-    {
-        return ESP_FAIL;
-    }
+
     if (filename == NULL || text == NULL)
         return ESP_ERR_INVALID_ARG;
 
@@ -157,7 +145,6 @@ esp_err_t sdcard_append(const char *filename, const char *text)
     FILE *f = fopen(path, "a");
     if (f == NULL)
     {
-        sd_active_flag = false;
         ESP_LOGE(TAG, "FOPEN_FAIL: %s", path);
         return ESP_FAIL;
     }
@@ -167,7 +154,6 @@ esp_err_t sdcard_append(const char *filename, const char *text)
 
     if (fclose(f) != 0)
     {
-        sd_active_flag = false;
         ESP_LOGE(TAG, "FCLOSE_FAIL");
         return ESP_FAIL;
     }
@@ -179,10 +165,7 @@ esp_err_t sdcard_append(const char *filename, const char *text)
 esp_err_t sdcard_read(const char *filename, char *buffer, size_t bufsize,
                       size_t *bytes_read)
 {
-    if (!sd_active_flag)
-    {
-        return ESP_FAIL;
-    }
+
     if (filename == NULL || buffer == NULL || bytes_read == NULL)
         return ESP_ERR_INVALID_ARG;
 
@@ -197,15 +180,13 @@ esp_err_t sdcard_read(const char *filename, char *buffer, size_t bufsize,
     FILE *f = fopen(path, "r");
     if (f == NULL)
     {
-        // sd_active_flag = false;
-        // ESP_LOGE(TAG, "FOPEN_FAIL: %s", path);
+        ESP_LOGE(TAG, "FOPEN_FAIL: %s", path);
         return ESP_FAIL;
     }
 
     *bytes_read = fread(buffer, 1, bufsize - 1, f);
     if (ferror(f))
     {
-        sd_active_flag = false;
         ESP_LOGE(TAG, "FREAD_FAIL");
         fclose(f);
         return ESP_FAIL;
@@ -215,7 +196,6 @@ esp_err_t sdcard_read(const char *filename, char *buffer, size_t bufsize,
 
     if (fclose(f) != 0)
     {
-        sd_active_flag = false;
         ESP_LOGE(TAG, "FCLOSE_FAIL");
         return ESP_FAIL;
     }

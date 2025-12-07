@@ -8,20 +8,26 @@
 #include "gpio.h"
 #include "timer.h"
 
-QueueHandle_t sd_queue = xQueueCreate(LAPTIME_LIST_SIZE_LOCAL, sizeof(char[LAPTIME_STRING_LENGTH]));
+QueueHandle_t sd_queue = xQueueCreate(LAPTIME_LIST_SIZE_LOCAL, sizeof(char[LAPTIME_STR_LENGTH]));
 QueueHandle_t sd_reinit_semaphore = xSemaphoreCreateBinary();
 
-QueueHandle_t lcd_laptime_current_queue = xQueueCreate(1, sizeof(char[LAPTIME_STRING_LENGTH]));
-QueueHandle_t lcd_laptime_penalty_queue = xQueueCreate(1, sizeof(Penalty_data));
+QueueHandle_t lcd_laptime_current_queue = xQueueCreate(1, sizeof(char[LAPTIME_STR_LENGTH]));
+QueueHandle_t lcd_laptime_penalty_semaphore = xSemaphoreCreateBinary();
 QueueHandle_t lcd_laptime_lists_semaphore = xSemaphoreCreateBinary();
 QueueHandle_t lcd_laptime_status_queue = xQueueCreate(1, sizeof(bool[STATUS_LIST_LENGTH]));
 
-QueueHandle_t wifi_laptime_current_queue = xQueueCreate(1, sizeof(char[LAPTIME_STRING_LENGTH]));
+QueueHandle_t wifi_laptime_current_queue = xQueueCreate(1, sizeof(char[LAPTIME_STR_LENGTH]));
+QueueHandle_t wifi_laptime_penalty_semaphore = xSemaphoreCreateBinary();
 QueueHandle_t wifi_laptime_lists_semaphore = xSemaphoreCreateBinary();
 QueueHandle_t wifi_laptime_status_queue = xQueueCreate(1, sizeof(bool[STATUS_LIST_LENGTH]));
 
-char lcd_list_buffer[2][LAPTIME_LIST_SIZE_LCD][LAPTIME_STRING_LENGTH] = {0};
-char wifi_list_buffer[2][LAPTIME_LIST_SIZE_WIFI][LAPTIME_STRING_LENGTH] = {0};
+char list_top_str[LAPTIME_LIST_SIZE_WIFI][LAPTIME_STR_LENGTH] = {0};
+char list_last_str[LAPTIME_LIST_SIZE_WIFI][LAPTIME_STR_LENGTH] = {0};
+char list_penalty_time_str[LAPTIME_LIST_SIZE_WIFI][PENALTY_TIME_STR_LENGTH] = {0};
+char list_penalty_count_str[LAPTIME_LIST_SIZE_WIFI][PENALTY_COUNT_STR_LENGTH] = {0};
+
+char penalty_time_str[PENALTY_TIME_STR_LENGTH] = "+00:00";
+char penalty_count_str[PENALTY_COUNT_STR_LENGTH] = "OC: 00   DOO: 00";
 
 /**
  * @brief Main task initializes core peripherals and creates program tasks

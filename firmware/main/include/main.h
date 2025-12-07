@@ -66,7 +66,7 @@
 
 /// @brief SPI_HOST defines for peripherals
 #define SPI_SD_HOST SPI2_HOST
-#define SPI_LCD_HOST SPI3_HOST
+#define SPI_LCD_HOST CONFIG_MIPI_DISPLAY_SPI_HOST
 
 /// @brief Size of local stored best/last laptime list
 #define LAPTIME_LIST_SIZE_LOCAL 50
@@ -81,7 +81,11 @@
 #define LAPTIME_MIN 500
 
 /// @brief Length of string needed to store converted laptime
-#define LAPTIME_STRING_LENGTH 21
+#define LAPTIME_STR_LENGTH 21
+
+#define PENALTY_TIME_STR_LENGTH 11
+
+#define PENALTY_COUNT_STR_LENGTH 25
 
 /// @brief Number of status flags displayed on LCD and webpage (gate mode, stop flag, sd flag)
 #define STATUS_LIST_LENGTH 3
@@ -122,8 +126,8 @@ extern QueueHandle_t sd_reinit_semaphore;
 extern QueueHandle_t lcd_laptime_current_queue;
 extern QueueHandle_t wifi_laptime_current_queue;
 
-extern QueueHandle_t lcd_laptime_penalty_queue;
-extern QueueHandle_t wifi_laptime_penalty_queue;
+extern QueueHandle_t lcd_laptime_penalty_semaphore;
+extern QueueHandle_t wifi_laptime_penalty_semaphore;
 
 /**
  * @ingroup freertos
@@ -147,5 +151,10 @@ extern QueueHandle_t wifi_laptime_status_queue;
  * [0] - top laptimes list
  * [1] - last laptimes list
  */
-extern char lcd_list_buffer[2][LAPTIME_LIST_SIZE_LCD][LAPTIME_STRING_LENGTH];
-extern char wifi_list_buffer[2][LAPTIME_LIST_SIZE_WIFI][LAPTIME_STRING_LENGTH];
+extern char list_top_str[LAPTIME_LIST_SIZE_WIFI][LAPTIME_STR_LENGTH];
+extern char list_last_str[LAPTIME_LIST_SIZE_WIFI][LAPTIME_STR_LENGTH];
+extern char list_penalty_time_str[LAPTIME_LIST_SIZE_WIFI][PENALTY_TIME_STR_LENGTH];
+extern char list_penalty_count_str[LAPTIME_LIST_SIZE_WIFI][PENALTY_COUNT_STR_LENGTH];
+
+extern char penalty_time_str[11];
+extern char penalty_count_str[25];

@@ -15,6 +15,9 @@ int session_num = 0;
 
 static const char *TAG = "SDCARD_TASK";
 
+bool sd_active_flag = false;
+bool sd_fail_flag = false;
+
 /**
  * @brief Mounts sd card in file system, checks communication and creates new .csv file if doesn't exist
  * @param card_pointer Pointer to sd card handle
@@ -41,7 +44,7 @@ esp_err_t sdcard_init(sdmmc_card_t **card_pointer)
     {
         return ret;
     }
-
+    sd_active_flag = true;
     unsigned int br;
     char sd_buffer[SD_BUFFER_SIZE] = "\0";
 
@@ -51,6 +54,11 @@ esp_err_t sdcard_init(sdmmc_card_t **card_pointer)
     {
         ESP_LOGI(TAG, "CREATING NEW FILE");
         ret = sdcard_write("laptimer.csv", "SESSION, LAP, TIME\n");
+        if (ret)
+        {
+            sd_active_flag = false;
+            return ret;
+        }
     }
     // If file exists, check last session number and increment it
     else if (session_num == 0)
@@ -83,7 +91,7 @@ esp_err_t sdcard_deinit(sdmmc_card_t **card_pointer)
  * @param laptime_saved_str
  * @return Error check
  */
-esp_err_t sdcard_save_laptime(char laptime_saved_str[LAPTIME_STRING_LENGTH])
+esp_err_t sdcard_save_laptime(char laptime_saved_str[LAPTIME_STR_LENGTH])
 {
     esp_err_t ret = ESP_OK;
 
@@ -92,10 +100,23 @@ esp_err_t sdcard_save_laptime(char laptime_saved_str[LAPTIME_STRING_LENGTH])
 
     ret = sdcard_append("laptimer.csv", session_str);
     if (ret)
+    {
+        sd_active_flag = false;
         return ret;
+    }
 
     ret = sdcard_append("laptimer.csv", laptime_saved_str);
+    if (ret)
+    {
+        sd_active_flag = false;
+        return ret;
+    }
     ret = sdcard_append("laptimer.csv", "\n");
+    if (ret)
+    {
+        sd_active_flag = false;
+        return ret;
+    }
     if (ret == ESP_OK)
         ESP_LOGI(TAG, "LAPTIME SAVE OK");
     else
@@ -103,7 +124,7 @@ esp_err_t sdcard_save_laptime(char laptime_saved_str[LAPTIME_STRING_LENGTH])
     return ret;
 }
 
-esp_err_t sdcard_check_integrity(char laptime_check_str[LAPTIME_STRING_LENGTH])
+esp_err_t sdcard_check_integrity(char laptime_check_str[LAPTIME_STR_LENGTH])
 {
     if (laptime_check_str == NULL)
         return ESP_FAIL;
@@ -113,7 +134,10 @@ esp_err_t sdcard_check_integrity(char laptime_check_str[LAPTIME_STRING_LENGTH])
     char sd_buffer[SD_BUFFER_SIZE] = "\0";
     ret = sdcard_read("laptimer.csv", sd_buffer, sizeof(sd_buffer), &br);
     if (ret)
+    {
+        sd_active_flag = false;
         return ret;
+    }
     if (strstr(sd_buffer, laptime_check_str) != NULL)
         ret = ESP_OK;
     else
@@ -132,7 +156,7 @@ void sdcard_task(void *args)
     sdmmc_card_t *card_handle = NULL;
     sdcard_spi_init();
     sdcard_init(&card_handle);
-    char laptime_saved_str[LAPTIME_STRING_LENGTH] = {0};
+    char laptime_saved_str[LAPTIME_STR_LENGTH] = {0};
     for (;;)
     {
         if (sd_active_flag == true && sd_fail_flag == false)
@@ -140,8 +164,7 @@ void sdcard_task(void *args)
             if (xQueueReceive(sd_queue, laptime_saved_str, portMAX_DELAY) == pdTRUE)
             {
                 sdcard_save_laptime(laptime_saved_str);
-                if (sdcard_check_integrity(laptime_saved_str) == ESP_FAIL)
-                    sd_active_flag = true;
+                sdcard_check_integrity(laptime_saved_str);
             }
         }
         else if (sd_active_flag == false && sd_fail_flag == false)
