@@ -58,24 +58,32 @@ th, td { padding: 5px; border-bottom: 1px solid #333; }
 </div>
 <div class="penalty">
   <div class="penalty-val" id="pen_time">+00:00</div>
-  <div id="pen_cnt">OC: 00   DOO: 00</div>
+  <div class="penalty-counts">
+      <span id="pen_oc">OC: 0</span> <span id="pen_doo">DOO: 0</span>
+  </div>
 </div>
 <div class="status">
   <span id="mode">1 GATE</span>
   <span id="stop">STOP</span>
   <span id="sd">SD</span>
 </div>
+<div style="margin-bottom: 10px;">
+  <form action="/api/csv" method="get">
+    <button type="submit" style="padding: 10px; font-size: 1em; background: #333; color: #fff; border: 1px solid #444; cursor: pointer;">DOWNLOAD CSV</button>
+  </form>
+</div>
 <table>
 <thead>
 <tr>
-<th>LAST 5</th>
-<th colspan="3">TOP 5</th>
+<th>LAST</th>
+<th colspan="4">TOP</th>
 </tr>
 <tr>
 <th>Time</th>
 <th>Time</th>
 <th>Pen. Time</th>
-<th>Pen. Count</th>
+<th>OC</th>
+<th>DOO</th>
 </tr>
 </thead>
 <tbody id="lists"></tbody>
@@ -85,18 +93,20 @@ function update() {
   fetch('/api/data').then(r => r.json()).then(d => {
     document.getElementById('curr').innerText = d.current;
     document.getElementById('pen_time').innerText = d.penalty_time || "+00:00";
-    document.getElementById('pen_cnt').innerText = d.penalty_count || "OC: 00   DOO: 00";
+    document.getElementById('pen_oc').innerText = "OC: " + (d.penalty_oc || "0");
+    document.getElementById('pen_doo').innerText = "DOO: " + (d.penalty_doo || "0");
     document.getElementById('mode').innerText = d.status.mode ? "2 GATE" : "1 GATE";
     document.getElementById('stop').className = d.status.stop ? "on" : "off";
     document.getElementById('sd').className = d.status.sd ? "on" : "off";
     
     let html = "";
     if (d.last && d.top) {
-        for(let i=0; i<15; i++) {
+        for(let i=0; i<d.last.length; i++) {
             let last_t = d.last[i] || '-';
             let top_t = d.top[i] || '-';
             let pen_t = (d.last_pen_time && d.last_pen_time[i]) ? d.last_pen_time[i] : '';
-            let pen_c = (d.last_pen_cnt && d.last_pen_cnt[i]) ? d.last_pen_cnt[i] : '';
+            let pen_oc = (d.last_pen_oc && d.last_pen_oc[i]) ? d.last_pen_oc[i] : '';
+            let pen_doo = (d.last_pen_doo && d.last_pen_doo[i]) ? d.last_pen_doo[i] : '';
             
             if ((last_t === '-' || last_t.includes('--:--.--')) && 
                 (top_t === '-' || top_t.includes('--:--.--'))) {
@@ -107,7 +117,8 @@ function update() {
                 <td>${last_t}</td>
                 <td>${top_t}</td>
                 <td class="pen-col">${pen_t}</td>
-                <td class="pen-col">${pen_c}</td>
+                <td class="pen-col">${pen_oc}</td>
+                <td class="pen-col">${pen_doo}</td>
             </tr>`;
         }
     }
@@ -148,7 +159,8 @@ static esp_err_t data_get_handler(httpd_req_t *req)
         cJSON *last_arr = cJSON_CreateArray();
         cJSON *top_arr = cJSON_CreateArray();
         cJSON *last_pen_time_arr = cJSON_CreateArray();
-        cJSON *last_pen_cnt_arr = cJSON_CreateArray();
+        cJSON *last_pen_oc_arr = cJSON_CreateArray();
+        cJSON *last_pen_doo_arr = cJSON_CreateArray();
 
         if (new_lists_flag == true)
         {
@@ -157,7 +169,8 @@ static esp_err_t data_get_handler(httpd_req_t *req)
                 cJSON_AddItemToArray(last_arr, cJSON_CreateString(list_last_str[i]));
                 cJSON_AddItemToArray(top_arr, cJSON_CreateString(list_top_str[i]));
                 cJSON_AddItemToArray(last_pen_time_arr, cJSON_CreateString(list_penalty_time_str[i]));
-                cJSON_AddItemToArray(last_pen_cnt_arr, cJSON_CreateString(list_penalty_count_str[i]));
+                cJSON_AddItemToArray(last_pen_oc_arr, cJSON_CreateString(list_penalty_oc_str[i]));
+                cJSON_AddItemToArray(last_pen_doo_arr, cJSON_CreateString(list_penalty_doo_str[i]));
             }
             new_lists_flag = false;
             xSemaphoreGive(wifi_laptime_lists_semaphore);
@@ -165,12 +178,14 @@ static esp_err_t data_get_handler(httpd_req_t *req)
         cJSON_AddItemToObject(root, "last", last_arr);
         cJSON_AddItemToObject(root, "top", top_arr);
         cJSON_AddItemToObject(root, "last_pen_time", last_pen_time_arr);
-        cJSON_AddItemToObject(root, "last_pen_cnt", last_pen_cnt_arr);
+        cJSON_AddItemToObject(root, "last_pen_oc", last_pen_oc_arr);
+        cJSON_AddItemToObject(root, "last_pen_doo", last_pen_doo_arr);
 
         if (new_penalty_flag == true)
         {
             cJSON_AddStringToObject(root, "penalty_time", penalty_time_str);
-            cJSON_AddStringToObject(root, "penalty_count", penalty_count_str);
+            cJSON_AddStringToObject(root, "penalty_oc", penalty_oc_str);
+            cJSON_AddStringToObject(root, "penalty_doo", penalty_doo_str);
             new_penalty_flag = false;
             xSemaphoreGive(wifi_laptime_penalty_semaphore);
         }
@@ -183,6 +198,38 @@ static esp_err_t data_get_handler(httpd_req_t *req)
     httpd_resp_send(req, sys_info, strlen(sys_info));
     free((void *)sys_info);
     cJSON_Delete(root);
+    return ESP_OK;
+}
+
+/**
+ * @brief Handler downloads lists in CSV format
+ * @param req HTTP request structure
+ * @return Error check
+ */
+static esp_err_t csv_get_handler(httpd_req_t *req)
+{
+    httpd_resp_set_type(req, "text/csv");
+    httpd_resp_set_hdr(req, "Content-Disposition", "attachment; filename=\"laptimes.csv\"");
+
+    // Header
+    httpd_resp_sendstr_chunk(req, "Number,Laptime [mm:ss:ms],Penalty Time [mm:ss],OC,DOO\n");
+
+    if (xSemaphoreTake(data_mutex, portMAX_DELAY))
+    {
+        char line[128];
+        for (int i = 0; i < LAPTIME_LIST_SIZE_WIFI; i++)
+        {
+            snprintf(line, sizeof(line), "%s,%s,%s,%s\n",
+                     list_last_str[i],
+                     list_penalty_time_str[i],
+                     list_penalty_oc_str[i],
+                     list_penalty_doo_str[i]);
+            httpd_resp_sendstr_chunk(req, line);
+        }
+        xSemaphoreGive(data_mutex);
+    }
+
+    httpd_resp_sendstr_chunk(req, NULL);
     return ESP_OK;
 }
 
@@ -212,6 +259,13 @@ static httpd_handle_t start_webserver(void)
             .handler = data_get_handler,
             .user_ctx = NULL};
         httpd_register_uri_handler(server, &data);
+
+        httpd_uri_t csv = {
+            .uri = "/api/csv",
+            .method = HTTP_GET,
+            .handler = csv_get_handler,
+            .user_ctx = NULL};
+        httpd_register_uri_handler(server, &csv);
         return server;
     }
 

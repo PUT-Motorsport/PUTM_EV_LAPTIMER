@@ -75,7 +75,7 @@
 #define LAPTIME_LIST_SIZE_LCD 5
 
 /// @brief Size of wifi displayed best/last laptime list
-#define LAPTIME_LIST_SIZE_WIFI 15
+#define LAPTIME_LIST_SIZE_WIFI 50
 
 /// @brief Minimal time to save in ms
 #define LAPTIME_MIN 500
@@ -154,7 +154,9 @@ extern QueueHandle_t wifi_laptime_status_queue;
 extern char list_top_str[LAPTIME_LIST_SIZE_WIFI][LAPTIME_STR_LENGTH];
 extern char list_last_str[LAPTIME_LIST_SIZE_WIFI][LAPTIME_STR_LENGTH];
 extern char list_penalty_time_str[LAPTIME_LIST_SIZE_WIFI][PENALTY_TIME_STR_LENGTH];
-extern char list_penalty_count_str[LAPTIME_LIST_SIZE_WIFI][PENALTY_COUNT_STR_LENGTH];
+extern char list_penalty_oc_str[LAPTIME_LIST_SIZE_WIFI][PENALTY_COUNT_STR_LENGTH];
+extern char list_penalty_doo_str[LAPTIME_LIST_SIZE_WIFI][PENALTY_COUNT_STR_LENGTH];
 
-extern char penalty_time_str[11];
-extern char penalty_count_str[25];
+extern char penalty_time_str[PENALTY_TIME_STR_LENGTH];
+extern char penalty_oc_str[PENALTY_COUNT_STR_LENGTH];
+extern char penalty_doo_str[PENALTY_COUNT_STR_LENGTH];

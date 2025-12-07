@@ -24,10 +24,12 @@ QueueHandle_t wifi_laptime_status_queue = xQueueCreate(1, sizeof(bool[STATUS_LIS
 char list_top_str[LAPTIME_LIST_SIZE_WIFI][LAPTIME_STR_LENGTH] = {0};
 char list_last_str[LAPTIME_LIST_SIZE_WIFI][LAPTIME_STR_LENGTH] = {0};
 char list_penalty_time_str[LAPTIME_LIST_SIZE_WIFI][PENALTY_TIME_STR_LENGTH] = {0};
-char list_penalty_count_str[LAPTIME_LIST_SIZE_WIFI][PENALTY_COUNT_STR_LENGTH] = {0};
+char list_penalty_oc_str[LAPTIME_LIST_SIZE_WIFI][PENALTY_COUNT_STR_LENGTH] = {0};
+char list_penalty_doo_str[LAPTIME_LIST_SIZE_WIFI][PENALTY_COUNT_STR_LENGTH] = {0};
 
 char penalty_time_str[PENALTY_TIME_STR_LENGTH] = "+00:00";
-char penalty_count_str[PENALTY_COUNT_STR_LENGTH] = "OC: 00   DOO: 00";
+char penalty_oc_str[PENALTY_COUNT_STR_LENGTH] = "0";
+char penalty_doo_str[PENALTY_COUNT_STR_LENGTH] = "0";
 
 /**
  * @brief Main task initializes core peripherals and creates program tasks

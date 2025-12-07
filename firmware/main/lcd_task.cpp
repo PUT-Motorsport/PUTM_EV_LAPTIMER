@@ -88,6 +88,8 @@ void print_ui()
                    WHITE);
     lcd_print_line(LCD_WIDTH / 2, LAPTIME_LISTS_POS_Y - PADDING, LCD_WIDTH / 2,
                    LCD_HEIGHT, WHITE);
+    lcd_print_str(LAPTIME_LISTS_POS_X, LAPTIME_CURRENT_POS_Y + 25, "OC:", UI_FONT, YELLOW);
+    lcd_print_str(LAPTIME_LISTS_POS_X + UI_LETTER_WIDTH * 8, LAPTIME_CURRENT_POS_Y + 25, "DOO:", UI_FONT, YELLOW);
 }
 
 /**
@@ -144,7 +146,8 @@ void print_penalty()
     if (xSemaphoreTake(lcd_laptime_penalty_semaphore, 0) == pdTRUE)
     {
         lcd_print_str(LAPTIME_CURRENT_POS_X + LAPTIME_CURRENT_LETTER_WIDTH * 13, LAPTIME_CURRENT_POS_Y, penalty_time_str, UI_FONT, YELLOW);
-        lcd_print_str(LAPTIME_LISTS_POS_X, LAPTIME_CURRENT_POS_Y + 25, penalty_count_str, UI_FONT, YELLOW);
+        lcd_print_str(LAPTIME_LISTS_POS_X + UI_LETTER_WIDTH * 4, LAPTIME_CURRENT_POS_Y + 25, penalty_oc_str, UI_FONT, YELLOW);
+        lcd_print_str(LAPTIME_LISTS_POS_X + UI_LETTER_WIDTH * 13, LAPTIME_CURRENT_POS_Y + 25, penalty_doo_str, UI_FONT, YELLOW);
         xSemaphoreGive(lcd_laptime_penalty_semaphore);
     }
 }

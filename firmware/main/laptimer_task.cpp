@@ -134,7 +134,8 @@ esp_err_t send_laptime_lists(Laptime_list *list)
         list->list_top[i].convert_string(list_top_str[i], LAPTIME_STR_LENGTH);
         list->list_last[i].convert_string(list_last_str[i], LAPTIME_STR_LENGTH);
         list->list_top[i].penalty_string(list_penalty_time_str[i], PENALTY_TIME_STR_LENGTH);
-        snprintf(list_penalty_count_str[i], PENALTY_COUNT_STR_LENGTH, "OC: %2u   DOO: %2u", list->list_top[i].oc_count, list->list_top[i].doo_count);
+        snprintf(list_penalty_oc_str[i], PENALTY_COUNT_STR_LENGTH, "%u", list->list_top[i].oc_count);
+        snprintf(list_penalty_doo_str[i], PENALTY_COUNT_STR_LENGTH, "%u", list->list_top[i].doo_count);
     }
 
     xSemaphoreGive(lcd_laptime_lists_semaphore);
@@ -165,8 +166,11 @@ bool penalty_check()
 
 void send_penalty()
 {
+
     laptime_current.penalty_string(penalty_time_str, sizeof(penalty_time_str));
-    snprintf(penalty_count_str, sizeof(penalty_count_str), "OC: %2u   DOO: %2u", laptime_current.oc_count, laptime_current.doo_count);
+    snprintf(penalty_oc_str, sizeof(penalty_oc_str), "%3u", laptime_current.oc_count);
+    snprintf(penalty_doo_str, sizeof(penalty_doo_str), "%3u", laptime_current.doo_count);
+
     xSemaphoreGive(lcd_laptime_penalty_semaphore);
     xSemaphoreGive(wifi_laptime_penalty_semaphore);
 }

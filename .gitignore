@@ -32,3 +32,5 @@ firmware/.clangd
 firmware/sdkconfig 2.old
 firmware/sdkconfig.old
 firmware/sdkconfig.old
+firmware/TODO
+firmware/sdkconfig.old
