@@ -1,0 +1,70 @@
+menu "PUTM EV Laptimer"
+        config LAP_GATE1_PIN
+            int "Start Gate Pin (GPIO)"
+            default 5
+            help
+                Input for first gate that starts new lap on negative edge
+
+        config LAP_GATE2_PIN
+            int "Stop Gate Pin (GPIO)"
+            default 4
+            help
+                Input for second gate that stops lap on negative edge in 2 gate mode
+
+        config LAP_RESET_PIN
+            int "Reset Button Pin (GPIO)"
+            default 6
+            help
+                Input for button that resets current laptime, tries to reinitialize sd card and checks status of LAP_MODE_PIN on negative edge
+
+        config LAP_MODE_PIN
+            int "Mode Switch Pin (GPIO)"
+            default 16
+            help
+                Input for switching between 1 gate and 2 gate mode. LOW - 1 gate mode, HIGH - 2 gate mode
+
+        config LAP_DOO_PIN
+            int "DOO Penalty Button Pin (GPIO)"
+            default 7
+            help
+                Input for button that adds Down or Out time penalty to current laptime (2s for Endurance) on negative edge
+
+        config LAP_OC_PIN
+            int "Off-Course Penalty Button Pin (GPIO)"
+            default 15
+            help
+                Input for button that adds Off-Course time penalty to current laptime (10s for Endurance) on negative edge
+
+        config SD_SPI_CLK
+            int "SD Card SPI CLK (GPIO)"
+            default 12
+        
+        config SD_SPI_MISO
+            int "SD Card SPI MISO (GPIO)"
+            default 13
+
+        config SD_SPI_MOSI
+            int "SD Card SPI MOSI (GPIO)"
+            default 11
+
+        config SD_SPI_CS
+            int "SD Card SPI CS (GPIO)"
+            default 10
+
+        # config LCD_SPI_CLK
+        #     int "LCD SPI CLK (GPIO)"
+        #     default 36
+
+        # config LCD_SPI_MOSI
+        #     int "LCD SPI MOSI (GPIO)"
+        #     default 35
+
+        # config LCD_SPI_CS
+        #     int "LCD SPI CS (GPIO)"
+        #     default 39
+
+        # config LCD_DC
+        #     int "LCD DC (GPIO)"
+        #     default 37
+
+endmenu

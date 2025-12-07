@@ -3,6 +3,7 @@
 #include "freertos/idf_additions.h"
 #include "esp_log.h"
 #include "esp_err.h"
+#include "sdkconfig.h"
 
 /**
  * @defgroup pinout_defines
@@ -13,19 +14,19 @@
  * @ingroup pinout_defines
  * @brief Input for first gate that starts new lap on negative edge
  */
-#define LAP_GATE1_PIN GPIO_NUM_32
+#define LAP_GATE1_PIN ((gpio_num_t)CONFIG_LAP_GATE1_PIN)
 
 /**
  * @ingroup pinout_defines
  * @brief Input for second gate that stops lap on negative edge in 2 gate mode
  */
-#define LAP_GATE2_PIN GPIO_NUM_33
+#define LAP_GATE2_PIN ((gpio_num_t)CONFIG_LAP_GATE2_PIN)
 
 /**
  * @ingroup pinout_defines
  * @brief Input for button that resets current laptime, tries to reinitialize sd card and checks status of LAP_MODE_PIN on negative edge
  */
-#define LAP_RESET_PIN GPIO_NUM_35
+#define LAP_RESET_PIN ((gpio_num_t)CONFIG_LAP_RESET_PIN)
 
 /**
  * @ingroup pinout_defines
@@ -33,35 +34,35 @@
  * LOW - 1 gate mode
  * HIGH - 2 gate mode
  */
-#define LAP_MODE_PIN GPIO_NUM_25
+#define LAP_MODE_PIN ((gpio_num_t)CONFIG_LAP_MODE_PIN)
 
 /**
  * @ingroup pinout_defines
  * @brief Input for button that adds Down or Out time penalty to current laptime (2s for Endurance) on negative edge
  */
-#define LAP_DOO_PIN GPIO_NUM_0
+#define LAP_DOO_PIN ((gpio_num_t)CONFIG_LAP_DOO_PIN)
 
 /**
  * @ingroup pinout_defines
  * @brief Input for button that adds Off-Course time penalty to current laptime (10s for Endurance) on negative edge
  */
-#define LAP_OC_PIN GPIO_NUM_4
+#define LAP_OC_PIN ((gpio_num_t)CONFIG_LAP_OC_PIN)
 
 /// @ingroup pinout_defines
 /// @brief SDCARD pinout
-#define SD_SPI_CLK 14
-#define SD_SPI_MISO 26
-#define SD_SPI_MOSI 13
-#define SD_SPI_CS 27
+#define SD_SPI_CLK CONFIG_SD_SPI_CLK
+#define SD_SPI_MISO CONFIG_SD_SPI_MISO
+#define SD_SPI_MOSI CONFIG_SD_SPI_MOSI
+#define SD_SPI_CS CONFIG_SD_SPI_CS
 
 /// @ingroup pinout_defines
 /// @brief LCD pinout
-#define LCD_SPI_CLK 18
-#define LCD_SPI_MOSI 23
-#define LCD_SPI_CS 5
-#define LCD_DC 17
-#define LCD_RESET 16
-#define LCD_BL 21
+#define LCD_SPI_CLK CONFIG_MIPI_DISPLAY_PIN_CLK
+#define LCD_SPI_MOSI CONFIG_MIPI_DISPLAY_PIN_MOSI
+#define LCD_SPI_CS CONFIG_MIPI_DISPLAY_PIN_CS
+#define LCD_DC CONFIG_MIPI_DISPLAY_PIN_DC
+#define LCD_RESET CONFIG_MIPI_DISPLAY_PIN_RST
+#define LCD_BL CONFIG_MIPI_DISPLAY_PIN_BL
 
 /// @brief SPI_HOST defines for peripherals
 #define SPI_SD_HOST SPI2_HOST

@@ -82,25 +82,24 @@ mipi_display_write_command(spi_device_handle_t spi, const uint8_t command)
 static void
 mipi_display_write_data(spi_device_handle_t spi, const uint8_t *data, size_t length)
 {
-    if (0 == length)
-    {
+    if (0 == length) {
         return;
     };
 
     /* Set DC high to denote data. */
     gpio_set_level(CONFIG_MIPI_DISPLAY_PIN_DC, 1);
 
-    for (size_t i = 0; i < length; i += SPI_MAX_TRANSFER_SIZE)
-    {
+    for (size_t i = 0; i < length; i += SPI_MAX_TRANSFER_SIZE) {
         size_t chunk = min(SPI_MAX_TRANSFER_SIZE, length - i);
 
         spi_transaction_t transaction = {
             .length = chunk * 8,
             .tx_buffer = data + i,
-            .rx_buffer = NULL};
+            .rx_buffer = NULL
+        };
 
         ESP_ERROR_CHECK(spi_device_polling_transmit(spi, &transaction));
-        // ESP_ERROR_CHECK(spi_device_queue_trans(spi, &transaction, portMAX_DELAY));
+        //ESP_ERROR_CHECK(spi_device_queue_trans(spi, &transaction, portMAX_DELAY));
         ESP_LOG_BUFFER_HEX_LEVEL(TAG, data + i, chunk, ESP_LOG_VERBOSE);
     }
 }
@@ -108,14 +107,13 @@ mipi_display_write_data(spi_device_handle_t spi, const uint8_t *data, size_t len
 static void
 mipi_display_read_data(spi_device_handle_t spi, uint8_t *data, size_t length)
 {
-    if (0 == length)
-    {
+    if (0 == length) {
         return;
     };
 
     spi_transaction_t transaction = {
-        .length = 0,            /* no tx */
-        .rxlength = length * 8, /* length in bits */
+        .length = 0, /* no tx */
+        .rxlength = length * 8,/* length in bits */
         .rx_buffer = data,
     };
 
@@ -137,8 +135,7 @@ mipi_display_set_address(spi_device_handle_t spi, uint16_t x1, uint16_t y1, uint
     y2 = y2 + CONFIG_MIPI_DISPLAY_OFFSET_Y;
 
     /* Change column address only if it has changed. */
-    if ((prev_x1 != x1 || prev_x2 != x2))
-    {
+    if ((prev_x1 != x1 || prev_x2 != x2)) {
         mipi_display_write_command(spi, MIPI_DCS_SET_COLUMN_ADDRESS);
         data[0] = x1 >> 8;
         data[1] = x1 & 0xff;
@@ -151,8 +148,7 @@ mipi_display_set_address(spi_device_handle_t spi, uint16_t x1, uint16_t y1, uint
     }
 
     /* Change page address only if it has changed. */
-    if ((prev_y1 != y1 || prev_y2 != y2))
-    {
+    if ((prev_y1 != y1 || prev_y2 != y2)) {
         mipi_display_write_command(spi, MIPI_DCS_SET_PAGE_ADDRESS);
         data[0] = y1 >> 8;
         data[1] = y1 & 0xff;
@@ -170,8 +166,7 @@ mipi_display_set_address(spi_device_handle_t spi, uint16_t x1, uint16_t y1, uint
 size_t
 mipi_display_write(spi_device_handle_t spi, uint16_t x1, uint16_t y1, uint16_t w, uint16_t h, const uint8_t *buffer)
 {
-    if (0 == w || 0 == h)
-    {
+    if (0 == w || 0 == h) {
         return 0;
     }
 
@@ -200,13 +195,15 @@ mipi_display_spi_master_init(spi_device_handle_t *spi)
         .quadhd_io_num = -1,
         /* Max transfer size in bytes. */
         .max_transfer_sz = SPI_MAX_TRANSFER_SIZE,
-        .flags = 0};
+        .flags = 0
+    };
     spi_device_interface_config_t devcfg = {
         .clock_speed_hz = CONFIG_MIPI_DISPLAY_SPI_CLOCK_SPEED_HZ,
         .mode = CONFIG_MIPI_DISPLAY_SPI_MODE,
         .spics_io_num = CONFIG_MIPI_DISPLAY_PIN_CS,
         .queue_size = 8,
-        .flags = SPI_DEVICE_NO_DUMMY};
+        .flags = SPI_DEVICE_NO_DUMMY
+    };
 
     /* ESP32S2 requires DMA channel to match the SPI host. */
     ESP_ERROR_CHECK(spi_bus_initialize(CONFIG_MIPI_DISPLAY_SPI_HOST, &buscfg, SPI_DMA_CH_AUTO));
@@ -215,7 +212,8 @@ mipi_display_spi_master_init(spi_device_handle_t *spi)
     ESP_LOGI(TAG, "SPI_MAX_TRANSFER_SIZE: %d", SPI_MAX_TRANSFER_SIZE);
 }
 
-void mipi_display_init(spi_device_handle_t *spi)
+void
+mipi_display_init(spi_device_handle_t *spi)
 {
     mutex = xSemaphoreCreateMutex();
 
@@ -248,10 +246,10 @@ void mipi_display_init(spi_device_handle_t *spi)
     vTaskDelay(200 / portTICK_PERIOD_MS);
 
     mipi_display_write_command(*spi, MIPI_DCS_SET_ADDRESS_MODE);
-    mipi_display_write_data(*spi, &(uint8_t){MIPI_DISPLAY_ADDRESS_MODE}, 1);
+    mipi_display_write_data(*spi, &(uint8_t) {MIPI_DISPLAY_ADDRESS_MODE}, 1);
 
     mipi_display_write_command(*spi, MIPI_DCS_SET_PIXEL_FORMAT);
-    mipi_display_write_data(*spi, &(uint8_t){CONFIG_MIPI_DISPLAY_PIXEL_FORMAT}, 1);
+    mipi_display_write_data(*spi, &(uint8_t) {CONFIG_MIPI_DISPLAY_PIXEL_FORMAT}, 1);
 
 #ifdef CONFIG_MIPI_DISPLAY_INVERT
     mipi_display_write_command(*spi, MIPI_DCS_ENTER_INVERT_MODE);
@@ -287,12 +285,12 @@ void mipi_display_init(spi_device_handle_t *spi)
     ledc_timer_config(&timercfg);
 
     ledc_channel_config_t channelcfg = {
-        .channel = LEDC_CHANNEL_0,
-        .duty = CONFIG_MIPI_DISPLAY_PWM_BL,
-        .gpio_num = CONFIG_MIPI_DISPLAY_PIN_BL,
+        .channel    = LEDC_CHANNEL_0,
+        .duty       = CONFIG_MIPI_DISPLAY_PWM_BL,
+        .gpio_num   = CONFIG_MIPI_DISPLAY_PIN_BL,
         .speed_mode = LEDC_LOW_SPEED_MODE,
-        .hpoint = 0,
-        .timer_sel = LEDC_TIMER_0,
+        .hpoint     = 0,
+        .timer_sel  = LEDC_TIMER_0,
     };
 
     ledc_channel_config(&channelcfg);
@@ -303,42 +301,43 @@ void mipi_display_init(spi_device_handle_t *spi)
     spi_device_acquire_bus(*spi, portMAX_DELAY);
 }
 
-void mipi_display_ioctl(spi_device_handle_t spi, const uint8_t command, uint8_t *data, size_t size)
+void
+mipi_display_ioctl(spi_device_handle_t spi, const uint8_t command, uint8_t *data, size_t size)
 {
     xSemaphoreTake(mutex, portMAX_DELAY);
 
-    switch (command)
-    {
-    case MIPI_DCS_GET_COMPRESSION_MODE:
-    case MIPI_DCS_GET_DISPLAY_ID:
-    case MIPI_DCS_GET_RED_CHANNEL:
-    case MIPI_DCS_GET_GREEN_CHANNEL:
-    case MIPI_DCS_GET_BLUE_CHANNEL:
-    case MIPI_DCS_GET_DISPLAY_STATUS:
-    case MIPI_DCS_GET_POWER_MODE:
-    case MIPI_DCS_GET_ADDRESS_MODE:
-    case MIPI_DCS_GET_PIXEL_FORMAT:
-    case MIPI_DCS_GET_DISPLAY_MODE:
-    case MIPI_DCS_GET_SIGNAL_MODE:
-    case MIPI_DCS_GET_DIAGNOSTIC_RESULT:
-    case MIPI_DCS_GET_SCANLINE:
-    case MIPI_DCS_GET_DISPLAY_BRIGHTNESS:
-    case MIPI_DCS_GET_CONTROL_DISPLAY:
-    case MIPI_DCS_GET_POWER_SAVE:
-    case MIPI_DCS_READ_DDB_START:
-    case MIPI_DCS_READ_DDB_CONTINUE:
-        mipi_display_write_command(spi, command);
-        mipi_display_read_data(spi, data, size);
-        break;
-    default:
-        mipi_display_write_command(spi, command);
-        mipi_display_write_data(spi, data, size);
+    switch (command) {
+        case MIPI_DCS_GET_COMPRESSION_MODE:
+        case MIPI_DCS_GET_DISPLAY_ID:
+        case MIPI_DCS_GET_RED_CHANNEL:
+        case MIPI_DCS_GET_GREEN_CHANNEL:
+        case MIPI_DCS_GET_BLUE_CHANNEL:
+        case MIPI_DCS_GET_DISPLAY_STATUS:
+        case MIPI_DCS_GET_POWER_MODE:
+        case MIPI_DCS_GET_ADDRESS_MODE:
+        case MIPI_DCS_GET_PIXEL_FORMAT:
+        case MIPI_DCS_GET_DISPLAY_MODE:
+        case MIPI_DCS_GET_SIGNAL_MODE:
+        case MIPI_DCS_GET_DIAGNOSTIC_RESULT:
+        case MIPI_DCS_GET_SCANLINE:
+        case MIPI_DCS_GET_DISPLAY_BRIGHTNESS:
+        case MIPI_DCS_GET_CONTROL_DISPLAY:
+        case MIPI_DCS_GET_POWER_SAVE:
+        case MIPI_DCS_READ_DDB_START:
+        case MIPI_DCS_READ_DDB_CONTINUE:
+            mipi_display_write_command(spi, command);
+            mipi_display_read_data(spi, data, size);
+            break;
+        default:
+            mipi_display_write_command(spi, command);
+            mipi_display_write_data(spi, data, size);
     }
 
     xSemaphoreGive(mutex);
 }
 
-void mipi_display_close(spi_device_handle_t spi)
+void
+mipi_display_close(spi_device_handle_t spi)
 {
     spi_device_release_bus(spi);
 }
