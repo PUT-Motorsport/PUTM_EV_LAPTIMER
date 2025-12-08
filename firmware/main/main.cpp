@@ -14,12 +14,12 @@ QueueHandle_t sd_reinit_semaphore = xSemaphoreCreateBinary();
 QueueHandle_t lcd_laptime_current_queue = xQueueCreate(1, sizeof(char[LAPTIME_STR_LENGTH]));
 QueueHandle_t lcd_laptime_penalty_semaphore = xSemaphoreCreateBinary();
 QueueHandle_t lcd_laptime_lists_semaphore = xSemaphoreCreateBinary();
-QueueHandle_t lcd_laptime_status_queue = xQueueCreate(1, sizeof(bool[STATUS_LIST_LENGTH]));
+QueueHandle_t lcd_laptime_status_semaphore = xSemaphoreCreateBinary();
 
 QueueHandle_t wifi_laptime_current_queue = xQueueCreate(1, sizeof(char[LAPTIME_STR_LENGTH]));
 QueueHandle_t wifi_laptime_penalty_semaphore = xSemaphoreCreateBinary();
 QueueHandle_t wifi_laptime_lists_semaphore = xSemaphoreCreateBinary();
-QueueHandle_t wifi_laptime_status_queue = xQueueCreate(1, sizeof(bool[STATUS_LIST_LENGTH]));
+QueueHandle_t wifi_laptime_status_semaphore = xSemaphoreCreateBinary();
 
 char list_top_str[LAPTIME_LIST_SIZE_WIFI][LAPTIME_STR_LENGTH] = {0};
 char list_last_str[LAPTIME_LIST_SIZE_WIFI][LAPTIME_STR_LENGTH] = {0};
@@ -30,6 +30,10 @@ char list_penalty_doo_str[LAPTIME_LIST_SIZE_WIFI][PENALTY_COUNT_STR_LENGTH] = {0
 char penalty_time_str[PENALTY_TIME_STR_LENGTH] = "+00:00";
 char penalty_oc_str[PENALTY_COUNT_STR_LENGTH] = "0";
 char penalty_doo_str[PENALTY_COUNT_STR_LENGTH] = "0";
+
+Lapmode lap_mode = ONE_GATE_MODE;
+volatile bool stop_flag = true;
+bool sd_active_flag = false;
 
 /**
  * @brief Main task initializes core peripherals and creates program tasks

@@ -34,3 +34,4 @@ firmware/sdkconfig.old
 firmware/sdkconfig.old
 firmware/TODO
 firmware/sdkconfig.old
+**/sdkconfig.old

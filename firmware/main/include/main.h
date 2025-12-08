@@ -5,6 +5,12 @@
 #include "esp_err.h"
 #include "sdkconfig.h"
 
+enum Lapmode
+{
+    ONE_GATE_MODE,
+    TWO_GATE_MODE,
+};
+
 /**
  * @defgroup pinout_defines
  * @brief Pinout defines
@@ -94,13 +100,6 @@
 #define DOO_TIME_PENALTY (uint32_t)200
 #define OC_TIME_PENALTY (uint32_t)1000
 
-struct Penalty_data
-{
-    char *time;
-    uint16_t oc_count;
-    uint16_t doo_count;
-};
-
 /**
  * @defgroup freertos
  * @brief FreeRTOS intertask communication
@@ -143,8 +142,8 @@ extern QueueHandle_t wifi_laptime_lists_semaphore;
  * bool[1] - stop_flag
  * bool[2] - sdcard_flag
  */
-extern QueueHandle_t lcd_laptime_status_queue;
-extern QueueHandle_t wifi_laptime_status_queue;
+extern QueueHandle_t lcd_laptime_status_semaphore;
+extern QueueHandle_t wifi_laptime_status_semaphore;
 
 /**
  * @brief Global variables locally store laptime lists used by lcd_task and wifi_task
@@ -160,3 +159,14 @@ extern char list_penalty_doo_str[LAPTIME_LIST_SIZE_WIFI][PENALTY_COUNT_STR_LENGT
 extern char penalty_time_str[PENALTY_TIME_STR_LENGTH];
 extern char penalty_oc_str[PENALTY_COUNT_STR_LENGTH];
 extern char penalty_doo_str[PENALTY_COUNT_STR_LENGTH];
+
+/**
+ * @brief Global variable determines behavior of gate inputs
+ */
+extern enum Lapmode lap_mode;
+
+/**
+ * @brief Global variable indicates stopped laptime, set true by LAP_RESET_PIN and set false by LAP_GATE1_PIN
+ */
+extern volatile bool stop_flag;
+extern bool sd_active_flag;

@@ -283,7 +283,6 @@ void wifi_task(void *args)
     start_webserver();
 
     char temp_laptime[LAPTIME_STR_LENGTH];
-    bool temp_status[3];
 
     data_mutex = xSemaphoreCreateMutex();
 
@@ -298,13 +297,16 @@ void wifi_task(void *args)
             }
         }
 
-        if (xQueueReceive(wifi_laptime_status_queue, temp_status, 0) == pdTRUE)
+        if (xSemaphoreTake(wifi_laptime_status_semaphore, 0) == pdTRUE)
         {
             if (xSemaphoreTake(data_mutex, portMAX_DELAY))
             {
-                memcpy(status_flags, temp_status, sizeof(status_flags));
+                status_flags[0] = (lap_mode);
+                status_flags[1] = stop_flag;
+                status_flags[2] = sd_active_flag;
                 xSemaphoreGive(data_mutex);
             }
+            xSemaphoreGive(wifi_laptime_status_semaphore);
         }
 
         if (xSemaphoreTake(wifi_laptime_lists_semaphore, 0) == pdTRUE && new_lists_flag == false)

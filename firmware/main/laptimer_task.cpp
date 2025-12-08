@@ -23,16 +23,6 @@ Laptime laptime_current;
  */
 Laptime laptime_saved;
 
-/**
- * @brief Global variable determines behavior of gate inputs
- */
-volatile Lapmode lap_mode = ONE_GATE_MODE;
-
-/**
- * @brief Global variable indicates stopped laptime, set true by LAP_RESET_PIN and set false by LAP_GATE1_PIN
- */
-volatile bool stop_flag = true;
-
 volatile TickType_t doo_press_time = 0;
 volatile TickType_t oc_press_time = 0;
 volatile bool doo_long_flag = false;
@@ -87,37 +77,6 @@ static void laptime_save_uart(char *laptime_str, size_t size)
         return;
     printf("%s", laptime_str);
     printf("\n");
-}
-
-/**
- * @brief Checks active flags and sends them to lcd_task and wifi_task
- */
-void send_status()
-{
-    static bool status[3] = {false};
-    switch (lap_mode)
-    {
-    case ONE_GATE_MODE:
-        status[0] = false;
-        break;
-    case TWO_GATE_MODE:
-        status[0] = true;
-        break;
-    default:
-        break;
-    }
-
-    if (stop_flag)
-        status[1] = true;
-    else
-        status[1] = false;
-
-    if (sd_active_flag)
-        status[2] = true;
-    else
-        status[2] = false;
-    xQueueSend(lcd_laptime_status_queue, status, 0);
-    xQueueSend(wifi_laptime_status_queue, status, 0);
 }
 
 /**
@@ -239,8 +198,11 @@ void gate2_pin_isr()
  */
 void reset_pin_isr()
 {
-    stop_flag = true;
-    laptime_current.reset();
+    if (stop_flag == false)
+    {
+        stop_flag = true;
+        laptime_current.reset();
+    }
 }
 
 void doo_pin_isr()
@@ -294,8 +256,8 @@ void laptimer_task(void *args)
     Laptime_list laptime_list;
 
     bool stop_flag_old = stop_flag;
-    bool sdcard_flag_old = sd_active_flag;
-    bool status_flag = true;
+    bool sd_active_flag_old = sd_active_flag;
+    bool status_update_flag = true;
 
     xQueueSend(lcd_laptime_current_queue, laptimer_current_str, 0);
     xQueueSend(wifi_laptime_current_queue, laptimer_current_str, 0);
@@ -307,8 +269,7 @@ void laptimer_task(void *args)
         if (stop_flag == false)
         {
             laptime_current.time = timer_get_time(laptime_timer);
-            if (penalty_check() == true)
-                status_flag = true;
+            status_update_flag = penalty_check();
             laptime_current.convert_string(laptimer_current_str, LAPTIME_STR_LENGTH);
             xQueueSend(lcd_laptime_current_queue, laptimer_current_str, 0);
             xQueueSend(wifi_laptime_current_queue, laptimer_current_str, 0);
@@ -322,13 +283,13 @@ void laptimer_task(void *args)
             {
                 xSemaphoreGive(sd_reinit_semaphore);
             }
-            status_flag = true;
+            status_update_flag = true;
         }
 
-        if (sdcard_flag_old != sd_active_flag)
+        if (sd_active_flag_old != sd_active_flag)
         {
-            sdcard_flag_old = sd_active_flag;
-            status_flag = true;
+            sd_active_flag_old = sd_active_flag;
+            status_update_flag = true;
         }
 
         if (laptime_saved.time > 0)
@@ -345,11 +306,12 @@ void laptimer_task(void *args)
             xQueueSend(sd_queue, laptime_saved_str, 0);
             send_laptime_lists(&laptime_list);
         }
-        if (status_flag == true)
+        if (status_update_flag == true)
         {
-            send_status();
+            xSemaphoreGive(lcd_laptime_status_semaphore);
+            xSemaphoreGive(wifi_laptime_status_semaphore);
             send_penalty();
-            status_flag = false;
+            status_update_flag = false;
         }
 
         vTaskDelay(10 / portTICK_PERIOD_MS);

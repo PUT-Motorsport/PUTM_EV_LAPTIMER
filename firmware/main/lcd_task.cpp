@@ -97,37 +97,32 @@ void print_ui()
  */
 void print_status()
 {
-    bool status[3] = {false};
-    if (xQueueReceive(lcd_laptime_status_queue, status, 0) != pdTRUE)
-        return;
-    bool mode = status[0];
-    bool stop_flag = status[1];
-    bool sd_flag = status[2];
-    switch (mode)
+    if (xSemaphoreTake(lcd_laptime_status_semaphore, 0) == pdTRUE)
     {
-    case false:
-        lcd_print_str(LCD_WIDTH - UI_LETTER_WIDTH * 6 - PADDING, PADDING, "1 GATE ",
-                      UI_FONT, GRAY);
-        break;
-    case true:
-        lcd_print_str(LCD_WIDTH - UI_LETTER_WIDTH * 6 - PADDING, PADDING, "2 GATE ",
-                      UI_FONT, GRAY);
-        break;
-    default:
-        break;
+        if (!lap_mode)
+        {
+            lcd_print_str(LCD_WIDTH - UI_LETTER_WIDTH * 6 - PADDING, PADDING, "1 GATE ",
+                          UI_FONT, GRAY);
+        }
+        else
+        {
+            lcd_print_str(LCD_WIDTH - UI_LETTER_WIDTH * 6 - PADDING, PADDING, "2 GATE ",
+                          UI_FONT, GRAY);
+        }
+
+        if (stop_flag)
+            lcd_print_str(LCD_WIDTH / 2, PADDING, "STOP", UI_FONT, RED);
+        else
+            lcd_print_str(LCD_WIDTH / 2, PADDING, "    ", UI_FONT, BLACK);
+
+        if (sd_active_flag)
+            lcd_print_str(LCD_WIDTH / 2 + UI_LETTER_WIDTH * 5, PADDING, "SD",
+                          UI_FONT, GREEN);
+        else
+            lcd_print_str(LCD_WIDTH / 2 + UI_LETTER_WIDTH * 5, PADDING, "  ",
+                          UI_FONT, BLACK);
+        xSemaphoreGive(lcd_laptime_status_semaphore);
     }
-
-    if (stop_flag)
-        lcd_print_str(LCD_WIDTH / 2, PADDING, "STOP", UI_FONT, RED);
-    else
-        lcd_print_str(LCD_WIDTH / 2, PADDING, "    ", UI_FONT, BLACK);
-
-    if (sd_flag)
-        lcd_print_str(LCD_WIDTH / 2 + UI_LETTER_WIDTH * 5, PADDING, "SD",
-                      UI_FONT, GREEN);
-    else
-        lcd_print_str(LCD_WIDTH / 2 + UI_LETTER_WIDTH * 5, PADDING, "  ",
-                      UI_FONT, BLACK);
 }
 
 /**

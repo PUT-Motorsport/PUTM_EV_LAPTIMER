@@ -119,12 +119,6 @@ struct Laptime_list
     Laptime list_last[LAPTIME_LIST_SIZE_LOCAL] = {0};
 };
 
-enum Lapmode
-{
-    ONE_GATE_MODE,
-    TWO_GATE_MODE,
-};
-
 void laptimer_task(void *args);
 
 void laptime_convert_string(Laptime laptime, char *laptime_str, size_t size);

@@ -15,7 +15,6 @@ int session_num = 0;
 
 static const char *TAG = "SDCARD_TASK";
 
-bool sd_active_flag = false;
 bool sd_fail_flag = false;
 
 /**
