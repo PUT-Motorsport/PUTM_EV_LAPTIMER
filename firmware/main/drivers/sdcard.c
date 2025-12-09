@@ -24,7 +24,7 @@ esp_err_t sdcard_spi_init()
         .sclk_io_num = SD_SPI_CLK,
         .quadwp_io_num = -1,
         .quadhd_io_num = -1,
-        .max_transfer_sz = 4 * 1000,
+        .max_transfer_sz = 10 * 1000,
     };
     esp_err_t ret = spi_bus_initialize(SPI2_HOST, &sdcard_spi_config, SPI_DMA_CH_AUTO);
     if (ret != ESP_OK)
@@ -49,7 +49,7 @@ esp_err_t sdcard_mount(sdmmc_card_t **out_card)
 
     sdmmc_host_t host = SDSPI_HOST_DEFAULT();
 
-    host.max_freq_khz = 400;
+    host.max_freq_khz = 1000;
 
     sdspi_device_config_t slot_config = SDSPI_DEVICE_CONFIG_DEFAULT();
     slot_config.gpio_cs = SD_SPI_CS;
