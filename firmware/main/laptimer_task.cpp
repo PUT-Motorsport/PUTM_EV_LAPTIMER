@@ -279,10 +279,6 @@ void laptimer_task(void *args)
         {
             stop_flag_old = stop_flag;
             lap_mode = lap_mode_check();
-            if (sd_active_flag == false && stop_flag == true)
-            {
-                xSemaphoreGive(sd_reinit_semaphore);
-            }
             status_update_flag = true;
         }
 

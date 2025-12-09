@@ -61,6 +61,8 @@ enum Lapmode
 #define SD_SPI_MOSI CONFIG_SD_SPI_MOSI
 #define SD_SPI_CS CONFIG_SD_SPI_CS
 
+#define SD_CD 9
+
 /// @ingroup pinout_defines
 /// @brief LCD pinout
 #define LCD_SPI_CLK CONFIG_MIPI_DISPLAY_PIN_CLK
@@ -110,13 +112,6 @@ enum Lapmode
  * @brief Queue passes laptimes from main logic laptimer_task to sdcard_task
  */
 extern QueueHandle_t sd_queue;
-
-/**
- * @ingroup freertos
- * @brief Semaphore tries to reinit sd card when reset button is pushed
- * (may be changed to sd card adapter with card detection pin for better reliability)
- */
-extern QueueHandle_t sd_reinit_semaphore;
 
 /**
  * @ingroup freertos

@@ -5,6 +5,7 @@
 #include "sdmmc_cmd.h"
 
 #include "sdcard.h"
+#include "gpio.h"
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -15,7 +16,7 @@ int session_num = 0;
 
 static const char *TAG = "SDCARD_TASK";
 
-bool sd_fail_flag = false;
+bool sd_detect_flag = false;
 
 /**
  * @brief Mounts sd card in file system, checks communication and creates new .csv file if doesn't exist
@@ -55,7 +56,6 @@ esp_err_t sdcard_init(sdmmc_card_t **card_pointer)
         ret = sdcard_write("laptimer.csv", "SESSION, LAP, TIME\n");
         if (ret)
         {
-            sd_active_flag = false;
             return ret;
         }
     }
@@ -100,20 +100,17 @@ esp_err_t sdcard_save_laptime(char laptime_saved_str[LAPTIME_STR_LENGTH])
     ret = sdcard_append("laptimer.csv", session_str);
     if (ret)
     {
-        sd_active_flag = false;
         return ret;
     }
 
     ret = sdcard_append("laptimer.csv", laptime_saved_str);
     if (ret)
     {
-        sd_active_flag = false;
         return ret;
     }
     ret = sdcard_append("laptimer.csv", "\n");
     if (ret)
     {
-        sd_active_flag = false;
         return ret;
     }
     if (ret == ESP_OK)
@@ -134,7 +131,6 @@ esp_err_t sdcard_check_integrity(char laptime_check_str[LAPTIME_STR_LENGTH])
     ret = sdcard_read("laptimer.csv", sd_buffer, sizeof(sd_buffer), &br);
     if (ret)
     {
-        sd_active_flag = false;
         return ret;
     }
     if (strstr(sd_buffer, laptime_check_str) != NULL)
@@ -153,31 +149,32 @@ esp_err_t sdcard_check_integrity(char laptime_check_str[LAPTIME_STR_LENGTH])
 void sdcard_task(void *args)
 {
     sdmmc_card_t *card_handle = NULL;
-    sdcard_spi_init();
-    sdcard_init(&card_handle);
+    if (sdcard_spi_init() == ESP_FAIL)
+        vTaskDelete(NULL);
+    if ((sd_detect_flag = !gpio_get_level((gpio_num_t)SD_CD)) == true)
+        sd_active_flag = !sdcard_init(&card_handle);
     char laptime_saved_str[LAPTIME_STR_LENGTH] = {0};
     for (;;)
     {
-        if (sd_active_flag == true && sd_fail_flag == false)
+        sd_detect_flag = !gpio_get_level((gpio_num_t)SD_CD);
+
+        if (sd_detect_flag == false && sd_active_flag == true)
         {
-            if (xQueueReceive(sd_queue, laptime_saved_str, portMAX_DELAY) == pdTRUE)
+            sdcard_deinit(&card_handle);
+            sd_active_flag = false;
+        }
+
+        if (sd_detect_flag == true && sd_active_flag == true)
+        {
+            if (xQueueReceive(sd_queue, laptime_saved_str, 0) == pdTRUE)
             {
-                sdcard_save_laptime(laptime_saved_str);
+                sd_active_flag = !sdcard_save_laptime(laptime_saved_str);
                 sdcard_check_integrity(laptime_saved_str);
             }
         }
-        else if (sd_active_flag == false && sd_fail_flag == false)
+        if (sd_detect_flag == true && sd_active_flag == false)
         {
-            sdcard_deinit(&card_handle);
-            sd_fail_flag = true;
-        }
-        else if (sd_active_flag == false && sd_fail_flag == true)
-        {
-            if (xSemaphoreTake(sd_reinit_semaphore, portMAX_DELAY) == pdTRUE)
-            {
-                if (sdcard_init(&card_handle) == ESP_OK)
-                    sd_fail_flag = false;
-            }
+            sd_active_flag = !sdcard_init(&card_handle);
         }
         vTaskDelay(50 / portTICK_PERIOD_MS);
     }

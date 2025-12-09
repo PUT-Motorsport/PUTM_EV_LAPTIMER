@@ -9,7 +9,6 @@
 #include "timer.h"
 
 QueueHandle_t sd_queue = xQueueCreate(LAPTIME_LIST_SIZE_LOCAL, sizeof(char[LAPTIME_STR_LENGTH]));
-QueueHandle_t sd_reinit_semaphore = xSemaphoreCreateBinary();
 
 QueueHandle_t lcd_laptime_current_queue = xQueueCreate(1, sizeof(char[LAPTIME_STR_LENGTH]));
 QueueHandle_t lcd_laptime_penalty_semaphore = xSemaphoreCreateBinary();
