@@ -98,6 +98,8 @@ esp_err_t send_laptime_lists(Laptime_list *list)
         list->list_top[i].penalty_string(list_penalty_time_str[i], PENALTY_TIME_STR_LENGTH);
         snprintf(list_penalty_oc_str[i], PENALTY_COUNT_STR_LENGTH, "%u", list->list_top[i].oc_count);
         snprintf(list_penalty_doo_str[i], PENALTY_COUNT_STR_LENGTH, "%u", list->list_top[i].doo_count);
+        list_top_driver_id[i] = list->list_top[i].driver_id;
+        list_last_driver_id[i] = list->list_last[i].driver_id;
     }
 
     xSemaphoreGive(lcd_laptime_lists_semaphore);
@@ -194,13 +196,13 @@ void driver_select()
     {
     case BTN_HOLD_ACTION:
         laptime_current.driver_id--;
-        if (laptime_current.driver_id < 0)
-            laptime_current.driver_id = DRIVER_COUNT - 1;
+        if (laptime_current.driver_id < 1)
+            laptime_current.driver_id = DRIVER_COUNT;
         break;
     case BTN_RELEASED_ACTION:
         laptime_current.driver_id++;
-        if (laptime_current.driver_id > DRIVER_COUNT - 1)
-            laptime_current.driver_id = 0;
+        if (laptime_current.driver_id > DRIVER_COUNT)
+            laptime_current.driver_id = 1;
         break;
     default:
         return;

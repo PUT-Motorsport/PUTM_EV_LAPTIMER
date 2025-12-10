@@ -32,7 +32,10 @@ char penalty_time_str[PENALTY_TIME_STR_LENGTH] = "+00:00";
 char penalty_oc_str[PENALTY_COUNT_STR_LENGTH] = "0";
 char penalty_doo_str[PENALTY_COUNT_STR_LENGTH] = "0";
 
-char driver_list[DRIVER_COUNT][DRIVER_TAG_LENGTH] = {"AAA", "BBB", "CCC"};
+char driver_list[DRIVER_COUNT + 1][DRIVER_TAG_LENGTH] = {"XXX", "AAA", "BBB", "CCC"};
+
+uint16_t list_top_driver_id[LAPTIME_LIST_SIZE_WIFI] = {0};
+uint16_t list_last_driver_id[LAPTIME_LIST_SIZE_WIFI] = {0};
 
 Lapmode lap_mode = ONE_GATE_MODE;
 volatile bool stop_flag = true;

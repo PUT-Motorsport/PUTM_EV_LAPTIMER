@@ -164,7 +164,10 @@ extern char penalty_time_str[PENALTY_TIME_STR_LENGTH];
 extern char penalty_oc_str[PENALTY_COUNT_STR_LENGTH];
 extern char penalty_doo_str[PENALTY_COUNT_STR_LENGTH];
 
-extern char driver_list[DRIVER_COUNT][4];
+extern char driver_list[DRIVER_COUNT + 1][4];
+
+extern uint16_t list_top_driver_id[LAPTIME_LIST_SIZE_WIFI];
+extern uint16_t list_last_driver_id[LAPTIME_LIST_SIZE_WIFI];
 
 /**
  * @brief Global variable determines behavior of gate inputs
