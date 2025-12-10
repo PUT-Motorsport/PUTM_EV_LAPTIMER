@@ -25,14 +25,17 @@ Laptime laptime_saved;
 
 volatile TickType_t doo_press_time = 0;
 volatile TickType_t oc_press_time = 0;
-volatile bool doo_long_flag = false;
-volatile bool oc_long_flag = false;
+volatile TickType_t ds_press_time = 0;
+volatile btn_long_state doo_long_flag = BTN_STANDBY;
+volatile btn_long_state oc_long_flag = BTN_STANDBY;
+volatile btn_long_state ds_state = BTN_STANDBY;
 
 /**
  * @brief Checks active state of LAP_MODE_PIN
  * @return Active mode
  */
-Lapmode lap_mode_check()
+Lapmode
+lap_mode_check()
 {
     if (gpio_get_level(LAP_MODE_PIN) == 0)
         return ONE_GATE_MODE;
@@ -102,23 +105,76 @@ esp_err_t send_laptime_lists(Laptime_list *list)
     return ESP_OK;
 }
 
-bool penalty_check()
+btn_long_state btn_hold(bool btn_state, volatile btn_long_state btn_press_state, TickType_t press_time)
 {
-    uint32_t penalty_time_temp = laptime_current.penalty_time;
+    switch (btn_press_state)
+    {
+    case BTN_STANDBY:
+        return BTN_STANDBY;
+
+    case BTN_HOLD_WAIT:
+        if (btn_state == 1)
+            return BTN_RELEASED_ACTION;
+        else if (press_time > pdMS_TO_TICKS(1000))
+            return BTN_HOLD_ACTION;
+        else
+            return BTN_HOLD_WAIT;
+
+    case BTN_HOLD_ACTION:
+        return BTN_AFTER_HOLD;
+    case BTN_RELEASED_ACTION:
+        return BTN_STANDBY;
+
+    case BTN_AFTER_HOLD:
+        if (btn_state == 1)
+            return BTN_STANDBY;
+        return BTN_AFTER_HOLD;
+
+    default:
+        return BTN_HOLD_WAIT;
+    }
+}
+
+bool penalty_check(Laptime *laptime)
+{
+    uint32_t penalty_time_temp = laptime->penalty_time;
     TickType_t tick = xTaskGetTickCount();
-    static bool doo_after_press_flag = false;
-    static bool oc_after_press_flag = false;
+    doo_long_flag = btn_hold(gpio_get_level(LAP_DOO_PIN), doo_long_flag, tick - doo_press_time);
+    oc_long_flag = btn_hold(gpio_get_level(LAP_OC_PIN), oc_long_flag, tick - oc_press_time);
 
-    if (doo_long_flag == true)
+    switch (doo_long_flag)
     {
-        doo_long_flag = laptime_current.penalty_check(gpio_get_level(LAP_DOO_PIN), &doo_after_press_flag, tick - doo_press_time, DOO_TIME_PENALTY);
+    case BTN_HOLD_ACTION:
+        if (laptime->penalty_time >= DOO_TIME_PENALTY && laptime->doo_count > 0)
+        {
+            laptime->doo_count--;
+            laptime->penalty_time -= DOO_TIME_PENALTY;
+        }
+        break;
+    case BTN_RELEASED_ACTION:
+        laptime->doo_count++;
+        laptime->penalty_time += DOO_TIME_PENALTY;
+        break;
+    default:
+        break;
     }
-    if (oc_long_flag == true)
+    switch (oc_long_flag)
     {
-        oc_long_flag = laptime_current.penalty_check(gpio_get_level(LAP_OC_PIN), &oc_after_press_flag, tick - oc_press_time, OC_TIME_PENALTY);
+    case BTN_HOLD_ACTION:
+        if (laptime->penalty_time >= OC_TIME_PENALTY && laptime->oc_count > 0)
+        {
+            laptime->oc_count--;
+            laptime->penalty_time -= OC_TIME_PENALTY;
+        }
+        break;
+    case BTN_RELEASED_ACTION:
+        laptime->oc_count++;
+        laptime->penalty_time += OC_TIME_PENALTY;
+        break;
+    default:
+        break;
     }
-
-    if (penalty_time_temp != laptime_current.penalty_time || laptime_current.penalty_time == 0)
+    if (penalty_time_temp != laptime->penalty_time || laptime->penalty_time == 0)
         return true;
     return false;
 }
@@ -133,6 +189,30 @@ void send_penalty()
     xSemaphoreGive(lcd_laptime_penalty_semaphore);
     xSemaphoreGive(wifi_laptime_penalty_semaphore);
 }
+
+void driver_select()
+{
+    TickType_t tick = xTaskGetTickCount();
+    ds_state = btn_hold(gpio_get_level(DRIVER_SELECT_PIN), ds_state, tick - ds_press_time);
+    switch (ds_state)
+    {
+    case BTN_HOLD_ACTION:
+        laptime_current.driver_id--;
+        if (laptime_current.driver_id < 0)
+            laptime_current.driver_id = DRIVER_COUNT - 1;
+        break;
+    case BTN_RELEASED_ACTION:
+        laptime_current.driver_id++;
+        if (laptime_current.driver_id > DRIVER_COUNT - 1)
+            laptime_current.driver_id = 0;
+        break;
+    default:
+        return;
+    }
+    laptime_current.driver_tag = driver_list[laptime_current.driver_id];
+    ESP_LOGI(TAG, "DRIVER ID: %d, DRIVER TAG: %s", laptime_current.driver_id, laptime_current.driver_tag);
+}
+
 /**
  * @brief ISR for first gate depends on active mode
  * lap_mode == ONE_GATE_MODE - first gate saves laptime and starts new lap on every negative edge
@@ -208,9 +288,9 @@ void reset_pin_isr()
 void doo_pin_isr()
 {
     TickType_t tick = xTaskGetTickCountFromISR();
-    if ((tick - doo_press_time) > pdMS_TO_TICKS(100) && doo_long_flag == false)
+    if ((tick - doo_press_time) > pdMS_TO_TICKS(100) && doo_long_flag == BTN_STANDBY)
     {
-        doo_long_flag = true;
+        doo_long_flag = BTN_HOLD_WAIT;
         doo_press_time = tick;
     }
 }
@@ -218,12 +298,23 @@ void doo_pin_isr()
 void oc_pin_isr()
 {
     TickType_t tick = xTaskGetTickCountFromISR();
-    if ((tick - oc_press_time) > pdMS_TO_TICKS(100) && oc_long_flag == false)
+    if ((tick - oc_press_time) > pdMS_TO_TICKS(100) && oc_long_flag == BTN_STANDBY)
     {
-        oc_long_flag = true;
+        oc_long_flag = BTN_HOLD_WAIT;
         oc_press_time = tick;
     }
 }
+
+void driver_select_pin_isr()
+{
+    TickType_t tick = xTaskGetTickCountFromISR();
+    if ((tick - ds_press_time) > pdMS_TO_TICKS(100) && ds_state == BTN_STANDBY)
+    {
+        ds_state = BTN_HOLD_WAIT;
+        ds_press_time = tick;
+    }
+}
+
 esp_err_t isr_init()
 {
     ESP_ERROR_CHECK(gpio_isr_handler_add(LAP_GATE1_PIN,
@@ -236,6 +327,8 @@ esp_err_t isr_init()
                                          (gpio_isr_t)doo_pin_isr, NULL));
     ESP_ERROR_CHECK(gpio_isr_handler_add(LAP_OC_PIN,
                                          (gpio_isr_t)oc_pin_isr, NULL));
+    ESP_ERROR_CHECK(gpio_isr_handler_add(DRIVER_SELECT_PIN,
+                                         (gpio_isr_t)driver_select_pin_isr, NULL));
     ESP_LOGI("ISR", "INIT OK");
     return ESP_OK;
 }
@@ -261,7 +354,7 @@ void laptimer_task(void *args)
 
     xQueueSend(lcd_laptime_current_queue, laptimer_current_str, 0);
     xQueueSend(wifi_laptime_current_queue, laptimer_current_str, 0);
-    penalty_check();
+    penalty_check(&laptime_current);
     send_laptime_lists(&laptime_list);
 
     for (;;)
@@ -269,7 +362,8 @@ void laptimer_task(void *args)
         if (stop_flag == false)
         {
             laptime_current.time = timer_get_time(laptime_timer);
-            status_update_flag = penalty_check();
+            status_update_flag = penalty_check(&laptime_current);
+            driver_select();
             laptime_current.convert_string(laptimer_current_str, LAPTIME_STR_LENGTH);
             xQueueSend(lcd_laptime_current_queue, laptimer_current_str, 0);
             xQueueSend(wifi_laptime_current_queue, laptimer_current_str, 0);

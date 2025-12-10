@@ -54,6 +54,8 @@ enum Lapmode
  */
 #define LAP_OC_PIN ((gpio_num_t)CONFIG_LAP_OC_PIN)
 
+#define DRIVER_SELECT_PIN ((gpio_num_t)17)
+
 /// @ingroup pinout_defines
 /// @brief SDCARD pinout
 #define SD_SPI_CLK CONFIG_SD_SPI_CLK
@@ -101,6 +103,8 @@ enum Lapmode
 /// @brief Time penalty added to current laptime by LAP_DOO_PIN and LAP_OC_PIN in ms
 #define DOO_TIME_PENALTY (uint32_t)200
 #define OC_TIME_PENALTY (uint32_t)1000
+
+#define DRIVER_COUNT 3
 
 /**
  * @defgroup freertos
@@ -154,6 +158,8 @@ extern char list_penalty_doo_str[LAPTIME_LIST_SIZE_WIFI][PENALTY_COUNT_STR_LENGT
 extern char penalty_time_str[PENALTY_TIME_STR_LENGTH];
 extern char penalty_oc_str[PENALTY_COUNT_STR_LENGTH];
 extern char penalty_doo_str[PENALTY_COUNT_STR_LENGTH];
+
+extern char driver_list[DRIVER_COUNT][4];
 
 /**
  * @brief Global variable determines behavior of gate inputs

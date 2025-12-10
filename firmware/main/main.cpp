@@ -30,6 +30,8 @@ char penalty_time_str[PENALTY_TIME_STR_LENGTH] = "+00:00";
 char penalty_oc_str[PENALTY_COUNT_STR_LENGTH] = "0";
 char penalty_doo_str[PENALTY_COUNT_STR_LENGTH] = "0";
 
+char driver_list[DRIVER_COUNT][4] = {"AAA", "BBB", "CCC"};
+
 Lapmode lap_mode = ONE_GATE_MODE;
 volatile bool stop_flag = true;
 bool sd_active_flag = false;

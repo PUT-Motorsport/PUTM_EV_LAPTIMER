@@ -9,9 +9,13 @@ class Laptime
 public:
     volatile uint16_t count = 1;
     volatile uint64_t time = 0;
+
     uint32_t penalty_time = 0;
     uint16_t doo_count = 0;
     uint16_t oc_count = 0;
+
+    int16_t driver_id = 0;
+    char *driver_tag = "XXX";
 
     void reset()
     {
@@ -25,48 +29,6 @@ public:
     {
         this->count++;
         this->reset();
-    }
-
-    bool penalty_check(bool btn_state, bool *press_flag_state, TickType_t press_time, uint32_t penalty)
-    {
-        uint16_t *count;
-        switch (penalty)
-        {
-        case DOO_TIME_PENALTY:
-            count = &(this->doo_count);
-            break;
-        case OC_TIME_PENALTY:
-            count = &(this->oc_count);
-            break;
-        default:
-            count = &(this->doo_count);
-            break;
-        }
-
-        if (btn_state == 0 && *press_flag_state == false)
-        {
-            if (press_time > pdMS_TO_TICKS(1000))
-            {
-                if (this->penalty_time >= penalty && *count > 0)
-                {
-                    (*count)--;
-                    this->penalty_time -= penalty;
-                }
-                *press_flag_state = true;
-            }
-        }
-        else if (btn_state == 1 && *press_flag_state == true)
-        {
-            *press_flag_state = false;
-            return false;
-        }
-        else if (*press_flag_state == false)
-        {
-            (*count)++;
-            this->penalty_time += penalty;
-            return false;
-        }
-        return true;
     }
 
     /**
@@ -117,6 +79,15 @@ struct Laptime_list
 {
     Laptime list_top[LAPTIME_LIST_SIZE_LOCAL] = {0};
     Laptime list_last[LAPTIME_LIST_SIZE_LOCAL] = {0};
+};
+
+enum btn_long_state
+{
+    BTN_STANDBY,
+    BTN_HOLD_WAIT,
+    BTN_HOLD_ACTION,
+    BTN_RELEASED_ACTION,
+    BTN_AFTER_HOLD,
 };
 
 void laptimer_task(void *args);
