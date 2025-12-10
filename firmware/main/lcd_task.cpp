@@ -40,6 +40,8 @@
 #define LAPTIME_LISTS_LETTER_WIDTH 10
 #define UI_LETTER_WIDTH 9
 
+const int color_list[] = {BLUE, RED, YELLOW, GREEN, MAGENTA, BROWN, CYAN};
+
 hagl_backend_t display_struct;
 hagl_backend_t *display = &display_struct;
 
@@ -86,10 +88,11 @@ void print_ui()
                   WHITE);
     lcd_print_line(0, LAPTIME_LISTS_POS_Y - PADDING, LCD_WIDTH, LAPTIME_LISTS_POS_Y - PADDING,
                    WHITE);
-    lcd_print_line(LCD_WIDTH / 2, LAPTIME_LISTS_POS_Y - PADDING, LCD_WIDTH / 2,
+    lcd_print_line(LCD_WIDTH / 2, LAPTIME_CURRENT_POS_Y + 25, LCD_WIDTH / 2,
                    LCD_HEIGHT, WHITE);
     lcd_print_str(LAPTIME_LISTS_POS_X, LAPTIME_CURRENT_POS_Y + 25, "OC:", UI_FONT, YELLOW);
     lcd_print_str(LAPTIME_LISTS_POS_X + UI_LETTER_WIDTH * 8, LAPTIME_CURRENT_POS_Y + 25, "DOO:", UI_FONT, YELLOW);
+    lcd_print_str(LAPTIME_LISTS_POS_X + LCD_WIDTH / 2, LAPTIME_CURRENT_POS_Y + 25, "DRIVER:", UI_FONT, WHITE);
 }
 
 /**
@@ -109,7 +112,6 @@ void print_status()
             lcd_print_str(LCD_WIDTH - UI_LETTER_WIDTH * 6 - PADDING, PADDING, "2 GATE ",
                           UI_FONT, GRAY);
         }
-
         if (stop_flag)
             lcd_print_str(LCD_WIDTH / 2, PADDING, "STOP", UI_FONT, RED);
         else
@@ -147,6 +149,16 @@ void print_penalty()
     }
 }
 
+void print_driver()
+{
+    static int16_t driver_id = 0;
+    if (xQueueReceive(lcd_laptime_driver_queue, &driver_id, 0) == pdTRUE)
+    {
+        lcd_print_str(LAPTIME_LISTS_POS_X + UI_LETTER_WIDTH * 26, LAPTIME_CURRENT_POS_Y + 25, driver_list[driver_id], UI_FONT, WHITE);
+        hagl_fill_rounded_rectangle(display, LAPTIME_LISTS_POS_X + UI_LETTER_WIDTH * 30, LAPTIME_CURRENT_POS_Y + 25, LAPTIME_LISTS_POS_X + UI_LETTER_WIDTH * 30 + 25, LAPTIME_CURRENT_POS_Y + 25 + 10, 5, (hagl_color_t)color_list[driver_id]);
+    }
+}
+
 /**
  * @brief Reads laptime lists from global variable after receiving samphore and prints them on LCD
  */
@@ -181,6 +193,7 @@ void lcd_task(void *args)
     {
         print_current_laptime();
         print_penalty();
+        print_driver();
         print_laptime_lists();
         print_status();
         vTaskDelay(20 / portTICK_PERIOD_MS);

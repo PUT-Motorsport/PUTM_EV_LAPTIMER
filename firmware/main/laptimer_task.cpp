@@ -135,7 +135,7 @@ btn_long_state btn_hold(bool btn_state, volatile btn_long_state btn_press_state,
     }
 }
 
-bool penalty_check(Laptime *laptime)
+void penalty_check(Laptime *laptime)
 {
     uint32_t penalty_time_temp = laptime->penalty_time;
     TickType_t tick = xTaskGetTickCount();
@@ -175,19 +175,15 @@ bool penalty_check(Laptime *laptime)
         break;
     }
     if (penalty_time_temp != laptime->penalty_time || laptime->penalty_time == 0)
-        return true;
-    return false;
-}
+    {
+        laptime_current.penalty_string(penalty_time_str, sizeof(penalty_time_str));
+        snprintf(penalty_oc_str, sizeof(penalty_oc_str), "%3u", laptime_current.oc_count);
+        snprintf(penalty_doo_str, sizeof(penalty_doo_str), "%3u", laptime_current.doo_count);
 
-void send_penalty()
-{
-
-    laptime_current.penalty_string(penalty_time_str, sizeof(penalty_time_str));
-    snprintf(penalty_oc_str, sizeof(penalty_oc_str), "%3u", laptime_current.oc_count);
-    snprintf(penalty_doo_str, sizeof(penalty_doo_str), "%3u", laptime_current.doo_count);
-
-    xSemaphoreGive(lcd_laptime_penalty_semaphore);
-    xSemaphoreGive(wifi_laptime_penalty_semaphore);
+        xSemaphoreGive(lcd_laptime_penalty_semaphore);
+        xSemaphoreGive(wifi_laptime_penalty_semaphore);
+    }
+    return;
 }
 
 void driver_select()
@@ -211,6 +207,9 @@ void driver_select()
     }
     laptime_current.driver_tag = driver_list[laptime_current.driver_id];
     ESP_LOGI(TAG, "DRIVER ID: %d, DRIVER TAG: %s", laptime_current.driver_id, laptime_current.driver_tag);
+    xQueueSend(lcd_laptime_driver_queue, &laptime_current.driver_id, 0);
+    xQueueSend(wifi_laptime_driver_queue, &laptime_current.driver_id, 0);
+    return;
 }
 
 /**
@@ -354,16 +353,20 @@ void laptimer_task(void *args)
 
     xQueueSend(lcd_laptime_current_queue, laptimer_current_str, 0);
     xQueueSend(wifi_laptime_current_queue, laptimer_current_str, 0);
+
+    xQueueSend(lcd_laptime_driver_queue, &laptime_current.driver_id, 0);
+    xQueueSend(wifi_laptime_driver_queue, &laptime_current.driver_id, 0);
+
     penalty_check(&laptime_current);
     send_laptime_lists(&laptime_list);
 
     for (;;)
     {
+        driver_select();
         if (stop_flag == false)
         {
             laptime_current.time = timer_get_time(laptime_timer);
-            status_update_flag = penalty_check(&laptime_current);
-            driver_select();
+            penalty_check(&laptime_current);
             laptime_current.convert_string(laptimer_current_str, LAPTIME_STR_LENGTH);
             xQueueSend(lcd_laptime_current_queue, laptimer_current_str, 0);
             xQueueSend(wifi_laptime_current_queue, laptimer_current_str, 0);
@@ -400,7 +403,6 @@ void laptimer_task(void *args)
         {
             xSemaphoreGive(lcd_laptime_status_semaphore);
             xSemaphoreGive(wifi_laptime_status_semaphore);
-            send_penalty();
             status_update_flag = false;
         }
 

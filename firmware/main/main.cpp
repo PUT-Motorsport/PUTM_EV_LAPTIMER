@@ -12,11 +12,13 @@ QueueHandle_t sd_queue = xQueueCreate(LAPTIME_LIST_SIZE_LOCAL, sizeof(char[LAPTI
 
 QueueHandle_t lcd_laptime_current_queue = xQueueCreate(1, sizeof(char[LAPTIME_STR_LENGTH]));
 QueueHandle_t lcd_laptime_penalty_semaphore = xSemaphoreCreateBinary();
+QueueHandle_t lcd_laptime_driver_queue = xQueueCreate(1, sizeof(int16_t *));
 QueueHandle_t lcd_laptime_lists_semaphore = xSemaphoreCreateBinary();
 QueueHandle_t lcd_laptime_status_semaphore = xSemaphoreCreateBinary();
 
 QueueHandle_t wifi_laptime_current_queue = xQueueCreate(1, sizeof(char[LAPTIME_STR_LENGTH]));
 QueueHandle_t wifi_laptime_penalty_semaphore = xSemaphoreCreateBinary();
+QueueHandle_t wifi_laptime_driver_queue = xQueueCreate(1, sizeof(int16_t *));
 QueueHandle_t wifi_laptime_lists_semaphore = xSemaphoreCreateBinary();
 QueueHandle_t wifi_laptime_status_semaphore = xSemaphoreCreateBinary();
 
@@ -30,7 +32,7 @@ char penalty_time_str[PENALTY_TIME_STR_LENGTH] = "+00:00";
 char penalty_oc_str[PENALTY_COUNT_STR_LENGTH] = "0";
 char penalty_doo_str[PENALTY_COUNT_STR_LENGTH] = "0";
 
-char driver_list[DRIVER_COUNT][4] = {"AAA", "BBB", "CCC"};
+char driver_list[DRIVER_COUNT][DRIVER_TAG_LENGTH] = {"AAA", "BBB", "CCC"};
 
 Lapmode lap_mode = ONE_GATE_MODE;
 volatile bool stop_flag = true;

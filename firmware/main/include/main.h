@@ -106,6 +106,8 @@ enum Lapmode
 
 #define DRIVER_COUNT 3
 
+#define DRIVER_TAG_LENGTH 4
+
 /**
  * @defgroup freertos
  * @brief FreeRTOS intertask communication
@@ -126,6 +128,9 @@ extern QueueHandle_t wifi_laptime_current_queue;
 
 extern QueueHandle_t lcd_laptime_penalty_semaphore;
 extern QueueHandle_t wifi_laptime_penalty_semaphore;
+
+extern QueueHandle_t lcd_laptime_driver_queue;
+extern QueueHandle_t wifi_laptime_driver_queue;
 
 /**
  * @ingroup freertos
