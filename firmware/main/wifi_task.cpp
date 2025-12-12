@@ -8,6 +8,8 @@
 
 static const char *TAG = "WIFI_TASK";
 
+extern uint16_t list_driver_lap_count[DRIVER_MAX_COUNT];
+
 /**
  * @brief Flag activated by semaphore received from laptimer_task on every laptime lists update
  */
@@ -45,7 +47,7 @@ body { font-family: monospace; background: #111; color: #eee; margin: 0; padding
 h1 { text-align: center; margin-top: 10px; }
 .container { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; max-width: 1400px; margin: 0 auto; }
 .main-panel { flex: 1; min-width: 300px; max-width: 900px; text-align: center; }
-.side-panel { flex: 0 0 200px; background: #222; padding: 15px; border-radius: 8px; height: fit-content; text-align: left; border: 1px solid #444; }
+.side-panel { flex: 0 0 500px; background: #222; padding: 15px; border-radius: 8px; height: fit-content; text-align: left; border: 1px solid #444; }
 .val { font-size: 3em; font-weight: bold; }
 .label { color: #aaa; font-size: 1.2em; margin-bottom: 5px; }
 .status { margin: 20px; font-size: 1.2em; }
@@ -63,7 +65,7 @@ th { color: #aaa; }
 .pen-col { color: #ffeb3b; }
 .driver-color-box { display: inline-block; width: 20px; height: 20px; border-radius: 4px; vertical-align: middle; border: 2px solid #fff; margin-right: 10px; }
 .current-container { display: flex; justify-content: center; align-items: baseline; gap: 20px; flex-wrap: wrap; }
-.download-btn { padding: 15px 30px; font-size: 1.2em; background: #333; color: #fff; border: 1px solid #444; cursor: pointer; margin: 20px 0; width: 100%; border-radius: 4px; }
+.download-btn { padding: 15px 30px; font-size: 1.2em; background: #333; color: #fff; border: 1px solid #444; cursor: pointer; margin: 5px 0; width: 100%; border-radius: 4px; display: block; text-decoration: none; text-align: center;}
 .legend-item { font-size: 1.1em; display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid #333; }
 .legend-item:last-child { border-bottom: none; }
 h3 { margin-top: 0; color: #ccc; border-bottom: 1px solid #555; padding-bottom: 10px; text-align: center; }
@@ -160,7 +162,10 @@ h3 { margin-top: 0; color: #ccc; border-bottom: 1px solid #555; padding-bottom: 
      <div id="driver_legend"></div>
      <div style="margin-top: 20px;">
         <form action="/api/csv" method="get">
-          <button type="submit" class="download-btn">DOWNLOAD CSV</button>
+          <button type="submit" class="download-btn">DOWNLOAD LAPS CSV</button>
+        </form>
+        <form action="/api/drivers_csv" method="get">
+          <button type="submit" class="download-btn">DOWNLOAD DRIVERS CSV</button>
         </form>
      </div>
   </div>
@@ -171,7 +176,7 @@ h3 { margin-top: 0; color: #ccc; border-bottom: 1px solid #555; padding-bottom: 
 const colors = ['black', 'blue', 'red', 'yellow', 'green', 'magenta', 'brown', 'cyan'];
 
 function update() {
-  fetch('/api/data').then(r => r.json()).then(d => {
+  fetch('/api/data?t=' + new Date().getTime()).then(r => r.json()).then(d => {
     document.getElementById('curr').innerText = d.current;
     
     document.getElementById('curr_drv_tag').innerText = d.current_driver_tag || "XXX";
@@ -188,13 +193,30 @@ function update() {
     document.getElementById('sd').className = d.status.sd ? "on" : "off";
     
     if (d.all_drivers) {
-        let legendHtml = "";
+        let legendHtml = "<table><thead><tr><th>Driver</th><th>Best</th><th>Laps</th><th>Pen.</th><th>OC</th><th>DOO</th></tr></thead><tbody>";
         d.all_drivers.forEach((drv, i) => {
-            //  Skip the first placeholder driver (index 0)
-             if (i === 0) return;
+             // Skip placeholder only if it matches standard placeholder
+             if (drv === "XXX") return;
              let color = colors[i] || 'black';
-             legendHtml += `<div class="legend-item"><span class="driver-color-box" style="background:${color}"></span> ${drv}</div>`;
+             
+             let best = (d.driver_best && d.driver_best[i]) ? d.driver_best[i] : '-';
+             let laps = (d.driver_lap_count && d.driver_lap_count[i] !== undefined) ? d.driver_lap_count[i] : '0';
+             let p_time = (d.driver_pen_time && d.driver_pen_time[i]) ? d.driver_pen_time[i] : '0';
+             let p_oc = (d.driver_pen_oc && d.driver_pen_oc[i]) ? d.driver_pen_oc[i] : '0';
+             let p_doo = (d.driver_pen_doo && d.driver_pen_doo[i]) ? d.driver_pen_doo[i] : '0';
+
+             legendHtml += `<tr>
+                <td style=\"text-align: left;\">
+                    <span class=\"driver-color-box\" style=\"background:${color}; margin-right:5px;\"></span>${drv}
+                </td>
+                <td>${best}</td>
+                <td>${laps}</td>
+                <td class=\"pen-col\">${p_time}</td>
+                <td class=\"pen-col\">${p_oc}</td>
+                <td class=\"pen-col\">${p_doo}</td>
+             </tr>`;
         });
+        legendHtml += "</tbody></table>";
         document.getElementById('driver_legend').innerHTML = legendHtml;
     }
 
@@ -214,10 +236,10 @@ function update() {
             let color = colors[drv_id] || 'black';
             lastHtml += `<tr>
                 <td>${t}</td>
-                <td>${drv}<span class="driver-color-box" style="background:${color}; margin-left:5px; margin-right:0;"></span></td>
-                <td class="pen-col">${p_time}</td>
-                <td class="pen-col">${p_oc}</td>
-                <td class="pen-col">${p_doo}</td>
+                <td>${drv}<span class=\"driver-color-box\" style=\"background:${color}; margin-left:5px; margin-right:0;\"></span></td>
+                <td class=\"pen-col\">${p_time}</td>
+                <td class=\"pen-col\">${p_oc}</td>
+                <td class=\"pen-col\">${p_doo}</td>
             </tr>`;
         }
     }
@@ -236,7 +258,7 @@ function update() {
             let color = colors[drv_id] || 'black';
             topHtml += `<tr>
                 <td>${t}</td>
-                <td>${drv}<span class="driver-color-box" style="background:${color}; margin-left:5px; margin-right:0;"></span></td>
+                <td>${drv}<span class=\"driver-color-box\" style=\"background:${color}; margin-left:5px; margin-right:0;\"></span></td>
             </tr>`;
         }
     }
@@ -272,11 +294,27 @@ static esp_err_t data_get_handler(httpd_req_t *req)
         cJSON_AddNumberToObject(root, "current_driver_id", current_driver_id);
 
         cJSON *drivers_arr = cJSON_CreateArray();
+        cJSON *driver_best_arr = cJSON_CreateArray();
+        cJSON *driver_lap_count_arr = cJSON_CreateArray();
+        cJSON *driver_pen_time_arr = cJSON_CreateArray();
+        cJSON *driver_pen_oc_arr = cJSON_CreateArray();
+        cJSON *driver_pen_doo_arr = cJSON_CreateArray();
+
         for (int i = 0; i <= DRIVER_COUNT; i++)
         {
             cJSON_AddItemToArray(drivers_arr, cJSON_CreateString(driver_list[i]));
+            cJSON_AddItemToArray(driver_best_arr, cJSON_CreateString(list_driver_str[i]));
+            cJSON_AddItemToArray(driver_lap_count_arr, cJSON_CreateNumber(list_driver_lap_count[i]));
+            cJSON_AddItemToArray(driver_pen_time_arr, cJSON_CreateString(list_driver_penalty_time_str[i]));
+            cJSON_AddItemToArray(driver_pen_oc_arr, cJSON_CreateString(list_driver_penalty_oc_str[i]));
+            cJSON_AddItemToArray(driver_pen_doo_arr, cJSON_CreateString(list_driver_penalty_doo_str[i]));
         }
         cJSON_AddItemToObject(root, "all_drivers", drivers_arr);
+        cJSON_AddItemToObject(root, "driver_best", driver_best_arr);
+        cJSON_AddItemToObject(root, "driver_lap_count", driver_lap_count_arr);
+        cJSON_AddItemToObject(root, "driver_pen_time", driver_pen_time_arr);
+        cJSON_AddItemToObject(root, "driver_pen_oc", driver_pen_oc_arr);
+        cJSON_AddItemToObject(root, "driver_pen_doo", driver_pen_doo_arr);
 
         cJSON *status = cJSON_CreateObject();
         cJSON_AddBoolToObject(status, "mode", status_flags[0]);
@@ -296,26 +334,22 @@ static esp_err_t data_get_handler(httpd_req_t *req)
         cJSON *last_pen_oc_arr = cJSON_CreateArray();
         cJSON *last_pen_doo_arr = cJSON_CreateArray();
 
-        if (new_lists_flag == true)
+        for (int i = 0; i < LAPTIME_LIST_SIZE_WIFI; i++)
         {
-            for (int i = 0; i < LAPTIME_LIST_SIZE_WIFI; i++)
-            {
-                cJSON_AddItemToArray(last_arr, cJSON_CreateString(list_last_str[i]));
-                cJSON_AddItemToArray(top_arr, cJSON_CreateString(list_top_str[i]));
+            cJSON_AddItemToArray(last_arr, cJSON_CreateString(list_last_str[i]));
+            cJSON_AddItemToArray(top_arr, cJSON_CreateString(list_top_str[i]));
 
-                cJSON_AddItemToArray(last_driver_tag_arr, cJSON_CreateString(driver_list[list_last_driver_id[i]]));
-                cJSON_AddItemToArray(last_driver_id_arr, cJSON_CreateNumber(list_last_driver_id[i]));
+            cJSON_AddItemToArray(last_driver_tag_arr, cJSON_CreateString(driver_list[list_last_driver_id[i]]));
+            cJSON_AddItemToArray(last_driver_id_arr, cJSON_CreateNumber(list_last_driver_id[i]));
 
-                cJSON_AddItemToArray(top_driver_tag_arr, cJSON_CreateString(driver_list[list_top_driver_id[i]]));
-                cJSON_AddItemToArray(top_driver_id_arr, cJSON_CreateNumber(list_top_driver_id[i]));
+            cJSON_AddItemToArray(top_driver_tag_arr, cJSON_CreateString(driver_list[list_top_driver_id[i]]));
+            cJSON_AddItemToArray(top_driver_id_arr, cJSON_CreateNumber(list_top_driver_id[i]));
 
-                cJSON_AddItemToArray(last_pen_time_arr, cJSON_CreateString(list_penalty_time_str[i]));
-                cJSON_AddItemToArray(last_pen_oc_arr, cJSON_CreateString(list_penalty_oc_str[i]));
-                cJSON_AddItemToArray(last_pen_doo_arr, cJSON_CreateString(list_penalty_doo_str[i]));
-            }
-            new_lists_flag = false;
-            xSemaphoreGive(wifi_laptime_lists_semaphore);
+            cJSON_AddItemToArray(last_pen_time_arr, cJSON_CreateString(list_penalty_time_str[i]));
+            cJSON_AddItemToArray(last_pen_oc_arr, cJSON_CreateString(list_penalty_oc_str[i]));
+            cJSON_AddItemToArray(last_pen_doo_arr, cJSON_CreateString(list_penalty_doo_str[i]));
         }
+
         cJSON_AddItemToObject(root, "last", last_arr);
         cJSON_AddItemToObject(root, "top", top_arr);
 
@@ -328,13 +362,18 @@ static esp_err_t data_get_handler(httpd_req_t *req)
         cJSON_AddItemToObject(root, "last_pen_oc", last_pen_oc_arr);
         cJSON_AddItemToObject(root, "last_pen_doo", last_pen_doo_arr);
 
-        if (new_penalty_flag == true)
+        cJSON_AddStringToObject(root, "penalty_time", current_penalty_time_str);
+        cJSON_AddStringToObject(root, "penalty_oc", current_penalty_oc_str);
+        cJSON_AddStringToObject(root, "penalty_doo", current_penalty_doo_str);
+
+        // Reset flags if needed, although we are not gating on them anymore for response construction
+        if (new_lists_flag)
         {
-            cJSON_AddStringToObject(root, "penalty_time", penalty_time_str);
-            cJSON_AddStringToObject(root, "penalty_oc", penalty_oc_str);
-            cJSON_AddStringToObject(root, "penalty_doo", penalty_doo_str);
+            new_lists_flag = false;
+        }
+        if (new_penalty_flag)
+        {
             new_penalty_flag = false;
-            xSemaphoreGive(wifi_laptime_penalty_semaphore);
         }
 
         xSemaphoreGive(data_mutex);
@@ -383,6 +422,40 @@ static esp_err_t csv_get_handler(httpd_req_t *req)
 }
 
 /**
+ * @brief Handler downloads driver statistics in CSV format
+ * @param req HTTP request structure
+ * @return Error check
+ */
+static esp_err_t drivers_csv_get_handler(httpd_req_t *req)
+{
+    httpd_resp_set_type(req, "text/csv");
+    httpd_resp_set_hdr(req, "Content-Disposition", "attachment; filename=\"drivers.csv\"");
+
+    // Header
+    httpd_resp_sendstr_chunk(req, "Driver,Best lap number, Best laptime,Lap count ,Penalty time sum,OC sum,DOO sum\n");
+
+    if (xSemaphoreTake(data_mutex, portMAX_DELAY))
+    {
+        char line[128];
+        for (int i = 1; i <= DRIVER_COUNT; i++)
+        {
+            snprintf(line, sizeof(line), "%s,%s,%u,%s,%s,%s\n",
+                     driver_list[i],
+                     list_driver_str[i],
+                     list_driver_lap_count[i],
+                     list_driver_penalty_time_str[i],
+                     list_driver_penalty_oc_str[i],
+                     list_driver_penalty_doo_str[i]);
+            httpd_resp_sendstr_chunk(req, line);
+        }
+        xSemaphoreGive(data_mutex);
+    }
+
+    httpd_resp_sendstr_chunk(req, NULL);
+    return ESP_OK;
+}
+
+/**
  * @brief Initialization of web server
  * @return Handle to http instance
  */
@@ -415,6 +488,14 @@ static httpd_handle_t start_webserver(void)
             .handler = csv_get_handler,
             .user_ctx = NULL};
         httpd_register_uri_handler(server, &csv);
+
+        httpd_uri_t drivers_csv = {
+            .uri = "/api/drivers_csv",
+            .method = HTTP_GET,
+            .handler = drivers_csv_get_handler,
+            .user_ctx = NULL};
+        httpd_register_uri_handler(server, &drivers_csv);
+
         return server;
     }
 

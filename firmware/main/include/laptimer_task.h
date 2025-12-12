@@ -55,7 +55,7 @@ public:
                      this->count, mm, ss, ms);
     }
 
-    void penalty_string(char laptime_str[11], size_t size)
+    void penalty_string(char laptime_str[PENALTY_TIME_STR_LENGTH], size_t size)
     {
         if (laptime_str == NULL)
             return;
@@ -79,6 +79,7 @@ struct Laptime_list
 {
     Laptime list_top[LAPTIME_LIST_SIZE_LOCAL] = {0};
     Laptime list_last[LAPTIME_LIST_SIZE_LOCAL] = {0};
+    Laptime list_driver[DRIVER_MAX_COUNT] = {0};
 };
 
 enum btn_long_state

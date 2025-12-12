@@ -104,6 +104,8 @@ enum Lapmode
 #define DOO_TIME_PENALTY (uint32_t)200
 #define OC_TIME_PENALTY (uint32_t)1000
 
+#define DRIVER_MAX_COUNT 10
+
 #define DRIVER_COUNT 3
 
 #define DRIVER_TAG_LENGTH 4
@@ -155,19 +157,25 @@ extern QueueHandle_t wifi_laptime_status_semaphore;
  * [1] - last laptimes list
  */
 extern char list_top_str[LAPTIME_LIST_SIZE_WIFI][LAPTIME_STR_LENGTH];
+extern uint16_t list_top_driver_id[LAPTIME_LIST_SIZE_WIFI];
+
 extern char list_last_str[LAPTIME_LIST_SIZE_WIFI][LAPTIME_STR_LENGTH];
+extern uint16_t list_last_driver_id[LAPTIME_LIST_SIZE_WIFI];
 extern char list_penalty_time_str[LAPTIME_LIST_SIZE_WIFI][PENALTY_TIME_STR_LENGTH];
 extern char list_penalty_oc_str[LAPTIME_LIST_SIZE_WIFI][PENALTY_COUNT_STR_LENGTH];
 extern char list_penalty_doo_str[LAPTIME_LIST_SIZE_WIFI][PENALTY_COUNT_STR_LENGTH];
 
-extern char penalty_time_str[PENALTY_TIME_STR_LENGTH];
-extern char penalty_oc_str[PENALTY_COUNT_STR_LENGTH];
-extern char penalty_doo_str[PENALTY_COUNT_STR_LENGTH];
+extern char list_driver_str[DRIVER_MAX_COUNT][LAPTIME_STR_LENGTH];
+extern uint16_t list_driver_lap_count[DRIVER_MAX_COUNT];
+extern char list_driver_penalty_time_str[DRIVER_MAX_COUNT][PENALTY_TIME_STR_LENGTH];
+extern char list_driver_penalty_oc_str[DRIVER_MAX_COUNT][PENALTY_COUNT_STR_LENGTH];
+extern char list_driver_penalty_doo_str[DRIVER_MAX_COUNT][PENALTY_COUNT_STR_LENGTH];
 
-extern char driver_list[DRIVER_COUNT + 1][4];
+extern char current_penalty_time_str[PENALTY_TIME_STR_LENGTH];
+extern char current_penalty_oc_str[PENALTY_COUNT_STR_LENGTH];
+extern char current_penalty_doo_str[PENALTY_COUNT_STR_LENGTH];
 
-extern uint16_t list_top_driver_id[LAPTIME_LIST_SIZE_WIFI];
-extern uint16_t list_last_driver_id[LAPTIME_LIST_SIZE_WIFI];
+extern char driver_list[DRIVER_MAX_COUNT][DRIVER_TAG_LENGTH];
 
 /**
  * @brief Global variable determines behavior of gate inputs

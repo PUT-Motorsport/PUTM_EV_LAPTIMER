@@ -34,8 +34,7 @@ volatile btn_long_state ds_state = BTN_STANDBY;
  * @brief Checks active state of LAP_MODE_PIN
  * @return Active mode
  */
-Lapmode
-lap_mode_check()
+Lapmode lap_mode_check()
 {
     if (gpio_get_level(LAP_MODE_PIN) == 0)
         return ONE_GATE_MODE;
@@ -71,6 +70,16 @@ esp_err_t laptime_save_local(Laptime laptime, Laptime_list *list)
             break;
         }
     }
+
+    if (laptime.time < list->list_driver[laptime.driver_id].time || list->list_driver[laptime.driver_id].time == 0)
+        list->list_driver[laptime.driver_id].time = laptime.time;
+    list->list_driver[laptime.driver_id].driver_id = laptime.driver_id;
+    list->list_driver[laptime.driver_id].driver_tag = driver_list[laptime.driver_id];
+    list->list_driver[laptime.driver_id].oc_count += laptime.oc_count;
+    list->list_driver[laptime.driver_id].doo_count += laptime.doo_count;
+    list->list_driver[laptime.driver_id].penalty_time += laptime.penalty_time;
+    list->list_driver[laptime.driver_id].count++;
+
     return ESP_OK;
 }
 
@@ -94,12 +103,21 @@ esp_err_t send_laptime_lists(Laptime_list *list)
     for (int i = 0; i < LAPTIME_LIST_SIZE_WIFI; i++)
     {
         list->list_top[i].convert_string(list_top_str[i], LAPTIME_STR_LENGTH);
-        list->list_last[i].convert_string(list_last_str[i], LAPTIME_STR_LENGTH);
-        list->list_top[i].penalty_string(list_penalty_time_str[i], PENALTY_TIME_STR_LENGTH);
-        snprintf(list_penalty_oc_str[i], PENALTY_COUNT_STR_LENGTH, "%u", list->list_top[i].oc_count);
-        snprintf(list_penalty_doo_str[i], PENALTY_COUNT_STR_LENGTH, "%u", list->list_top[i].doo_count);
         list_top_driver_id[i] = list->list_top[i].driver_id;
+
+        list->list_last[i].convert_string(list_last_str[i], LAPTIME_STR_LENGTH);
+        list->list_last[i].penalty_string(list_penalty_time_str[i], PENALTY_TIME_STR_LENGTH);
         list_last_driver_id[i] = list->list_last[i].driver_id;
+        snprintf(list_penalty_oc_str[i], PENALTY_COUNT_STR_LENGTH, "%u", list->list_last[i].oc_count);
+        snprintf(list_penalty_doo_str[i], PENALTY_COUNT_STR_LENGTH, "%u", list->list_last[i].doo_count);
+    }
+    for (int i = 1; i <= DRIVER_COUNT; i++)
+    {
+        list->list_driver[i].convert_string(list_driver_str[i], LAPTIME_STR_LENGTH);
+        list->list_driver[i].penalty_string(list_driver_penalty_time_str[i], PENALTY_TIME_STR_LENGTH);
+        list_driver_lap_count[i] = list->list_driver[i].count - 1;
+        snprintf(list_driver_penalty_oc_str[i], PENALTY_COUNT_STR_LENGTH, "%u", list->list_driver[i].oc_count);
+        snprintf(list_driver_penalty_doo_str[i], PENALTY_COUNT_STR_LENGTH, "%u", list->list_driver[i].doo_count);
     }
 
     xSemaphoreGive(lcd_laptime_lists_semaphore);
@@ -178,9 +196,9 @@ void penalty_check(Laptime *laptime)
     }
     if (penalty_time_temp != laptime->penalty_time || laptime->penalty_time == 0)
     {
-        laptime_current.penalty_string(penalty_time_str, sizeof(penalty_time_str));
-        snprintf(penalty_oc_str, sizeof(penalty_oc_str), "%3u", laptime_current.oc_count);
-        snprintf(penalty_doo_str, sizeof(penalty_doo_str), "%3u", laptime_current.doo_count);
+        laptime_current.penalty_string(current_penalty_time_str, sizeof(current_penalty_time_str));
+        snprintf(current_penalty_oc_str, sizeof(current_penalty_oc_str), "%3u", laptime_current.oc_count);
+        snprintf(current_penalty_doo_str, sizeof(current_penalty_doo_str), "%3u", laptime_current.doo_count);
 
         xSemaphoreGive(lcd_laptime_penalty_semaphore);
         xSemaphoreGive(wifi_laptime_penalty_semaphore);

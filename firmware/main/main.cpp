@@ -23,19 +23,25 @@ QueueHandle_t wifi_laptime_lists_semaphore = xSemaphoreCreateBinary();
 QueueHandle_t wifi_laptime_status_semaphore = xSemaphoreCreateBinary();
 
 char list_top_str[LAPTIME_LIST_SIZE_WIFI][LAPTIME_STR_LENGTH] = {0};
+uint16_t list_top_driver_id[LAPTIME_LIST_SIZE_WIFI] = {0};
+
 char list_last_str[LAPTIME_LIST_SIZE_WIFI][LAPTIME_STR_LENGTH] = {0};
+uint16_t list_last_driver_id[LAPTIME_LIST_SIZE_WIFI] = {0};
 char list_penalty_time_str[LAPTIME_LIST_SIZE_WIFI][PENALTY_TIME_STR_LENGTH] = {0};
 char list_penalty_oc_str[LAPTIME_LIST_SIZE_WIFI][PENALTY_COUNT_STR_LENGTH] = {0};
 char list_penalty_doo_str[LAPTIME_LIST_SIZE_WIFI][PENALTY_COUNT_STR_LENGTH] = {0};
 
-char penalty_time_str[PENALTY_TIME_STR_LENGTH] = "+00:00";
-char penalty_oc_str[PENALTY_COUNT_STR_LENGTH] = "0";
-char penalty_doo_str[PENALTY_COUNT_STR_LENGTH] = "0";
+char list_driver_str[DRIVER_MAX_COUNT][LAPTIME_STR_LENGTH] = {0};
+uint16_t list_driver_lap_count[DRIVER_MAX_COUNT] = {0};
+char list_driver_penalty_time_str[DRIVER_MAX_COUNT][PENALTY_TIME_STR_LENGTH] = {0};
+char list_driver_penalty_oc_str[DRIVER_MAX_COUNT][PENALTY_COUNT_STR_LENGTH] = {0};
+char list_driver_penalty_doo_str[DRIVER_MAX_COUNT][PENALTY_COUNT_STR_LENGTH] = {0};
 
-char driver_list[DRIVER_COUNT + 1][DRIVER_TAG_LENGTH] = {"XXX", "AAA", "BBB", "CCC"};
+char current_penalty_time_str[PENALTY_TIME_STR_LENGTH] = "+00:00";
+char current_penalty_oc_str[PENALTY_COUNT_STR_LENGTH] = "0";
+char current_penalty_doo_str[PENALTY_COUNT_STR_LENGTH] = "0";
 
-uint16_t list_top_driver_id[LAPTIME_LIST_SIZE_WIFI] = {0};
-uint16_t list_last_driver_id[LAPTIME_LIST_SIZE_WIFI] = {0};
+char driver_list[DRIVER_MAX_COUNT][DRIVER_TAG_LENGTH] = {"XXX", "AAA", "BBB", "CCC"};
 
 Lapmode lap_mode = ONE_GATE_MODE;
 volatile bool stop_flag = true;

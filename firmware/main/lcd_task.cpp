@@ -147,9 +147,9 @@ void print_penalty()
 {
     if (xSemaphoreTake(lcd_laptime_penalty_semaphore, 0) == pdTRUE)
     {
-        lcd_print_str(LAPTIME_CURRENT_POS_X + LAPTIME_CURRENT_LETTER_WIDTH * 13, LAPTIME_CURRENT_POS_Y, penalty_time_str, UI_FONT, YELLOW);
-        lcd_print_str(LAPTIME_LISTS_POS_X + UI_LETTER_WIDTH * 4, LAPTIME_CURRENT_POS_Y + 25, penalty_oc_str, UI_FONT, YELLOW);
-        lcd_print_str(LAPTIME_LISTS_POS_X + UI_LETTER_WIDTH * 13, LAPTIME_CURRENT_POS_Y + 25, penalty_doo_str, UI_FONT, YELLOW);
+        lcd_print_str(LAPTIME_CURRENT_POS_X + LAPTIME_CURRENT_LETTER_WIDTH * 13, LAPTIME_CURRENT_POS_Y, current_penalty_time_str, UI_FONT, YELLOW);
+        lcd_print_str(LAPTIME_LISTS_POS_X + UI_LETTER_WIDTH * 4, LAPTIME_CURRENT_POS_Y + 25, current_penalty_oc_str, UI_FONT, YELLOW);
+        lcd_print_str(LAPTIME_LISTS_POS_X + UI_LETTER_WIDTH * 13, LAPTIME_CURRENT_POS_Y + 25, current_penalty_doo_str, UI_FONT, YELLOW);
         xSemaphoreGive(lcd_laptime_penalty_semaphore);
     }
 }
@@ -179,7 +179,7 @@ void print_laptime_lists()
         lcd_print_tag(LCD_WIDTH / 2 + LAPTIME_LISTS_POS_X + LAPTIME_CURRENT_LETTER_WIDTH * 12 + 10, LAPTIME_LISTS_POS_Y + LAPTIME_LISTS_SPACING + i * LAPTIME_LISTS_SPACING + 5, 8, 8, color_list[list_top_driver_id[i]]);
         lcd_print_str(LAPTIME_LISTS_POS_X, LAPTIME_LISTS_POS_Y + LAPTIME_LISTS_SPACING + i * LAPTIME_LISTS_SPACING, list_last_str[i],
                       LAPTIME_LISTS_FONT, WHITE);
-        lcd_print_tag(LAPTIME_LISTS_POS_X + LAPTIME_CURRENT_LETTER_WIDTH * 12 + 10, LAPTIME_LISTS_POS_Y + LAPTIME_LISTS_SPACING + i * LAPTIME_LISTS_SPACING + 5, 8, 8, color_list[list_last_driver_id[i]]);
+        lcd_print_tag(LAPTIME_LISTS_POS_X + LAPTIME_CURRENT_LETTER_WIDTH * 12 + 10, LAPTIME_LISTS_POS_Y + LAPTIME_LISTS_SPACING + i * LAPTIME_LISTS_SPACING + 5, 8, 8, color_list[list_driver_lap_count[i]]);
     }
     xSemaphoreGive(lcd_laptime_lists_semaphore);
 }
