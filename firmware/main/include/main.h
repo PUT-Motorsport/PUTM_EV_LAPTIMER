@@ -54,7 +54,7 @@ enum Lapmode
  */
 #define LAP_OC_PIN ((gpio_num_t)CONFIG_LAP_OC_PIN)
 
-#define DRIVER_SELECT_PIN ((gpio_num_t)17)
+#define DRIVER_SELECT_PIN ((gpio_num_t)CONFIG_DRIVER_SELECT_PIN)
 
 /// @ingroup pinout_defines
 /// @brief SDCARD pinout
