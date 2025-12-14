@@ -27,6 +27,7 @@ Laptime laptime_list_driver[DRIVER_MAX_COUNT] = {0};
 Lapmode lap_mode = ONE_GATE_MODE;
 volatile bool stop_flag = true;
 bool sd_active_flag = false;
+int driver_count = 0;
 
 /**
  * @brief Main task initializes core peripherals and creates program tasks

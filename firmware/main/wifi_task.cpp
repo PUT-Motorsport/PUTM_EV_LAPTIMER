@@ -321,7 +321,7 @@ static esp_err_t data_get_handler(httpd_req_t *req)
         cJSON *driver_pen_oc_arr = cJSON_CreateArray();
         cJSON *driver_pen_doo_arr = cJSON_CreateArray();
 
-        for (int i = 0; i <= DRIVER_COUNT; i++)
+        for (int i = 0; i <= driver_count; i++)
         {
             cJSON_AddItemToArray(drivers_arr, cJSON_CreateString(driver_list[i]));
 
@@ -475,7 +475,7 @@ static esp_err_t drivers_csv_get_handler(httpd_req_t *req)
         char time_str[LAPTIME_STR_LENGTH];
         char pen_str[PENALTY_TIME_STR_LENGTH];
 
-        for (int i = 1; i <= DRIVER_COUNT; i++)
+        for (int i = 1; i <= driver_count; i++)
         {
             laptime_list_driver[i].convert_string(time_str, sizeof(time_str));
             laptime_list_driver[i].penalty_string(pen_str, sizeof(pen_str));

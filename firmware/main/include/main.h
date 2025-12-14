@@ -100,8 +100,6 @@
 
 #define DRIVER_MAX_COUNT 10
 
-#define DRIVER_COUNT 3
-
 #define DRIVER_TAG_LENGTH 4
 
 #ifdef __cplusplus
@@ -246,3 +244,5 @@ extern enum Lapmode lap_mode;
  */
 extern volatile bool stop_flag;
 extern bool sd_active_flag;
+
+extern int driver_count;

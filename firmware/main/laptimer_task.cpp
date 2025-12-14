@@ -187,11 +187,11 @@ void driver_select()
     case BTN_HOLD_ACTION:
         laptime_current.driver_id--;
         if (laptime_current.driver_id < 1)
-            laptime_current.driver_id = DRIVER_COUNT;
+            laptime_current.driver_id = driver_count;
         break;
     case BTN_RELEASED_ACTION:
         laptime_current.driver_id++;
-        if (laptime_current.driver_id > DRIVER_COUNT)
+        if (laptime_current.driver_id > driver_count)
             laptime_current.driver_id = 1;
         break;
     default:

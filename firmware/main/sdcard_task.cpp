@@ -18,6 +18,37 @@ static const char *TAG = "SDCARD_TASK";
 
 bool sd_detect_flag = false;
 
+esp_err_t sdcard_get_driver_list(sdmmc_card_t **card_pointer)
+{
+    unsigned int br;
+    char sd_buffer[SD_BUFFER_SIZE] = "\0";
+
+    char *driver_tag_temp = "\0";
+    char driver_list_temp[DRIVER_MAX_COUNT][DRIVER_TAG_LENGTH] = {"---"};
+    int driver_count_temp = 0;
+
+    if (sdcard_read("drivers.csv", sd_buffer, sizeof(sd_buffer), &br) ==
+        ESP_OK)
+    {
+        sd_buffer[br] = '\0';
+        driver_tag_temp = strtok(sd_buffer, ",");
+        for (; (driver_count_temp < DRIVER_MAX_COUNT && driver_tag_temp != NULL); driver_count_temp++)
+        {
+            driver_tag_temp[DRIVER_TAG_LENGTH - 1] = '\0';
+            ESP_LOGI(TAG, "DRIVER: %s", driver_tag_temp);
+            strcpy(driver_list_temp[driver_count_temp], driver_tag_temp);
+            driver_tag_temp = strtok(NULL, ",");
+        }
+        ESP_LOGI(TAG, "COUNT: %d", driver_count_temp);
+        for (int i = 0; i < driver_count_temp; i++)
+        {
+            strcpy(driver_list[i + 1], driver_list_temp[i]);
+        }
+        driver_count = driver_count_temp;
+    }
+    return ESP_OK;
+}
+
 /**
  * @brief Mounts sd card in file system, checks communication and creates new .csv file if doesn't exist
  * @param card_pointer Pointer to sd card handle
@@ -70,6 +101,7 @@ esp_err_t sdcard_init(sdmmc_card_t **card_pointer)
             session_num++;
         }
     }
+    sdcard_get_driver_list(card_pointer);
     sprintf(session_str, "#%d,", session_num);
     ESP_LOGI(TAG, "INIT OK");
     return ret;
