@@ -53,7 +53,7 @@ esp_err_t sdcard_init(sdmmc_card_t **card_pointer)
         ESP_OK)
     {
         ESP_LOGI(TAG, "CREATING NEW FILE");
-        ret = sdcard_write("laptimer.csv", "SESSION, LAP, TIME\n");
+        ret = sdcard_write("laptimer.csv", "SESSION, LAP, TIME, PENALTY, OC, DOO, DRIVER\n");
         if (ret)
         {
             return ret;
@@ -90,12 +90,24 @@ esp_err_t sdcard_deinit(sdmmc_card_t **card_pointer)
  * @param laptime_saved_str
  * @return Error check
  */
-esp_err_t sdcard_save_laptime(char laptime_saved_str[LAPTIME_STR_LENGTH])
+esp_err_t sdcard_save_laptime(Laptime laptime_saved)
 {
     esp_err_t ret = ESP_OK;
 
-    if (laptime_saved_str == NULL || sd_active_flag == false)
-        return ESP_ERR_INVALID_ARG;
+    char laptime_saved_str[LAPTIME_STR_LENGTH] = {0};
+    char laptime_penalty_str[PENALTY_TIME_STR_LENGTH] = {0};
+    char laptime_oc_str[PENALTY_COUNT_STR_LENGTH] = {0};
+    char laptime_doo_str[PENALTY_COUNT_STR_LENGTH] = {0};
+    char laptime_driver_str[DRIVER_TAG_LENGTH] = {0};
+
+    laptime_saved.convert_string(laptime_saved_str, sizeof(laptime_saved_str));
+    laptime_saved.penalty_string(laptime_penalty_str, sizeof(laptime_penalty_str));
+    snprintf(laptime_oc_str, sizeof(laptime_oc_str), "%3u,", laptime_saved.oc_count);
+    snprintf(laptime_doo_str, sizeof(laptime_doo_str), "%3u,", laptime_saved.doo_count);
+    snprintf(laptime_driver_str, sizeof(laptime_driver_str), "%s", driver_list[laptime_saved.driver_id]);
+
+    if (sd_active_flag == false)
+        return ESP_FAIL;
 
     ret = sdcard_append("laptimer.csv", session_str);
     if (ret)
@@ -104,6 +116,36 @@ esp_err_t sdcard_save_laptime(char laptime_saved_str[LAPTIME_STR_LENGTH])
     }
 
     ret = sdcard_append("laptimer.csv", laptime_saved_str);
+    if (ret)
+    {
+        return ret;
+    }
+    ret = sdcard_append("laptimer.csv", ",");
+    if (ret)
+    {
+        return ret;
+    }
+    ret = sdcard_append("laptimer.csv", laptime_penalty_str);
+    if (ret)
+    {
+        return ret;
+    }
+    ret = sdcard_append("laptimer.csv", ",");
+    if (ret)
+    {
+        return ret;
+    }
+    ret = sdcard_append("laptimer.csv", laptime_oc_str);
+    if (ret)
+    {
+        return ret;
+    }
+    ret = sdcard_append("laptimer.csv", laptime_doo_str);
+    if (ret)
+    {
+        return ret;
+    }
+    ret = sdcard_append("laptimer.csv", laptime_driver_str);
     if (ret)
     {
         return ret;
@@ -154,7 +196,6 @@ void sdcard_task(void *args)
     if ((sd_detect_flag = !gpio_get_level((gpio_num_t)SD_CD)) == true)
         sd_active_flag = !sdcard_init(&card_handle);
     static Laptime laptime_saved;
-    char laptime_saved_str[LAPTIME_STR_LENGTH] = {0};
     for (;;)
     {
         sd_detect_flag = !gpio_get_level((gpio_num_t)SD_CD);
@@ -169,9 +210,8 @@ void sdcard_task(void *args)
         {
             if (xQueueReceive(laptime_saved_queue_sd, &laptime_saved, 0) == pdTRUE)
             {
-                laptime_saved.convert_string(laptime_saved_str, sizeof(laptime_saved_str));
-                sd_active_flag = !sdcard_save_laptime(laptime_saved_str);
-                sdcard_check_integrity(laptime_saved_str);
+                sd_active_flag = !sdcard_save_laptime(laptime_saved);
+                // sdcard_check_integrity(laptime_saved_str);
             }
         }
         if (sd_detect_flag == true && sd_active_flag == false)

@@ -139,13 +139,13 @@ void print_current_laptime()
 {
     static Laptime laptime_current;
 
+    if (xQueueReceive(laptime_current_queue_lcd, &laptime_current, 0) != pdTRUE)
+        return;
+
     char laptime_current_str[LAPTIME_STR_LENGTH] = {0};
     char laptime_penalty_str[PENALTY_TIME_STR_LENGTH] = {0};
     char laptime_oc_str[PENALTY_COUNT_STR_LENGTH] = {0};
     char laptime_doo_str[PENALTY_COUNT_STR_LENGTH] = {0};
-
-    if (xQueueReceive(laptime_current_queue_lcd, &laptime_current, 0) != pdTRUE)
-        return;
 
     laptime_current.convert_string(laptime_current_str, sizeof(laptime_current_str));
     laptime_current.penalty_string(laptime_penalty_str, sizeof(laptime_penalty_str));
