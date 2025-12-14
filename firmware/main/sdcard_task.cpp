@@ -153,6 +153,7 @@ void sdcard_task(void *args)
         vTaskDelete(NULL);
     if ((sd_detect_flag = !gpio_get_level((gpio_num_t)SD_CD)) == true)
         sd_active_flag = !sdcard_init(&card_handle);
+    static Laptime laptime_saved;
     char laptime_saved_str[LAPTIME_STR_LENGTH] = {0};
     for (;;)
     {
@@ -166,8 +167,9 @@ void sdcard_task(void *args)
 
         if (sd_detect_flag == true && sd_active_flag == true)
         {
-            if (xQueueReceive(sd_queue, laptime_saved_str, 0) == pdTRUE)
+            if (xQueueReceive(laptime_saved_queue_sd, &laptime_saved, 0) == pdTRUE)
             {
+                laptime_saved.convert_string(laptime_saved_str, sizeof(laptime_saved_str));
                 sd_active_flag = !sdcard_save_laptime(laptime_saved_str);
                 sdcard_check_integrity(laptime_saved_str);
             }

@@ -8,40 +8,21 @@
 #include "gpio.h"
 #include "timer.h"
 
-QueueHandle_t sd_queue = xQueueCreate(LAPTIME_LIST_SIZE_LOCAL, sizeof(char[LAPTIME_STR_LENGTH]));
+QueueHandle_t laptime_saved_queue_sd = xQueueCreate(1, sizeof(Laptime));
 
-QueueHandle_t lcd_laptime_current_queue = xQueueCreate(1, sizeof(char[LAPTIME_STR_LENGTH]));
-QueueHandle_t lcd_laptime_penalty_semaphore = xSemaphoreCreateBinary();
-QueueHandle_t lcd_laptime_driver_queue = xQueueCreate(1, sizeof(int16_t *));
-QueueHandle_t lcd_laptime_lists_semaphore = xSemaphoreCreateBinary();
-QueueHandle_t lcd_laptime_status_semaphore = xSemaphoreCreateBinary();
+QueueHandle_t laptime_current_queue_lcd = xQueueCreate(1, sizeof(Laptime));
+QueueHandle_t laptime_current_queue_wifi = xQueueCreate(1, sizeof(Laptime));
 
-QueueHandle_t wifi_laptime_current_queue = xQueueCreate(1, sizeof(char[LAPTIME_STR_LENGTH]));
-QueueHandle_t wifi_laptime_penalty_semaphore = xSemaphoreCreateBinary();
-QueueHandle_t wifi_laptime_driver_queue = xQueueCreate(1, sizeof(int16_t *));
-QueueHandle_t wifi_laptime_lists_semaphore = xSemaphoreCreateBinary();
-QueueHandle_t wifi_laptime_status_semaphore = xSemaphoreCreateBinary();
+SemaphoreHandle_t laptime_lists_mutex = xSemaphoreCreateMutex();
 
-char list_top_str[LAPTIME_LIST_SIZE_WIFI][LAPTIME_STR_LENGTH] = {0};
-uint16_t list_top_driver_id[LAPTIME_LIST_SIZE_WIFI] = {0};
+QueueHandle_t laptime_status_queue_lcd = xQueueCreate(1, sizeof(bool[3]));
+QueueHandle_t laptime_status_queue_wifi = xQueueCreate(1, sizeof(bool[3]));
 
-char list_last_str[LAPTIME_LIST_SIZE_WIFI][LAPTIME_STR_LENGTH] = {0};
-uint16_t list_last_driver_id[LAPTIME_LIST_SIZE_WIFI] = {0};
-char list_penalty_time_str[LAPTIME_LIST_SIZE_WIFI][PENALTY_TIME_STR_LENGTH] = {0};
-char list_penalty_oc_str[LAPTIME_LIST_SIZE_WIFI][PENALTY_COUNT_STR_LENGTH] = {0};
-char list_penalty_doo_str[LAPTIME_LIST_SIZE_WIFI][PENALTY_COUNT_STR_LENGTH] = {0};
+char driver_list[DRIVER_MAX_COUNT][DRIVER_TAG_LENGTH] = {"---", "AAA", "BBB", "CCC"};
 
-char list_driver_str[DRIVER_MAX_COUNT][LAPTIME_STR_LENGTH] = {0};
-uint16_t list_driver_lap_count[DRIVER_MAX_COUNT] = {0};
-char list_driver_penalty_time_str[DRIVER_MAX_COUNT][PENALTY_TIME_STR_LENGTH] = {0};
-char list_driver_penalty_oc_str[DRIVER_MAX_COUNT][PENALTY_COUNT_STR_LENGTH] = {0};
-char list_driver_penalty_doo_str[DRIVER_MAX_COUNT][PENALTY_COUNT_STR_LENGTH] = {0};
-
-char current_penalty_time_str[PENALTY_TIME_STR_LENGTH] = "+00:00";
-char current_penalty_oc_str[PENALTY_COUNT_STR_LENGTH] = "0";
-char current_penalty_doo_str[PENALTY_COUNT_STR_LENGTH] = "0";
-
-char driver_list[DRIVER_MAX_COUNT][DRIVER_TAG_LENGTH] = {"XXX", "AAA", "BBB", "CCC"};
+Laptime laptime_list_top[LAPTIME_LIST_SIZE_LOCAL] = {0};
+Laptime laptime_list_last[LAPTIME_LIST_SIZE_LOCAL] = {0};
+Laptime laptime_list_driver[DRIVER_MAX_COUNT] = {0};
 
 Lapmode lap_mode = ONE_GATE_MODE;
 volatile bool stop_flag = true;

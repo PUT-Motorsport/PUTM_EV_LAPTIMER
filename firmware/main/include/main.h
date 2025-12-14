@@ -5,12 +5,6 @@
 #include "esp_err.h"
 #include "sdkconfig.h"
 
-enum Lapmode
-{
-    ONE_GATE_MODE,
-    TWO_GATE_MODE,
-};
-
 /**
  * @defgroup pinout_defines
  * @brief Pinout defines
@@ -110,6 +104,91 @@ enum Lapmode
 
 #define DRIVER_TAG_LENGTH 4
 
+#ifdef __cplusplus
+class Laptime
+{
+public:
+    volatile uint16_t count = 1;
+    volatile uint64_t time = 0;
+
+    uint32_t penalty_time = 0;
+    uint16_t doo_count = 0;
+    uint16_t oc_count = 0;
+
+    int16_t driver_id = 0;
+
+    void reset()
+    {
+        this->time = 0;
+        this->penalty_time = 0;
+        this->doo_count = 0;
+        this->oc_count = 0;
+    }
+
+    void new_lap()
+    {
+        this->count++;
+        this->reset();
+    }
+
+    /**
+     * @brief Converts laptime from int measured in 10ms to string that is ready to display
+     * @param laptime_str String for converted laptime
+     * @param size Size of string
+     */
+    void convert_string(char laptime_str[LAPTIME_STR_LENGTH], size_t size)
+    {
+        if (laptime_str == NULL)
+            return;
+
+        if (this->time == 0)
+        {
+            snprintf(laptime_str, size, "--, --:--.--");
+            return;
+        }
+
+        unsigned int mm = (this->time / 6000) % 60;
+        unsigned int ss = (this->time / 100) % 60;
+        unsigned int ms = this->time % 100;
+        if (size == LAPTIME_STR_LENGTH)
+            snprintf(laptime_str, size, "%02u, %02u:%02u:%02u",
+                     this->count, mm, ss, ms);
+    }
+
+    void penalty_string(char laptime_str[PENALTY_TIME_STR_LENGTH], size_t size)
+    {
+        if (laptime_str == NULL)
+            return;
+
+        if (this->time == 0)
+        {
+            snprintf(laptime_str, size, "+00:00");
+            return;
+        }
+
+        unsigned int mm = (this->penalty_time / 6000) % 60;
+        unsigned int ss = (this->penalty_time / 100) % 60;
+        if (size >= 11)
+        {
+            snprintf(laptime_str, size, "+%02u:%02u", mm, ss);
+        }
+    }
+};
+
+struct Laptime_list
+{
+    Laptime list_top[LAPTIME_LIST_SIZE_LOCAL] = {0};
+    Laptime list_last[LAPTIME_LIST_SIZE_LOCAL] = {0};
+    Laptime list_driver[DRIVER_MAX_COUNT] = {0};
+};
+#endif
+
+enum Lapmode
+{
+    ONE_GATE_MODE,
+    TWO_GATE_MODE,
+};
+
 /**
  * @defgroup freertos
  * @brief FreeRTOS intertask communication
@@ -119,27 +198,20 @@ enum Lapmode
  * @ingroup freertos
  * @brief Queue passes laptimes from main logic laptimer_task to sdcard_task
  */
-extern QueueHandle_t sd_queue;
+extern QueueHandle_t laptime_saved_queue_sd;
 
 /**
  * @ingroup freertos
  * @brief Queue passes current laptime from main logic laptimer_task to lcd_task and wifi_task
  */
-extern QueueHandle_t lcd_laptime_current_queue;
-extern QueueHandle_t wifi_laptime_current_queue;
-
-extern QueueHandle_t lcd_laptime_penalty_semaphore;
-extern QueueHandle_t wifi_laptime_penalty_semaphore;
-
-extern QueueHandle_t lcd_laptime_driver_queue;
-extern QueueHandle_t wifi_laptime_driver_queue;
+extern QueueHandle_t laptime_current_queue_lcd;
+extern QueueHandle_t laptime_current_queue_wifi;
 
 /**
  * @ingroup freertos
  * @brief Semaphore allows lcd_task and wifi_task to read stored laptime lists
  */
-extern QueueHandle_t lcd_laptime_lists_semaphore;
-extern QueueHandle_t wifi_laptime_lists_semaphore;
+extern SemaphoreHandle_t laptime_lists_mutex;
 
 /**
  * @ingroup freertos
@@ -148,34 +220,21 @@ extern QueueHandle_t wifi_laptime_lists_semaphore;
  * bool[1] - stop_flag
  * bool[2] - sdcard_flag
  */
-extern QueueHandle_t lcd_laptime_status_semaphore;
-extern QueueHandle_t wifi_laptime_status_semaphore;
-
-/**
- * @brief Global variables locally store laptime lists used by lcd_task and wifi_task
- * [0] - top laptimes list
- * [1] - last laptimes list
- */
-extern char list_top_str[LAPTIME_LIST_SIZE_WIFI][LAPTIME_STR_LENGTH];
-extern uint16_t list_top_driver_id[LAPTIME_LIST_SIZE_WIFI];
-
-extern char list_last_str[LAPTIME_LIST_SIZE_WIFI][LAPTIME_STR_LENGTH];
-extern uint16_t list_last_driver_id[LAPTIME_LIST_SIZE_WIFI];
-extern char list_penalty_time_str[LAPTIME_LIST_SIZE_WIFI][PENALTY_TIME_STR_LENGTH];
-extern char list_penalty_oc_str[LAPTIME_LIST_SIZE_WIFI][PENALTY_COUNT_STR_LENGTH];
-extern char list_penalty_doo_str[LAPTIME_LIST_SIZE_WIFI][PENALTY_COUNT_STR_LENGTH];
-
-extern char list_driver_str[DRIVER_MAX_COUNT][LAPTIME_STR_LENGTH];
-extern uint16_t list_driver_lap_count[DRIVER_MAX_COUNT];
-extern char list_driver_penalty_time_str[DRIVER_MAX_COUNT][PENALTY_TIME_STR_LENGTH];
-extern char list_driver_penalty_oc_str[DRIVER_MAX_COUNT][PENALTY_COUNT_STR_LENGTH];
-extern char list_driver_penalty_doo_str[DRIVER_MAX_COUNT][PENALTY_COUNT_STR_LENGTH];
-
-extern char current_penalty_time_str[PENALTY_TIME_STR_LENGTH];
-extern char current_penalty_oc_str[PENALTY_COUNT_STR_LENGTH];
-extern char current_penalty_doo_str[PENALTY_COUNT_STR_LENGTH];
+extern QueueHandle_t laptime_status_queue_lcd;
+extern QueueHandle_t laptime_status_queue_wifi;
 
 extern char driver_list[DRIVER_MAX_COUNT][DRIVER_TAG_LENGTH];
+
+#ifdef __cplusplus
+const char laptime_current_default_str[] = "--, --:--.--";
+const char laptime_penalty_default_str[] = "+00:00";
+const char laptime_oc_default_str[] = "0";
+const char laptime_doo_default_str[] = "0";
+
+extern Laptime laptime_list_top[LAPTIME_LIST_SIZE_LOCAL];
+extern Laptime laptime_list_last[LAPTIME_LIST_SIZE_LOCAL];
+extern Laptime laptime_list_driver[DRIVER_MAX_COUNT];
+#endif
 
 /**
  * @brief Global variable determines behavior of gate inputs

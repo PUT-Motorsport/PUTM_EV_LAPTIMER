@@ -48,37 +48,52 @@ Lapmode lap_mode_check()
  * @param list Structure that stores local laptimes
  * @return
  */
-esp_err_t laptime_save_local(Laptime laptime, Laptime_list *list)
+
+esp_err_t laptime_save_top(Laptime laptime, Laptime list_top[LAPTIME_LIST_SIZE_LOCAL])
 {
-    if (list == NULL)
+    if (list_top == NULL)
         return ESP_FAIL;
-    for (int i = LAPTIME_LIST_SIZE_LOCAL - 1; i > 0; i--)
-    {
-        list->list_last[i] = list->list_last[i - 1];
-    }
-    list->list_last[0] = laptime;
 
     for (int i = 0; i < LAPTIME_LIST_SIZE_LOCAL; i++)
     {
-        if (laptime.time < list->list_top[i].time || list->list_top[i].time == 0)
+        if (laptime.time < list_top[i].time || list_top[i].time == 0)
         {
             for (int j = LAPTIME_LIST_SIZE_LOCAL - 1; j > i; j--)
             {
-                list->list_top[j] = list->list_top[j - 1];
+                list_top[j] = list_top[j - 1];
             }
-            list->list_top[i] = laptime;
+            list_top[i] = laptime;
             break;
         }
     }
+    return ESP_OK;
+}
 
-    if (laptime.time < list->list_driver[laptime.driver_id].time || list->list_driver[laptime.driver_id].time == 0)
-        list->list_driver[laptime.driver_id].time = laptime.time;
-    list->list_driver[laptime.driver_id].driver_id = laptime.driver_id;
-    list->list_driver[laptime.driver_id].driver_tag = driver_list[laptime.driver_id];
-    list->list_driver[laptime.driver_id].oc_count += laptime.oc_count;
-    list->list_driver[laptime.driver_id].doo_count += laptime.doo_count;
-    list->list_driver[laptime.driver_id].penalty_time += laptime.penalty_time;
-    list->list_driver[laptime.driver_id].count++;
+esp_err_t laptime_save_last(Laptime laptime, Laptime list_last[LAPTIME_LIST_SIZE_LOCAL])
+{
+    if (list_last == NULL)
+        return ESP_FAIL;
+
+    for (int i = LAPTIME_LIST_SIZE_LOCAL - 1; i > 0; i--)
+    {
+        list_last[i] = list_last[i - 1];
+    }
+    list_last[0] = laptime;
+    return ESP_OK;
+}
+
+esp_err_t laptime_save_driver(Laptime laptime, Laptime list_driver[DRIVER_MAX_COUNT])
+{
+    if (list_driver == NULL)
+        return ESP_FAIL;
+
+    if (laptime.time < list_driver[laptime.driver_id].time || list_driver[laptime.driver_id].time == 0)
+        list_driver[laptime.driver_id].time = laptime.time;
+    list_driver[laptime.driver_id].driver_id = laptime.driver_id;
+    list_driver[laptime.driver_id].oc_count += laptime.oc_count;
+    list_driver[laptime.driver_id].doo_count += laptime.doo_count;
+    list_driver[laptime.driver_id].penalty_time += laptime.penalty_time;
+    list_driver[laptime.driver_id].count++;
 
     return ESP_OK;
 }
@@ -89,40 +104,6 @@ static void laptime_save_uart(char *laptime_str, size_t size)
         return;
     printf("%s", laptime_str);
     printf("\n");
-}
-
-/**
- * @brief Converts local laptime lists to strings, saves them to global arrays and allows lcd_task and wifi_task to read them
- * @param list Structure that stores local laptimes
- */
-esp_err_t send_laptime_lists(Laptime_list *list)
-{
-    if (list == NULL)
-        return ESP_FAIL;
-
-    for (int i = 0; i < LAPTIME_LIST_SIZE_WIFI; i++)
-    {
-        list->list_top[i].convert_string(list_top_str[i], LAPTIME_STR_LENGTH);
-        list_top_driver_id[i] = list->list_top[i].driver_id;
-
-        list->list_last[i].convert_string(list_last_str[i], LAPTIME_STR_LENGTH);
-        list->list_last[i].penalty_string(list_penalty_time_str[i], PENALTY_TIME_STR_LENGTH);
-        list_last_driver_id[i] = list->list_last[i].driver_id;
-        snprintf(list_penalty_oc_str[i], PENALTY_COUNT_STR_LENGTH, "%u", list->list_last[i].oc_count);
-        snprintf(list_penalty_doo_str[i], PENALTY_COUNT_STR_LENGTH, "%u", list->list_last[i].doo_count);
-    }
-    for (int i = 1; i <= DRIVER_COUNT; i++)
-    {
-        list->list_driver[i].convert_string(list_driver_str[i], LAPTIME_STR_LENGTH);
-        list->list_driver[i].penalty_string(list_driver_penalty_time_str[i], PENALTY_TIME_STR_LENGTH);
-        list_driver_lap_count[i] = list->list_driver[i].count - 1;
-        snprintf(list_driver_penalty_oc_str[i], PENALTY_COUNT_STR_LENGTH, "%u", list->list_driver[i].oc_count);
-        snprintf(list_driver_penalty_doo_str[i], PENALTY_COUNT_STR_LENGTH, "%u", list->list_driver[i].doo_count);
-    }
-
-    xSemaphoreGive(lcd_laptime_lists_semaphore);
-    xSemaphoreGive(wifi_laptime_lists_semaphore);
-    return ESP_OK;
 }
 
 btn_long_state btn_hold(bool btn_state, volatile btn_long_state btn_press_state, TickType_t press_time)
@@ -194,15 +175,6 @@ void penalty_check(Laptime *laptime)
     default:
         break;
     }
-    if (penalty_time_temp != laptime->penalty_time || laptime->penalty_time == 0)
-    {
-        laptime_current.penalty_string(current_penalty_time_str, sizeof(current_penalty_time_str));
-        snprintf(current_penalty_oc_str, sizeof(current_penalty_oc_str), "%3u", laptime_current.oc_count);
-        snprintf(current_penalty_doo_str, sizeof(current_penalty_doo_str), "%3u", laptime_current.doo_count);
-
-        xSemaphoreGive(lcd_laptime_penalty_semaphore);
-        xSemaphoreGive(wifi_laptime_penalty_semaphore);
-    }
     return;
 }
 
@@ -225,10 +197,8 @@ void driver_select()
     default:
         return;
     }
-    laptime_current.driver_tag = driver_list[laptime_current.driver_id];
-    ESP_LOGI(TAG, "DRIVER ID: %d, DRIVER TAG: %s", laptime_current.driver_id, laptime_current.driver_tag);
-    xQueueSend(lcd_laptime_driver_queue, &laptime_current.driver_id, 0);
-    xQueueSend(wifi_laptime_driver_queue, &laptime_current.driver_id, 0);
+    ESP_LOGI(TAG, "DRIVER ID: %d, DRIVER TAG: %s", laptime_current.driver_id, driver_list[laptime_current.driver_id]);
+
     return;
 }
 
@@ -361,24 +331,17 @@ esp_err_t isr_init()
  */
 void laptimer_task(void *args)
 {
-
-    char laptimer_current_str[LAPTIME_STR_LENGTH] = {"--, --:--.--"};
+    char laptime_current_str[LAPTIME_STR_LENGTH] = {"--, --:--.--"};
     char laptime_saved_str[LAPTIME_STR_LENGTH] = {"--, --:--.--"};
-
-    Laptime_list laptime_list;
 
     bool stop_flag_old = stop_flag;
     bool sd_active_flag_old = sd_active_flag;
     bool status_update_flag = true;
 
-    xQueueSend(lcd_laptime_current_queue, laptimer_current_str, 0);
-    xQueueSend(wifi_laptime_current_queue, laptimer_current_str, 0);
-
-    xQueueSend(lcd_laptime_driver_queue, &laptime_current.driver_id, 0);
-    xQueueSend(wifi_laptime_driver_queue, &laptime_current.driver_id, 0);
+    xQueueSend(laptime_current_queue_lcd, &laptime_current, 0);
+    xQueueSend(laptime_current_queue_wifi, &laptime_current, 0);
 
     penalty_check(&laptime_current);
-    send_laptime_lists(&laptime_list);
 
     for (;;)
     {
@@ -387,9 +350,9 @@ void laptimer_task(void *args)
         {
             laptime_current.time = timer_get_time(laptime_timer);
             penalty_check(&laptime_current);
-            laptime_current.convert_string(laptimer_current_str, LAPTIME_STR_LENGTH);
-            xQueueSend(lcd_laptime_current_queue, laptimer_current_str, 0);
-            xQueueSend(wifi_laptime_current_queue, laptimer_current_str, 0);
+            laptime_current.convert_string(laptime_current_str, LAPTIME_STR_LENGTH);
+            xQueueSend(laptime_current_queue_lcd, &laptime_current, 0);
+            xQueueSend(laptime_current_queue_wifi, &laptime_current, 0);
         }
 
         if (stop_flag != stop_flag_old)
@@ -405,7 +368,7 @@ void laptimer_task(void *args)
             status_update_flag = true;
         }
 
-        if (laptime_saved.time > 0)
+        if (laptime_saved.time > 0 && xSemaphoreTake(laptime_lists_mutex, 0) == pdTRUE)
         {
             ESP_LOGI(TAG, "DOO: %u, OC: %u, Penalty sum: %llu\n", laptime_saved.doo_count, laptime_saved.oc_count, laptime_saved.penalty_time);
 
@@ -414,15 +377,18 @@ void laptimer_task(void *args)
 
             laptime_save_uart(laptime_saved_str,
                               sizeof(laptime_saved_str));
-            laptime_save_local(laptime_saved, &laptime_list);
+            laptime_save_top(laptime_saved, laptime_list_top);
+            laptime_save_last(laptime_saved, laptime_list_last);
+            laptime_save_driver(laptime_saved, laptime_list_driver);
+            xQueueSend(laptime_saved_queue_sd, &laptime_saved, 0);
+            xSemaphoreGive(laptime_lists_mutex);
             laptime_saved.reset();
-            xQueueSend(sd_queue, laptime_saved_str, 0);
-            send_laptime_lists(&laptime_list);
         }
         if (status_update_flag == true)
         {
-            xSemaphoreGive(lcd_laptime_status_semaphore);
-            xSemaphoreGive(wifi_laptime_status_semaphore);
+            bool status_list[3] = {lap_mode, stop_flag, sd_active_flag};
+            xQueueSend(laptime_status_queue_lcd, status_list, 0);
+            xQueueSend(laptime_status_queue_wifi, status_list, 0);
             status_update_flag = false;
         }
 

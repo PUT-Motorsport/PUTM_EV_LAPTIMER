@@ -8,31 +8,18 @@
 
 static const char *TAG = "WIFI_TASK";
 
-extern uint16_t list_driver_lap_count[DRIVER_MAX_COUNT];
-
 /**
- * @brief Flag activated by semaphore received from laptimer_task on every laptime lists update
+ * @brief Current laptime data used to display on website
  */
-bool new_lists_flag = true;
-bool new_penalty_flag = true;
+static Laptime current_laptime_data;
 
 /**
- * @brief Current laptime string used to display on website, readed periodically by data_get_handler
+ * @brief Status flags used to display on website
  */
-static char current_laptime[LAPTIME_STR_LENGTH] = "--,--:--:--";
+static bool status_flags[3] = {false, true, false};
 
 /**
- * @brief Current driver ID used to display on website
- */
-static int16_t current_driver_id = 0;
-
-/**
- * @brief Status flags used to display on website, readed periodically by data_get_handler
- */
-static bool status_flags[3] = {false, false, false};
-
-/**
- * @brief Mutex usde by data_get_handler to ensure that it can read data safely
+ * @brief Mutex used by data_get_handler to ensure that it can read local data safely
  */
 static SemaphoreHandle_t data_mutex = NULL;
 
@@ -84,7 +71,7 @@ h3 { margin-top: 0; color: #ccc; border-bottom: 1px solid #555; padding-bottom: 
 <body>
 <h1>PUTM Laptimer</h1>
 <div class="container">
-  
+
   <div class="main-panel">
       <div>
             <div class="status">
@@ -119,8 +106,6 @@ h3 { margin-top: 0; color: #ccc; border-bottom: 1px solid #555; padding-bottom: 
             </tr>
         </tbody>
       </table>
-
-
 
       <div class="tables-wrapper">
           <!-- LAST LAPS TABLE -->
@@ -178,8 +163,8 @@ const colors = ['black', 'blue', 'red', 'yellow', 'green', 'magenta', 'brown', '
 function update() {
   fetch('/api/data?t=' + new Date().getTime()).then(r => r.json()).then(d => {
     document.getElementById('curr').innerText = d.current;
-    
-    document.getElementById('curr_drv_tag').innerText = d.current_driver_tag || "XXX";
+
+    document.getElementById('curr_drv_tag').innerText = d.current_driver_tag || "---";
     let currColorIdx = d.current_driver_id || 0;
     if(currColorIdx < 0 || currColorIdx >= colors.length) currColorIdx = 0;
     document.getElementById('curr_drv_col').style.background = colors[currColorIdx];
@@ -187,18 +172,18 @@ function update() {
     document.getElementById('pen_time').innerText = d.penalty_time || "+00:00";
     document.getElementById('pen_oc').innerText = (d.penalty_oc || "0");
     document.getElementById('pen_doo').innerText = (d.penalty_doo || "0");
-    
+
     document.getElementById('mode').innerText = d.status.mode ? "2 GATE" : "1 GATE";
     document.getElementById('stop').className = d.status.stop ? "on" : "off";
     document.getElementById('sd').className = d.status.sd ? "on" : "off";
-    
+
     if (d.all_drivers) {
         let legendHtml = "<table><thead><tr><th>Driver</th><th>Best</th><th>Laps</th><th>Pen.</th><th>OC</th><th>DOO</th></tr></thead><tbody>";
         d.all_drivers.forEach((drv, i) => {
              // Skip placeholder only if it matches standard placeholder
-             if (drv === "XXX") return;
+             if (drv === "---") return;
              let color = colors[i] || 'black';
-             
+
              let best = (d.driver_best && d.driver_best[i]) ? d.driver_best[i] : '-';
              let laps = (d.driver_lap_count && d.driver_lap_count[i] !== undefined) ? d.driver_lap_count[i] : '0';
              let p_time = (d.driver_pen_time && d.driver_pen_time[i]) ? d.driver_pen_time[i] : '0';
@@ -286,13 +271,49 @@ static esp_err_t data_get_handler(httpd_req_t *req)
 {
     cJSON *root = cJSON_CreateObject();
 
+    char temp_str[LAPTIME_STR_LENGTH] = {0};
+    char temp_pen_str[PENALTY_TIME_STR_LENGTH] = {0};
+    char temp_count_str[PENALTY_COUNT_STR_LENGTH] = {0};
+
+    // Local snapshot variables
+    Laptime local_current;
+    bool local_status[3] = {0};
+
+    // Take local mutex for atomic copy of current status
     if (xSemaphoreTake(data_mutex, portMAX_DELAY))
     {
-        cJSON_AddStringToObject(root, "current", current_laptime);
+        local_current = current_laptime_data;
+        memcpy(local_status, status_flags, sizeof(status_flags));
+        xSemaphoreGive(data_mutex);
+    }
 
-        cJSON_AddStringToObject(root, "current_driver_tag", driver_list[current_driver_id]);
-        cJSON_AddNumberToObject(root, "current_driver_id", current_driver_id);
+    local_current.convert_string(temp_str, sizeof(temp_str));
+    cJSON_AddStringToObject(root, "current", temp_str);
 
+    int id = local_current.driver_id;
+    if (id < 0 || id >= DRIVER_MAX_COUNT)
+        id = 0;
+    cJSON_AddStringToObject(root, "current_driver_tag", driver_list[id]);
+    cJSON_AddNumberToObject(root, "current_driver_id", id);
+
+    local_current.penalty_string(temp_pen_str, sizeof(temp_pen_str));
+    cJSON_AddStringToObject(root, "penalty_time", temp_pen_str);
+
+    snprintf(temp_count_str, sizeof(temp_count_str), "%u", local_current.oc_count);
+    cJSON_AddStringToObject(root, "penalty_oc", temp_count_str);
+
+    snprintf(temp_count_str, sizeof(temp_count_str), "%u", local_current.doo_count);
+    cJSON_AddStringToObject(root, "penalty_doo", temp_count_str);
+
+    cJSON *status = cJSON_CreateObject();
+    cJSON_AddBoolToObject(status, "mode", local_status[0]);
+    cJSON_AddBoolToObject(status, "stop", local_status[1]);
+    cJSON_AddBoolToObject(status, "sd", local_status[2]);
+    cJSON_AddItemToObject(root, "status", status);
+
+    // Take global mutex for lists
+    if (xSemaphoreTake(laptime_lists_mutex, portMAX_DELAY))
+    {
         cJSON *drivers_arr = cJSON_CreateArray();
         cJSON *driver_best_arr = cJSON_CreateArray();
         cJSON *driver_lap_count_arr = cJSON_CreateArray();
@@ -303,11 +324,20 @@ static esp_err_t data_get_handler(httpd_req_t *req)
         for (int i = 0; i <= DRIVER_COUNT; i++)
         {
             cJSON_AddItemToArray(drivers_arr, cJSON_CreateString(driver_list[i]));
-            cJSON_AddItemToArray(driver_best_arr, cJSON_CreateString(list_driver_str[i]));
-            cJSON_AddItemToArray(driver_lap_count_arr, cJSON_CreateNumber(list_driver_lap_count[i]));
-            cJSON_AddItemToArray(driver_pen_time_arr, cJSON_CreateString(list_driver_penalty_time_str[i]));
-            cJSON_AddItemToArray(driver_pen_oc_arr, cJSON_CreateString(list_driver_penalty_oc_str[i]));
-            cJSON_AddItemToArray(driver_pen_doo_arr, cJSON_CreateString(list_driver_penalty_doo_str[i]));
+
+            laptime_list_driver[i].convert_string(temp_str, sizeof(temp_str));
+            cJSON_AddItemToArray(driver_best_arr, cJSON_CreateString(temp_str));
+
+            cJSON_AddItemToArray(driver_lap_count_arr, cJSON_CreateNumber(laptime_list_driver[i].count - 1));
+
+            laptime_list_driver[i].penalty_string(temp_pen_str, sizeof(temp_pen_str));
+            cJSON_AddItemToArray(driver_pen_time_arr, cJSON_CreateString(temp_pen_str));
+
+            snprintf(temp_count_str, sizeof(temp_count_str), "%u", laptime_list_driver[i].oc_count);
+            cJSON_AddItemToArray(driver_pen_oc_arr, cJSON_CreateString(temp_count_str));
+
+            snprintf(temp_count_str, sizeof(temp_count_str), "%u", laptime_list_driver[i].doo_count);
+            cJSON_AddItemToArray(driver_pen_doo_arr, cJSON_CreateString(temp_count_str));
         }
         cJSON_AddItemToObject(root, "all_drivers", drivers_arr);
         cJSON_AddItemToObject(root, "driver_best", driver_best_arr);
@@ -315,12 +345,6 @@ static esp_err_t data_get_handler(httpd_req_t *req)
         cJSON_AddItemToObject(root, "driver_pen_time", driver_pen_time_arr);
         cJSON_AddItemToObject(root, "driver_pen_oc", driver_pen_oc_arr);
         cJSON_AddItemToObject(root, "driver_pen_doo", driver_pen_doo_arr);
-
-        cJSON *status = cJSON_CreateObject();
-        cJSON_AddBoolToObject(status, "mode", status_flags[0]);
-        cJSON_AddBoolToObject(status, "stop", status_flags[1]);
-        cJSON_AddBoolToObject(status, "sd", status_flags[2]);
-        cJSON_AddItemToObject(root, "status", status);
 
         cJSON *last_arr = cJSON_CreateArray();
         cJSON *top_arr = cJSON_CreateArray();
@@ -336,18 +360,34 @@ static esp_err_t data_get_handler(httpd_req_t *req)
 
         for (int i = 0; i < LAPTIME_LIST_SIZE_WIFI; i++)
         {
-            cJSON_AddItemToArray(last_arr, cJSON_CreateString(list_last_str[i]));
-            cJSON_AddItemToArray(top_arr, cJSON_CreateString(list_top_str[i]));
+            // Last
+            laptime_list_last[i].convert_string(temp_str, sizeof(temp_str));
+            cJSON_AddItemToArray(last_arr, cJSON_CreateString(temp_str));
 
-            cJSON_AddItemToArray(last_driver_tag_arr, cJSON_CreateString(driver_list[list_last_driver_id[i]]));
-            cJSON_AddItemToArray(last_driver_id_arr, cJSON_CreateNumber(list_last_driver_id[i]));
+            int drv_id = laptime_list_last[i].driver_id;
+            if (drv_id < 0 || drv_id >= DRIVER_MAX_COUNT)
+                drv_id = 0;
+            cJSON_AddItemToArray(last_driver_tag_arr, cJSON_CreateString(driver_list[drv_id]));
+            cJSON_AddItemToArray(last_driver_id_arr, cJSON_CreateNumber(drv_id));
 
-            cJSON_AddItemToArray(top_driver_tag_arr, cJSON_CreateString(driver_list[list_top_driver_id[i]]));
-            cJSON_AddItemToArray(top_driver_id_arr, cJSON_CreateNumber(list_top_driver_id[i]));
+            laptime_list_last[i].penalty_string(temp_pen_str, sizeof(temp_pen_str));
+            cJSON_AddItemToArray(last_pen_time_arr, cJSON_CreateString(temp_pen_str));
 
-            cJSON_AddItemToArray(last_pen_time_arr, cJSON_CreateString(list_penalty_time_str[i]));
-            cJSON_AddItemToArray(last_pen_oc_arr, cJSON_CreateString(list_penalty_oc_str[i]));
-            cJSON_AddItemToArray(last_pen_doo_arr, cJSON_CreateString(list_penalty_doo_str[i]));
+            snprintf(temp_count_str, sizeof(temp_count_str), "%u", laptime_list_last[i].oc_count);
+            cJSON_AddItemToArray(last_pen_oc_arr, cJSON_CreateString(temp_count_str));
+
+            snprintf(temp_count_str, sizeof(temp_count_str), "%u", laptime_list_last[i].doo_count);
+            cJSON_AddItemToArray(last_pen_doo_arr, cJSON_CreateString(temp_count_str));
+
+            // Top
+            laptime_list_top[i].convert_string(temp_str, sizeof(temp_str));
+            cJSON_AddItemToArray(top_arr, cJSON_CreateString(temp_str));
+
+            drv_id = laptime_list_top[i].driver_id;
+            if (drv_id < 0 || drv_id >= DRIVER_MAX_COUNT)
+                drv_id = 0;
+            cJSON_AddItemToArray(top_driver_tag_arr, cJSON_CreateString(driver_list[drv_id]));
+            cJSON_AddItemToArray(top_driver_id_arr, cJSON_CreateNumber(drv_id));
         }
 
         cJSON_AddItemToObject(root, "last", last_arr);
@@ -362,21 +402,7 @@ static esp_err_t data_get_handler(httpd_req_t *req)
         cJSON_AddItemToObject(root, "last_pen_oc", last_pen_oc_arr);
         cJSON_AddItemToObject(root, "last_pen_doo", last_pen_doo_arr);
 
-        cJSON_AddStringToObject(root, "penalty_time", current_penalty_time_str);
-        cJSON_AddStringToObject(root, "penalty_oc", current_penalty_oc_str);
-        cJSON_AddStringToObject(root, "penalty_doo", current_penalty_doo_str);
-
-        // Reset flags if needed, although we are not gating on them anymore for response construction
-        if (new_lists_flag)
-        {
-            new_lists_flag = false;
-        }
-        if (new_penalty_flag)
-        {
-            new_penalty_flag = false;
-        }
-
-        xSemaphoreGive(data_mutex);
+        xSemaphoreGive(laptime_lists_mutex);
     }
 
     const char *sys_info = cJSON_PrintUnformatted(root);
@@ -400,21 +426,30 @@ static esp_err_t csv_get_handler(httpd_req_t *req)
     // Header
     httpd_resp_sendstr_chunk(req, "Number,Driver,Laptime [mm:ss:ms],Penalty Time [mm:ss],OC,DOO\n");
 
-    if (xSemaphoreTake(data_mutex, portMAX_DELAY))
+    if (xSemaphoreTake(laptime_lists_mutex, portMAX_DELAY))
     {
         char line[128];
+        char time_str[LAPTIME_STR_LENGTH];
+        char pen_str[PENALTY_TIME_STR_LENGTH];
+
         for (int i = 0; i < LAPTIME_LIST_SIZE_WIFI; i++)
         {
-            // Using last lap list for CSV as per logic in previous version (implied by using list_last_str)
-            snprintf(line, sizeof(line), "%s,%s,%s,%s,%s\n",
-                     list_last_str[i],
-                     driver_list[list_last_driver_id[i]],
-                     list_penalty_time_str[i],
-                     list_penalty_oc_str[i],
-                     list_penalty_doo_str[i]);
+            laptime_list_last[i].convert_string(time_str, sizeof(time_str));
+            laptime_list_last[i].penalty_string(pen_str, sizeof(pen_str));
+
+            int drv_id = laptime_list_last[i].driver_id;
+            if (drv_id < 0 || drv_id >= DRIVER_MAX_COUNT)
+                drv_id = 0;
+
+            snprintf(line, sizeof(line), "%s,%s,%s,%u,%u\n",
+                     time_str,
+                     driver_list[drv_id],
+                     pen_str,
+                     laptime_list_last[i].oc_count,
+                     laptime_list_last[i].doo_count);
             httpd_resp_sendstr_chunk(req, line);
         }
-        xSemaphoreGive(data_mutex);
+        xSemaphoreGive(laptime_lists_mutex);
     }
 
     httpd_resp_sendstr_chunk(req, NULL);
@@ -432,23 +467,29 @@ static esp_err_t drivers_csv_get_handler(httpd_req_t *req)
     httpd_resp_set_hdr(req, "Content-Disposition", "attachment; filename=\"drivers.csv\"");
 
     // Header
-    httpd_resp_sendstr_chunk(req, "Driver,Best lap number, Best laptime,Lap count ,Penalty time sum,OC sum,DOO sum\n");
+    httpd_resp_sendstr_chunk(req, "Driver,Best laptime,Lap count,Penalty time sum,OC sum,DOO sum\n");
 
-    if (xSemaphoreTake(data_mutex, portMAX_DELAY))
+    if (xSemaphoreTake(laptime_lists_mutex, portMAX_DELAY))
     {
         char line[128];
+        char time_str[LAPTIME_STR_LENGTH];
+        char pen_str[PENALTY_TIME_STR_LENGTH];
+
         for (int i = 1; i <= DRIVER_COUNT; i++)
         {
-            snprintf(line, sizeof(line), "%s,%s,%u,%s,%s,%s\n",
+            laptime_list_driver[i].convert_string(time_str, sizeof(time_str));
+            laptime_list_driver[i].penalty_string(pen_str, sizeof(pen_str));
+
+            snprintf(line, sizeof(line), "%s,%s,%u,%s,%u,%u\n",
                      driver_list[i],
-                     list_driver_str[i],
-                     list_driver_lap_count[i],
-                     list_driver_penalty_time_str[i],
-                     list_driver_penalty_oc_str[i],
-                     list_driver_penalty_doo_str[i]);
+                     time_str,
+                     laptime_list_driver[i].count,
+                     pen_str,
+                     laptime_list_driver[i].oc_count,
+                     laptime_list_driver[i].doo_count);
             httpd_resp_sendstr_chunk(req, line);
         }
-        xSemaphoreGive(data_mutex);
+        xSemaphoreGive(laptime_lists_mutex);
     }
 
     httpd_resp_sendstr_chunk(req, NULL);
@@ -512,59 +553,28 @@ void wifi_task(void *args)
     wifi_init_softap();
     start_webserver();
 
-    char temp_laptime[LAPTIME_STR_LENGTH];
-    int32_t temp_driver_id_buf; // Buffer to safely receive potentially 4 bytes from queue
-
     data_mutex = xSemaphoreCreateMutex();
 
     for (;;)
     {
-        if (xQueueReceive(wifi_laptime_current_queue, temp_laptime, 0) == pdTRUE)
+        Laptime temp_lap;
+        if (xQueueReceive(laptime_current_queue_wifi, &temp_lap, 0) == pdTRUE)
         {
             if (xSemaphoreTake(data_mutex, portMAX_DELAY))
             {
-                strncpy(current_laptime, temp_laptime, LAPTIME_STR_LENGTH);
+                current_laptime_data = temp_lap;
                 xSemaphoreGive(data_mutex);
             }
         }
 
-        // Receive driver ID - handle potential pointer/value size mismatch safe-ishly
-        // The queue was created with size 4 (pointer size), but sender sends &int16_t.
-        // We read 4 bytes into a buffer and cast.
-        if (xQueueReceive(wifi_laptime_driver_queue, &temp_driver_id_buf, 0) == pdTRUE)
+        bool temp_status[3];
+        if (xQueueReceive(laptime_status_queue_wifi, &temp_status, 0) == pdTRUE)
         {
             if (xSemaphoreTake(data_mutex, portMAX_DELAY))
             {
-                current_driver_id = (int16_t)temp_driver_id_buf;
-                // Boundary check
-                if (current_driver_id < 0 || current_driver_id > DRIVER_COUNT)
-                {
-                    current_driver_id = 0;
-                }
+                memcpy(status_flags, temp_status, sizeof(status_flags));
                 xSemaphoreGive(data_mutex);
             }
-        }
-
-        if (xSemaphoreTake(wifi_laptime_status_semaphore, 0) == pdTRUE)
-        {
-            if (xSemaphoreTake(data_mutex, portMAX_DELAY))
-            {
-                status_flags[0] = (lap_mode);
-                status_flags[1] = stop_flag;
-                status_flags[2] = sd_active_flag;
-                xSemaphoreGive(data_mutex);
-            }
-            xSemaphoreGive(wifi_laptime_status_semaphore);
-        }
-
-        if (xSemaphoreTake(wifi_laptime_lists_semaphore, 0) == pdTRUE && new_lists_flag == false)
-        {
-            new_lists_flag = true;
-        }
-
-        if (xSemaphoreTake(wifi_laptime_penalty_semaphore, 0) == pdTRUE && new_penalty_flag == false)
-        {
-            new_penalty_flag = true;
         }
 
         vTaskDelay(pdMS_TO_TICKS(20));
