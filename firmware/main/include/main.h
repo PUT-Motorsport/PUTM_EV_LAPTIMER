@@ -102,6 +102,8 @@
 
 #define DRIVER_TAG_LENGTH 4
 
+#define DRIVER_LIST_DEFAULT {"---", "AAA", "BBB", "CCC"}
+
 #ifdef __cplusplus
 class Laptime
 {
@@ -113,7 +115,7 @@ public:
     uint16_t doo_count = 0;
     uint16_t oc_count = 0;
 
-    int16_t driver_id = 0;
+    int8_t driver_id = 0;
 
     void reset()
     {
@@ -192,6 +194,8 @@ enum Lapmode
  * @brief FreeRTOS intertask communication
  */
 
+extern SemaphoreHandle_t driver_list_mutex;
+
 /**
  * @ingroup freertos
  * @brief Queue passes laptimes from main logic laptimer_task to sdcard_task
@@ -222,6 +226,7 @@ extern QueueHandle_t laptime_status_queue_lcd;
 extern QueueHandle_t laptime_status_queue_wifi;
 
 extern char driver_list[DRIVER_MAX_COUNT][DRIVER_TAG_LENGTH];
+extern uint8_t driver_count;
 
 #ifdef __cplusplus
 const char laptime_current_default_str[] = "--, --:--.--";
@@ -243,6 +248,5 @@ extern enum Lapmode lap_mode;
  * @brief Global variable indicates stopped laptime, set true by LAP_RESET_PIN and set false by LAP_GATE1_PIN
  */
 extern volatile bool stop_flag;
-extern bool sd_active_flag;
 
-extern int driver_count;
+extern bool sd_active_flag;

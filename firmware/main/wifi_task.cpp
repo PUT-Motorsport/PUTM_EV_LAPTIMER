@@ -13,6 +13,8 @@ static const char *TAG = "WIFI_TASK";
  */
 static Laptime current_laptime_data;
 
+static char driver_list_local[DRIVER_MAX_COUNT][DRIVER_TAG_LENGTH] = DRIVER_LIST_DEFAULT;
+
 /**
  * @brief Status flags used to display on website
  */
@@ -158,7 +160,7 @@ h3 { margin-top: 0; color: #ccc; border-bottom: 1px solid #555; padding-bottom: 
 </div>
 
 <script>
-const colors = ['black', 'blue', 'red', 'yellow', 'green', 'magenta', 'brown', 'cyan'];
+const colors = ['black', 'blue', 'red', 'yellow', 'green', 'magenta', 'brown', 'cyan', 'purple' , 'olive];
 
 function update() {
   fetch('/api/data?t=' + new Date().getTime()).then(r => r.json()).then(d => {
@@ -293,7 +295,7 @@ static esp_err_t data_get_handler(httpd_req_t *req)
     int id = local_current.driver_id;
     if (id < 0 || id >= DRIVER_MAX_COUNT)
         id = 0;
-    cJSON_AddStringToObject(root, "current_driver_tag", driver_list[id]);
+    cJSON_AddStringToObject(root, "current_driver_tag", driver_list_local[id]);
     cJSON_AddNumberToObject(root, "current_driver_id", id);
 
     local_current.penalty_string(temp_pen_str, sizeof(temp_pen_str));
@@ -323,7 +325,7 @@ static esp_err_t data_get_handler(httpd_req_t *req)
 
         for (int i = 0; i <= driver_count; i++)
         {
-            cJSON_AddItemToArray(drivers_arr, cJSON_CreateString(driver_list[i]));
+            cJSON_AddItemToArray(drivers_arr, cJSON_CreateString(driver_list_local[i]));
 
             laptime_list_driver[i].convert_string(temp_str, sizeof(temp_str));
             cJSON_AddItemToArray(driver_best_arr, cJSON_CreateString(temp_str));
@@ -367,7 +369,7 @@ static esp_err_t data_get_handler(httpd_req_t *req)
             int drv_id = laptime_list_last[i].driver_id;
             if (drv_id < 0 || drv_id >= DRIVER_MAX_COUNT)
                 drv_id = 0;
-            cJSON_AddItemToArray(last_driver_tag_arr, cJSON_CreateString(driver_list[drv_id]));
+            cJSON_AddItemToArray(last_driver_tag_arr, cJSON_CreateString(driver_list_local[drv_id]));
             cJSON_AddItemToArray(last_driver_id_arr, cJSON_CreateNumber(drv_id));
 
             laptime_list_last[i].penalty_string(temp_pen_str, sizeof(temp_pen_str));
@@ -386,7 +388,7 @@ static esp_err_t data_get_handler(httpd_req_t *req)
             drv_id = laptime_list_top[i].driver_id;
             if (drv_id < 0 || drv_id >= DRIVER_MAX_COUNT)
                 drv_id = 0;
-            cJSON_AddItemToArray(top_driver_tag_arr, cJSON_CreateString(driver_list[drv_id]));
+            cJSON_AddItemToArray(top_driver_tag_arr, cJSON_CreateString(driver_list_local[drv_id]));
             cJSON_AddItemToArray(top_driver_id_arr, cJSON_CreateNumber(drv_id));
         }
 
@@ -443,7 +445,7 @@ static esp_err_t csv_get_handler(httpd_req_t *req)
 
             snprintf(line, sizeof(line), "%s,%s,%s,%u,%u\n",
                      time_str,
-                     driver_list[drv_id],
+                     driver_list_local[drv_id],
                      pen_str,
                      laptime_list_last[i].oc_count,
                      laptime_list_last[i].doo_count);
@@ -481,7 +483,7 @@ static esp_err_t drivers_csv_get_handler(httpd_req_t *req)
             laptime_list_driver[i].penalty_string(pen_str, sizeof(pen_str));
 
             snprintf(line, sizeof(line), "%s,%s,%u,%s,%u,%u\n",
-                     driver_list[i],
+                     driver_list_local[i],
                      time_str,
                      laptime_list_driver[i].count,
                      pen_str,
@@ -558,6 +560,13 @@ void wifi_task(void *args)
     for (;;)
     {
         Laptime temp_lap;
+
+        if (xSemaphoreTake(driver_list_mutex, 0) == pdTRUE)
+        {
+            memcpy(driver_list_local, driver_list, sizeof(driver_list_local));
+            xSemaphoreGive(driver_list_mutex);
+        }
+
         if (xQueueReceive(laptime_current_queue_wifi, &temp_lap, 0) == pdTRUE)
         {
             if (xSemaphoreTake(data_mutex, portMAX_DELAY))

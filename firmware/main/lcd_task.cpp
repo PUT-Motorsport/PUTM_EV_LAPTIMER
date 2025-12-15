@@ -24,6 +24,8 @@
 #define BROWN 0x40BC
 #define BRRED 0x07FC
 #define GRAY 0x3084
+#define PURPLE 0x1080
+#define OLIVE 0x0084
 
 #define PADDING 10
 #define LAPTIME_LISTS_POS_X 10
@@ -40,7 +42,8 @@
 #define LAPTIME_LISTS_LETTER_WIDTH 10
 #define UI_LETTER_WIDTH 9
 
-const int color_list[] = {BLACK, BLUE, RED, YELLOW, GREEN, MAGENTA, BROWN, CYAN};
+static char driver_list_local[DRIVER_MAX_COUNT][DRIVER_TAG_LENGTH] = DRIVER_LIST_DEFAULT;
+const int driver_color_list[DRIVER_MAX_COUNT] = {BLACK, BLUE, RED, YELLOW, GREEN, MAGENTA, BROWN, CYAN, PURPLE, OLIVE};
 
 hagl_backend_t display_struct;
 hagl_backend_t *display = &display_struct;
@@ -156,8 +159,8 @@ void print_current_laptime()
     lcd_print_str(LAPTIME_CURRENT_POS_X + LAPTIME_CURRENT_LETTER_WIDTH * 13, LAPTIME_CURRENT_POS_Y, laptime_penalty_str, UI_FONT, YELLOW);
     lcd_print_str(LAPTIME_LISTS_POS_X + UI_LETTER_WIDTH * 4, LAPTIME_CURRENT_POS_Y + 25, laptime_oc_str, UI_FONT, YELLOW);
     lcd_print_str(LAPTIME_LISTS_POS_X + UI_LETTER_WIDTH * 13, LAPTIME_CURRENT_POS_Y + 25, laptime_doo_str, UI_FONT, YELLOW);
-    lcd_print_str(LAPTIME_LISTS_POS_X + UI_LETTER_WIDTH * 26, LAPTIME_CURRENT_POS_Y + 25, driver_list[laptime_current.driver_id], UI_FONT, WHITE);
-    lcd_print_tag(LAPTIME_LISTS_POS_X + UI_LETTER_WIDTH * 30, LAPTIME_CURRENT_POS_Y + 25, 25, 10, color_list[laptime_current.driver_id]);
+    lcd_print_str(LAPTIME_LISTS_POS_X + UI_LETTER_WIDTH * 26, LAPTIME_CURRENT_POS_Y + 25, driver_list_local[laptime_current.driver_id], UI_FONT, WHITE);
+    lcd_print_tag(LAPTIME_LISTS_POS_X + UI_LETTER_WIDTH * 30, LAPTIME_CURRENT_POS_Y + 25, 25, 10, driver_color_list[laptime_current.driver_id]);
 }
 
 /**
@@ -180,10 +183,10 @@ void print_laptime_lists()
         lcd_print_str(LCD_WIDTH / 2 + LAPTIME_LISTS_POS_X,
                       LAPTIME_LISTS_POS_Y + LAPTIME_LISTS_SPACING + i * LAPTIME_LISTS_SPACING, laptime_top_str,
                       LAPTIME_LISTS_FONT, WHITE);
-        lcd_print_tag(LCD_WIDTH / 2 + LAPTIME_LISTS_POS_X + LAPTIME_CURRENT_LETTER_WIDTH * 12 + 10, LAPTIME_LISTS_POS_Y + LAPTIME_LISTS_SPACING + i * LAPTIME_LISTS_SPACING + 5, 8, 8, color_list[laptime_list_top[i].driver_id]);
+        lcd_print_tag(LCD_WIDTH / 2 + LAPTIME_LISTS_POS_X + LAPTIME_CURRENT_LETTER_WIDTH * 12 + 10, LAPTIME_LISTS_POS_Y + LAPTIME_LISTS_SPACING + i * LAPTIME_LISTS_SPACING + 5, 8, 8, driver_color_list[laptime_list_top[i].driver_id]);
         lcd_print_str(LAPTIME_LISTS_POS_X, LAPTIME_LISTS_POS_Y + LAPTIME_LISTS_SPACING + i * LAPTIME_LISTS_SPACING, laptime_last_str,
                       LAPTIME_LISTS_FONT, WHITE);
-        lcd_print_tag(LAPTIME_LISTS_POS_X + LAPTIME_CURRENT_LETTER_WIDTH * 12 + 10, LAPTIME_LISTS_POS_Y + LAPTIME_LISTS_SPACING + i * LAPTIME_LISTS_SPACING + 5, 8, 8, color_list[laptime_list_last[i].driver_id]);
+        lcd_print_tag(LAPTIME_LISTS_POS_X + LAPTIME_CURRENT_LETTER_WIDTH * 12 + 10, LAPTIME_LISTS_POS_Y + LAPTIME_LISTS_SPACING + i * LAPTIME_LISTS_SPACING + 5, 8, 8, driver_color_list[laptime_list_last[i].driver_id]);
     }
     xSemaphoreGive(laptime_lists_mutex);
 }
@@ -202,6 +205,12 @@ void lcd_task(void *args)
 
     for (;;)
     {
+        if (xSemaphoreTake(driver_list_mutex, 0) == pdTRUE)
+        {
+            memcpy(driver_list_local, driver_list, sizeof(driver_list_local));
+            xSemaphoreGive(driver_list_mutex);
+        }
+
         print_current_laptime();
         print_laptime_lists();
         print_status();

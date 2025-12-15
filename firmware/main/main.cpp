@@ -8,6 +8,8 @@
 #include "gpio.h"
 #include "timer.h"
 
+SemaphoreHandle_t driver_list_mutex = xSemaphoreCreateMutex();
+
 QueueHandle_t laptime_saved_queue_sd = xQueueCreate(1, sizeof(Laptime));
 
 QueueHandle_t laptime_current_queue_lcd = xQueueCreate(1, sizeof(Laptime));
@@ -18,7 +20,8 @@ SemaphoreHandle_t laptime_lists_mutex = xSemaphoreCreateMutex();
 QueueHandle_t laptime_status_queue_lcd = xQueueCreate(1, sizeof(bool[3]));
 QueueHandle_t laptime_status_queue_wifi = xQueueCreate(1, sizeof(bool[3]));
 
-char driver_list[DRIVER_MAX_COUNT][DRIVER_TAG_LENGTH] = {"---", "AAA", "BBB", "CCC"};
+char driver_list[DRIVER_MAX_COUNT][DRIVER_TAG_LENGTH] = DRIVER_LIST_DEFAULT;
+uint8_t driver_count = 3;
 
 Laptime laptime_list_top[LAPTIME_LIST_SIZE_LOCAL] = {0};
 Laptime laptime_list_last[LAPTIME_LIST_SIZE_LOCAL] = {0};
@@ -27,7 +30,6 @@ Laptime laptime_list_driver[DRIVER_MAX_COUNT] = {0};
 Lapmode lap_mode = ONE_GATE_MODE;
 volatile bool stop_flag = true;
 bool sd_active_flag = false;
-int driver_count = 0;
 
 /**
  * @brief Main task initializes core peripherals and creates program tasks
