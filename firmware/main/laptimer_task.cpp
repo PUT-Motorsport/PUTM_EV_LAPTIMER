@@ -12,6 +12,8 @@
 
 static const char *TAG = "LAPTIMER_TASK";
 
+static Driver_list driver_list_local;
+
 /**
  * @brief Global variable used to store current laptime that is readed from timer in main loop and saved in ISR
  */
@@ -186,11 +188,11 @@ bool driver_select()
     case BTN_HOLD_ACTION:
         laptime_current.driver_id--;
         if (laptime_current.driver_id < 1)
-            laptime_current.driver_id = driver_count;
+            laptime_current.driver_id = driver_list_local.driver_count;
         return true;
     case BTN_RELEASED_ACTION:
         laptime_current.driver_id++;
-        if (laptime_current.driver_id > driver_count)
+        if (laptime_current.driver_id > driver_list_local.driver_count)
             laptime_current.driver_id = 1;
         return true;
     default:
@@ -342,7 +344,16 @@ void laptimer_task(void *args)
 
     for (;;)
     {
+
+        if (xSemaphoreTake(driver_list_mutex, 0) == pdTRUE)
+        {
+            memcpy(driver_list_local.list, driver_list_main.list, sizeof(driver_list_local));
+            driver_list_local.driver_count = driver_list_main.driver_count;
+            xSemaphoreGive(driver_list_mutex);
+        }
+
         driver_select();
+
         if (stop_flag == false)
         {
             laptime_current.time = timer_get_time(laptime_timer);

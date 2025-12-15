@@ -155,6 +155,24 @@ public:
                      this->count, mm, ss, ms);
     }
 
+    void convert_string_time(char laptime_str[LAPTIME_STR_LENGTH], size_t size)
+    {
+        if (laptime_str == NULL)
+            return;
+
+        if (this->time == 0)
+        {
+            snprintf(laptime_str, size, "--:--.--");
+            return;
+        }
+
+        unsigned int mm = (this->time / 6000) % 60;
+        unsigned int ss = (this->time / 100) % 60;
+        unsigned int ms = this->time % 100;
+        if (size == LAPTIME_STR_LENGTH)
+            snprintf(laptime_str, size, "%02u:%02u:%02u", mm, ss, ms);
+    }
+
     void penalty_string(char laptime_str[PENALTY_TIME_STR_LENGTH], size_t size)
     {
         if (laptime_str == NULL)
@@ -173,6 +191,12 @@ public:
             snprintf(laptime_str, size, "+%02u:%02u", mm, ss);
         }
     }
+};
+
+struct Driver_list
+{
+    char list[DRIVER_MAX_COUNT][DRIVER_TAG_LENGTH] = DRIVER_LIST_DEFAULT;
+    uint8_t driver_count = 3;
 };
 
 struct Laptime_list
@@ -225,10 +249,10 @@ extern SemaphoreHandle_t laptime_lists_mutex;
 extern QueueHandle_t laptime_status_queue_lcd;
 extern QueueHandle_t laptime_status_queue_wifi;
 
-extern char driver_list[DRIVER_MAX_COUNT][DRIVER_TAG_LENGTH];
-extern uint8_t driver_count;
-
 #ifdef __cplusplus
+
+extern Driver_list driver_list_main;
+
 const char laptime_current_default_str[] = "--, --:--.--";
 const char laptime_penalty_default_str[] = "+00:00";
 const char laptime_oc_default_str[] = "0";

@@ -16,7 +16,7 @@ static const char *TAG = "SDCARD_TASK";
 char session_str[14] = {"#00"};
 int session_num = 0;
 
-static char driver_list_local[DRIVER_MAX_COUNT][DRIVER_TAG_LENGTH] = DRIVER_LIST_DEFAULT;
+static Driver_list driver_list_local;
 
 bool sd_detect_flag = false;
 
@@ -46,9 +46,9 @@ esp_err_t sdcard_get_driver_list(sdmmc_card_t **card_pointer)
         {
             for (int i = 0; i < driver_count_temp; i++)
             {
-                strncpy(driver_list[i + 1], driver_list_temp[i], sizeof(driver_list[i + 1]));
+                strncpy(driver_list_main.list[i + 1], driver_list_temp[i], sizeof(driver_list_main.list[i + 1]));
             }
-            driver_count = driver_count_temp;
+            driver_list_main.driver_count = driver_count_temp;
             xSemaphoreGive(driver_list_mutex);
         }
     }
@@ -142,7 +142,7 @@ esp_err_t sdcard_save_laptime(Laptime laptime_saved)
     laptime_saved.penalty_string(laptime_penalty_str, sizeof(laptime_penalty_str));
     snprintf(laptime_oc_str, sizeof(laptime_oc_str), "%3u,", laptime_saved.oc_count);
     snprintf(laptime_doo_str, sizeof(laptime_doo_str), "%3u,", laptime_saved.doo_count);
-    snprintf(laptime_driver_str, sizeof(laptime_driver_str), "%s", driver_list_local[laptime_saved.driver_id]);
+    snprintf(laptime_driver_str, sizeof(laptime_driver_str), "%s", driver_list_local.list[laptime_saved.driver_id]);
 
     if (sd_active_flag == false)
         return ESP_FAIL;
@@ -238,7 +238,8 @@ void sdcard_task(void *args)
     {
         if (xSemaphoreTake(driver_list_mutex, 0) == pdTRUE)
         {
-            memcpy(driver_list_local, driver_list, sizeof(driver_list_local));
+            memcpy(driver_list_local.list, driver_list_main.list, sizeof(driver_list_local.list));
+            driver_list_local.driver_count = driver_list_main.driver_count;
             xSemaphoreGive(driver_list_mutex);
         }
 

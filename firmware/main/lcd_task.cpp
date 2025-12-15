@@ -42,7 +42,8 @@
 #define LAPTIME_LISTS_LETTER_WIDTH 10
 #define UI_LETTER_WIDTH 9
 
-static char driver_list_local[DRIVER_MAX_COUNT][DRIVER_TAG_LENGTH] = DRIVER_LIST_DEFAULT;
+static Driver_list driver_list_local;
+
 const int driver_color_list[DRIVER_MAX_COUNT] = {BLACK, BLUE, RED, YELLOW, GREEN, MAGENTA, BROWN, CYAN, PURPLE, OLIVE};
 
 hagl_backend_t display_struct;
@@ -159,7 +160,7 @@ void print_current_laptime()
     lcd_print_str(LAPTIME_CURRENT_POS_X + LAPTIME_CURRENT_LETTER_WIDTH * 13, LAPTIME_CURRENT_POS_Y, laptime_penalty_str, UI_FONT, YELLOW);
     lcd_print_str(LAPTIME_LISTS_POS_X + UI_LETTER_WIDTH * 4, LAPTIME_CURRENT_POS_Y + 25, laptime_oc_str, UI_FONT, YELLOW);
     lcd_print_str(LAPTIME_LISTS_POS_X + UI_LETTER_WIDTH * 13, LAPTIME_CURRENT_POS_Y + 25, laptime_doo_str, UI_FONT, YELLOW);
-    lcd_print_str(LAPTIME_LISTS_POS_X + UI_LETTER_WIDTH * 26, LAPTIME_CURRENT_POS_Y + 25, driver_list_local[laptime_current.driver_id], UI_FONT, WHITE);
+    lcd_print_str(LAPTIME_LISTS_POS_X + UI_LETTER_WIDTH * 26, LAPTIME_CURRENT_POS_Y + 25, driver_list_local.list[laptime_current.driver_id], UI_FONT, WHITE);
     lcd_print_tag(LAPTIME_LISTS_POS_X + UI_LETTER_WIDTH * 30, LAPTIME_CURRENT_POS_Y + 25, 25, 10, driver_color_list[laptime_current.driver_id]);
 }
 
@@ -207,7 +208,8 @@ void lcd_task(void *args)
     {
         if (xSemaphoreTake(driver_list_mutex, 0) == pdTRUE)
         {
-            memcpy(driver_list_local, driver_list, sizeof(driver_list_local));
+            memcpy(driver_list_local.list, driver_list_main.list, sizeof(driver_list_local));
+            driver_list_local.driver_count = driver_list_main.driver_count;
             xSemaphoreGive(driver_list_mutex);
         }
 

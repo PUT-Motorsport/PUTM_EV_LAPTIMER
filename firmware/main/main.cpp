@@ -20,8 +20,7 @@ SemaphoreHandle_t laptime_lists_mutex = xSemaphoreCreateMutex();
 QueueHandle_t laptime_status_queue_lcd = xQueueCreate(1, sizeof(bool[3]));
 QueueHandle_t laptime_status_queue_wifi = xQueueCreate(1, sizeof(bool[3]));
 
-char driver_list[DRIVER_MAX_COUNT][DRIVER_TAG_LENGTH] = DRIVER_LIST_DEFAULT;
-uint8_t driver_count = 3;
+Driver_list driver_list_main;
 
 Laptime laptime_list_top[LAPTIME_LIST_SIZE_LOCAL] = {0};
 Laptime laptime_list_last[LAPTIME_LIST_SIZE_LOCAL] = {0};
