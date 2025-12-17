@@ -160,6 +160,7 @@ void penalty_check(Laptime *laptime)
     default:
         break;
     }
+
     switch (oc_long_flag)
     {
     case BTN_HOLD_ACTION:

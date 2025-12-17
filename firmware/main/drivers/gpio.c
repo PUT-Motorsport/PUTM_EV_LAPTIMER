@@ -60,9 +60,16 @@ esp_err_t gpio_init(void)
         .intr_type = GPIO_INTR_NEGEDGE,
     };
 
+    gpio_config_t sd_cd_config = {
+        .pin_bit_mask = 1ULL << CONFIG_SD_CD,
+        .mode = GPIO_MODE_INPUT,
+        .pull_up_en = false,
+        .pull_down_en = false,
+    };
+
     const gpio_config_t *configs[] = {&gate1_btn_config, &gate2_btn_config,
                                       &reset_btn_config,
-                                      &lap_mode_btn_config, &lap_doo_btn_config, &lap_oc_btn_config, &driver_select_btn_config};
+                                      &lap_mode_btn_config, &lap_doo_btn_config, &lap_oc_btn_config, &driver_select_btn_config, &sd_cd_config};
 
     for (int i = 0; i < sizeof(configs) / sizeof(configs[0]); i++)
     {

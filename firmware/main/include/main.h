@@ -57,7 +57,7 @@
 #define SD_SPI_MOSI CONFIG_SD_SPI_MOSI
 #define SD_SPI_CS CONFIG_SD_SPI_CS
 
-#define SD_CD 9
+#define SD_CD CONFIG_SD_CD
 
 /// @ingroup pinout_defines
 /// @brief LCD pinout
@@ -105,6 +105,7 @@
 #define DRIVER_LIST_DEFAULT {"---", "AAA", "BBB", "CCC"}
 
 #ifdef __cplusplus
+
 class Laptime
 {
 public:
@@ -199,12 +200,6 @@ struct Driver_list
     uint8_t driver_count = 3;
 };
 
-struct Laptime_list
-{
-    Laptime list_top[LAPTIME_LIST_SIZE_LOCAL] = {0};
-    Laptime list_last[LAPTIME_LIST_SIZE_LOCAL] = {0};
-    Laptime list_driver[DRIVER_MAX_COUNT] = {0};
-};
 #endif
 
 enum Lapmode

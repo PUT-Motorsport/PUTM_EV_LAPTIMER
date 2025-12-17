@@ -57,6 +57,10 @@ menu "PUTM EV Laptimer"
             int "SD Card SPI CS (GPIO)"
             default 22
 
+        config SD_CD
+            int "SD Card CD (GPIO)"
+            default 9
+
         # config LCD_SPI_CLK
         #     int "LCD SPI CLK (GPIO)"
         #     default 36
