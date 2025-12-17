@@ -23,7 +23,7 @@ esp_err_t gpio_init(void)
     gpio_config_t reset_btn_config = {
         .pin_bit_mask = 1ULL << CONFIG_LAP_RESET_PIN,
         .mode = GPIO_MODE_INPUT,
-        .pull_up_en = false,
+        .pull_up_en = true,
         .pull_down_en = false,
         .intr_type = GPIO_INTR_NEGEDGE,
     };
