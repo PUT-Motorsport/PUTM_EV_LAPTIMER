@@ -4,6 +4,7 @@
 #include "esp_log.h"
 #include "esp_err.h"
 #include "sdkconfig.h"
+#include <esp_wifi_types_generic.h>
 
 /**
  * @defgroup pinout_defines
@@ -14,19 +15,19 @@
  * @ingroup pinout_defines
  * @brief Input for first gate that starts new lap on negative edge
  */
-#define LAP_GATE1_PIN ((gpio_num_t)CONFIG_LAP_GATE1_PIN)
+#define LAP_GATE1_PIN ((gpio_num_t)CONFIG_GATE1_PIN)
 
 /**
  * @ingroup pinout_defines
  * @brief Input for second gate that stops lap on negative edge in 2 gate mode
  */
-#define LAP_GATE2_PIN ((gpio_num_t)CONFIG_LAP_GATE2_PIN)
+#define LAP_GATE2_PIN ((gpio_num_t)CONFIG_GATE2_PIN)
 
 /**
  * @ingroup pinout_defines
  * @brief Input for button that resets current laptime, tries to reinitialize sd card and checks status of LAP_MODE_PIN on negative edge
  */
-#define LAP_RESET_PIN ((gpio_num_t)CONFIG_LAP_RESET_PIN)
+#define LAP_RESET_PIN ((gpio_num_t)CONFIG_STOP_PIN)
 
 /**
  * @ingroup pinout_defines
@@ -34,19 +35,19 @@
  * LOW - 1 gate mode
  * HIGH - 2 gate mode
  */
-#define LAP_MODE_PIN ((gpio_num_t)CONFIG_LAP_MODE_PIN)
+#define LAP_MODE_PIN ((gpio_num_t)CONFIG_MODE_PIN)
 
 /**
  * @ingroup pinout_defines
  * @brief Input for button that adds Down or Out time penalty to current laptime (2s for Endurance) on negative edge
  */
-#define LAP_DOO_PIN ((gpio_num_t)CONFIG_LAP_DOO_PIN)
+#define LAP_DOO_PIN ((gpio_num_t)CONFIG_DOO_PIN)
 
 /**
  * @ingroup pinout_defines
  * @brief Input for button that adds Off-Course time penalty to current laptime (10s for Endurance) on negative edge
  */
-#define LAP_OC_PIN ((gpio_num_t)CONFIG_LAP_OC_PIN)
+#define LAP_OC_PIN ((gpio_num_t)CONFIG_OC_PIN)
 
 #define DRIVER_SELECT_PIN ((gpio_num_t)CONFIG_DRIVER_SELECT_PIN)
 
@@ -103,6 +104,12 @@
 #define DRIVER_TAG_LENGTH 4
 
 #define DRIVER_LIST_DEFAULT {"---", "AAA", "BBB", "CCC"}
+
+enum Lap_mode
+{
+    ONE_GATE_MODE,
+    TWO_GATE_MODE,
+};
 
 #ifdef __cplusplus
 
@@ -200,20 +207,26 @@ struct Driver_list
     uint8_t driver_count = 3;
 };
 
-#endif
-
-enum Lapmode
+struct Config
 {
-    ONE_GATE_MODE,
-    TWO_GATE_MODE,
+    Lap_mode lap_mode = ONE_GATE_MODE;
+    Driver_list driver_list;
+
+    wifi_mode_t wifi_mode = WIFI_MODE_STA;
+    char wifi_ssid[32] = "iPhone (Hubert)";
+    char wifi_password[64] = "Mateusz123";
+    uint8_t wifi_channel = 1;
+    uint8_t wifi_max_connection = 3;
 };
+
+#endif
 
 /**
  * @defgroup freertos
  * @brief FreeRTOS intertask communication
  */
 
-extern SemaphoreHandle_t driver_list_mutex;
+extern SemaphoreHandle_t config_mutex;
 
 /**
  * @ingroup freertos
@@ -246,22 +259,19 @@ extern QueueHandle_t laptime_status_queue_wifi;
 
 #ifdef __cplusplus
 
-extern Driver_list driver_list_main;
+// extern Driver_list driver_list_main;
 
-const char laptime_current_default_str[] = "--, --:--.--";
-const char laptime_penalty_default_str[] = "+00:00";
-const char laptime_oc_default_str[] = "0";
-const char laptime_doo_default_str[] = "0";
+extern Config config_main;
+
+// const char laptime_current_default_str[] = "--, --:--.--";
+// const char laptime_penalty_default_str[] = "+00:00";
+// const char laptime_oc_default_str[] = "0";
+// const char laptime_doo_default_str[] = "0";
 
 extern Laptime laptime_list_top[LAPTIME_LIST_SIZE_LOCAL];
 extern Laptime laptime_list_last[LAPTIME_LIST_SIZE_LOCAL];
 extern Laptime laptime_list_driver[DRIVER_MAX_COUNT];
 #endif
-
-/**
- * @brief Global variable determines behavior of gate inputs
- */
-extern enum Lapmode lap_mode;
 
 /**
  * @brief Global variable indicates stopped laptime, set true by LAP_RESET_PIN and set false by LAP_GATE1_PIN

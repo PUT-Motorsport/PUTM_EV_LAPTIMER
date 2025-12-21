@@ -36,7 +36,7 @@ volatile btn_long_state ds_state = BTN_STANDBY;
  * @brief Checks active state of LAP_MODE_PIN
  * @return Active mode
  */
-Lapmode lap_mode_check()
+Lap_mode lap_mode_check()
 {
     if (gpio_get_level(LAP_MODE_PIN) == 0)
         return ONE_GATE_MODE;
@@ -100,11 +100,12 @@ esp_err_t laptime_save_driver(Laptime laptime, Laptime list_driver[DRIVER_MAX_CO
     return ESP_OK;
 }
 
-static void laptime_save_uart(char *laptime_str, size_t size)
+static void laptime_save_uart(Laptime laptime)
 {
-    if (laptime_str == NULL)
-        return;
-    printf("%s", laptime_str);
+    char laptime_saved_str[LAPTIME_STR_LENGTH] = "--, --:--.--";
+    laptime.convert_string(laptime_saved_str,
+                           sizeof(laptime_saved_str));
+    printf("%s", laptime_saved_str);
     printf("\n");
 }
 
@@ -209,7 +210,7 @@ bool driver_select()
  */
 void gate1_pin_isr()
 {
-    switch (lap_mode)
+    switch (config_main.lap_mode)
     {
     case ONE_GATE_MODE:
         if (stop_flag == false && laptime_current.time > LAPTIME_MIN)
@@ -244,7 +245,7 @@ void gate1_pin_isr()
  */
 void gate2_pin_isr()
 {
-    switch (lap_mode)
+    switch (config_main.lap_mode)
     {
     case ONE_GATE_MODE:
         break;
@@ -331,9 +332,6 @@ esp_err_t isr_init()
  */
 void laptimer_task(void *args)
 {
-    char laptime_current_str[LAPTIME_STR_LENGTH] = {"--, --:--.--"};
-    char laptime_saved_str[LAPTIME_STR_LENGTH] = {"--, --:--.--"};
-
     bool stop_flag_old = stop_flag;
     bool sd_active_flag_old = sd_active_flag;
     bool status_update_flag = true;
@@ -346,11 +344,11 @@ void laptimer_task(void *args)
     for (;;)
     {
 
-        if (xSemaphoreTake(driver_list_mutex, 0) == pdTRUE)
+        if (xSemaphoreTake(config_mutex, 0) == pdTRUE)
         {
-            memcpy(driver_list_local.list, driver_list_main.list, sizeof(driver_list_local));
-            driver_list_local.driver_count = driver_list_main.driver_count;
-            xSemaphoreGive(driver_list_mutex);
+            memcpy(driver_list_local.list, config_main.driver_list.list, sizeof(driver_list_local));
+            driver_list_local.driver_count = config_main.driver_list.driver_count;
+            xSemaphoreGive(config_mutex);
         }
 
         driver_select();
@@ -366,7 +364,6 @@ void laptimer_task(void *args)
         if (stop_flag != stop_flag_old)
         {
             stop_flag_old = stop_flag;
-            lap_mode = lap_mode_check();
             status_update_flag = true;
         }
 
@@ -379,12 +376,7 @@ void laptimer_task(void *args)
         if (laptime_saved.time > 0 && xSemaphoreTake(laptime_lists_mutex, 0) == pdTRUE)
         {
             ESP_LOGI(TAG, "DOO: %u, OC: %u, Penalty sum: %llu\n", laptime_saved.doo_count, laptime_saved.oc_count, laptime_saved.penalty_time);
-
-            laptime_saved.convert_string(laptime_saved_str,
-                                         sizeof(laptime_saved_str));
-
-            laptime_save_uart(laptime_saved_str,
-                              sizeof(laptime_saved_str));
+            laptime_save_uart(laptime_saved);
             laptime_save_top(laptime_saved, laptime_list_top);
             laptime_save_last(laptime_saved, laptime_list_last);
             laptime_save_driver(laptime_saved, laptime_list_driver);
@@ -394,7 +386,7 @@ void laptimer_task(void *args)
         }
         if (status_update_flag == true)
         {
-            bool status_list[3] = {lap_mode, stop_flag, sd_active_flag};
+            bool status_list[3] = {config_main.lap_mode, stop_flag, sd_active_flag};
             xQueueSend(laptime_status_queue_lcd, status_list, 0);
             xQueueSend(laptime_status_queue_wifi, status_list, 0);
             status_update_flag = false;

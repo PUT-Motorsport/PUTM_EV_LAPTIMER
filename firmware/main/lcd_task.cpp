@@ -206,11 +206,11 @@ void lcd_task(void *args)
 
     for (;;)
     {
-        if (xSemaphoreTake(driver_list_mutex, 0) == pdTRUE)
+        if (xSemaphoreTake(config_mutex, 0) == pdTRUE)
         {
-            memcpy(driver_list_local.list, driver_list_main.list, sizeof(driver_list_local));
-            driver_list_local.driver_count = driver_list_main.driver_count;
-            xSemaphoreGive(driver_list_mutex);
+            memcpy(driver_list_local.list, config_main.driver_list.list, sizeof(driver_list_local));
+            driver_list_local.driver_count = config_main.driver_list.driver_count;
+            xSemaphoreGive(config_mutex);
         }
 
         print_current_laptime();

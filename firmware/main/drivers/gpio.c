@@ -5,7 +5,7 @@
 esp_err_t gpio_init(void)
 {
     gpio_config_t gate1_btn_config = {
-        .pin_bit_mask = 1ULL << CONFIG_LAP_GATE1_PIN,
+        .pin_bit_mask = 1ULL << CONFIG_GATE1_PIN,
         .mode = GPIO_MODE_INPUT,
         .pull_up_en = false,
         .pull_down_en = true,
@@ -13,39 +13,39 @@ esp_err_t gpio_init(void)
     };
 
     gpio_config_t gate2_btn_config = {
-        .pin_bit_mask = 1ULL << CONFIG_LAP_GATE2_PIN,
+        .pin_bit_mask = 1ULL << CONFIG_GATE2_PIN,
         .mode = GPIO_MODE_INPUT,
         .pull_up_en = false,
         .pull_down_en = true,
         .intr_type = GPIO_INTR_NEGEDGE,
     };
 
-    gpio_config_t reset_btn_config = {
-        .pin_bit_mask = 1ULL << CONFIG_LAP_RESET_PIN,
+    gpio_config_t stop_btn_config = {
+        .pin_bit_mask = 1ULL << CONFIG_STOP_PIN,
         .mode = GPIO_MODE_INPUT,
         .pull_up_en = true,
         .pull_down_en = false,
         .intr_type = GPIO_INTR_NEGEDGE,
     };
 
-    gpio_config_t lap_mode_btn_config = {
-        .pin_bit_mask = 1ULL << CONFIG_LAP_MODE_PIN,
+    gpio_config_t mode_sw_config = {
+        .pin_bit_mask = 1ULL << CONFIG_MODE_PIN,
         .mode = GPIO_MODE_INPUT,
         .pull_up_en = false,
         .pull_down_en = true,
         .intr_type = GPIO_INTR_DISABLE,
     };
 
-    gpio_config_t lap_doo_btn_config = {
-        .pin_bit_mask = 1ULL << CONFIG_LAP_DOO_PIN,
+    gpio_config_t doo_btn_config = {
+        .pin_bit_mask = 1ULL << CONFIG_DOO_PIN,
         .mode = GPIO_MODE_INPUT,
         .pull_up_en = true,
         .pull_down_en = false,
         .intr_type = GPIO_INTR_NEGEDGE,
     };
 
-    gpio_config_t lap_oc_btn_config = {
-        .pin_bit_mask = 1ULL << CONFIG_LAP_OC_PIN,
+    gpio_config_t oc_btn_config = {
+        .pin_bit_mask = 1ULL << CONFIG_OC_PIN,
         .mode = GPIO_MODE_INPUT,
         .pull_up_en = true,
         .pull_down_en = false,
@@ -67,9 +67,8 @@ esp_err_t gpio_init(void)
         .pull_down_en = false,
     };
 
-    const gpio_config_t *configs[] = {&gate1_btn_config, &gate2_btn_config,
-                                      &reset_btn_config,
-                                      &lap_mode_btn_config, &lap_doo_btn_config, &lap_oc_btn_config, &driver_select_btn_config, &sd_cd_config};
+    const gpio_config_t *configs[] = {&gate1_btn_config, &gate2_btn_config, &stop_btn_config,
+                                      &mode_sw_config, &doo_btn_config, &oc_btn_config, &driver_select_btn_config, &sd_cd_config};
 
     for (int i = 0; i < sizeof(configs) / sizeof(configs[0]); i++)
     {

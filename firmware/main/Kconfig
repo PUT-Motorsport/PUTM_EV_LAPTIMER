@@ -1,35 +1,35 @@
 menu "PUTM EV Laptimer"
-        config LAP_GATE1_PIN
+        config GATE1_PIN
             int "Start Gate Pin (GPIO)"
             default 5
             help
                 Input for first gate that starts new lap on negative edge
 
-        config LAP_GATE2_PIN
+        config GATE2_PIN
             int "Stop Gate Pin (GPIO)"
             default 4
             help
                 Input for second gate that stops lap on negative edge in 2 gate mode
 
-        config LAP_RESET_PIN
-            int "Reset Button Pin (GPIO)"
-            default 25
+        config STOP_PIN
+            int "Stop Button Pin (GPIO)"
+            default 6
             help
                 Input for button that resets current laptime, tries to reinitialize sd card and checks status of LAP_MODE_PIN on negative edge
 
-        config LAP_MODE_PIN
+        config MODE_PIN
             int "Mode Switch Pin (GPIO)"
             default 16
             help
                 Input for switching between 1 gate and 2 gate mode. LOW - 1 gate mode, HIGH - 2 gate mode
 
-        config LAP_DOO_PIN
+        config DOO_PIN
             int "DOO Penalty Button Pin (GPIO)"
-            default 26
+            default 7
             help
                 Input for button that adds Down or Out time penalty to current laptime (2s for Endurance) on negative edge
 
-        config LAP_OC_PIN
+        config OC_PIN
             int "Off-Course Penalty Button Pin (GPIO)"
             default 15
             help

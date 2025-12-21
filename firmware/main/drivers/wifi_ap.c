@@ -3,7 +3,6 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_mac.h"
-#include "esp_wifi.h"
 #include "esp_event.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
@@ -11,32 +10,68 @@
 #include "lwip/err.h"
 #include "lwip/sys.h"
 
-#define WIFI_SSID "PUTM_LAPTIMER"
-#define WIFI_PASSWORD "putm_laptimer"
-#define WIFI_CHANNEL 1
-#define MAX_STA_CONN 4
-
 static const char *TAG = "WIFI_AP";
+
+static int s_retry_num = 0;
+static EventGroupHandle_t s_wifi_event_group;
+
+// static void wifi_event_handler(void *arg, esp_event_base_t event_base,
+//                                int32_t event_id, void *event_data)
+// {
+//     if (event_id == WIFI_EVENT_AP_STACONNECTED)
+//     {
+//         wifi_event_ap_staconnected_t *event = (wifi_event_ap_staconnected_t *)event_data;
+//         ESP_LOGI(TAG, "station " MACSTR " join, AID=%d",
+//                  MAC2STR(event->mac), event->aid);
+//     }
+//     else if (event_id == WIFI_EVENT_AP_STADISCONNECTED)
+//     {
+//         wifi_event_ap_stadisconnected_t *event = (wifi_event_ap_stadisconnected_t *)event_data;
+//         ESP_LOGI(TAG, "station " MACSTR " leave, AID=%d",
+//                  MAC2STR(event->mac), event->aid);
+//     }
+// }
 
 static void wifi_event_handler(void *arg, esp_event_base_t event_base,
                                int32_t event_id, void *event_data)
 {
-    if (event_id == WIFI_EVENT_AP_STACONNECTED)
+    if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_STACONNECTED)
     {
         wifi_event_ap_staconnected_t *event = (wifi_event_ap_staconnected_t *)event_data;
-        ESP_LOGI(TAG, "station " MACSTR " join, AID=%d",
+        ESP_LOGI(TAG, "Station " MACSTR " joined, AID=%d",
                  MAC2STR(event->mac), event->aid);
     }
-    else if (event_id == WIFI_EVENT_AP_STADISCONNECTED)
+    else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_STADISCONNECTED)
     {
         wifi_event_ap_stadisconnected_t *event = (wifi_event_ap_stadisconnected_t *)event_data;
-        ESP_LOGI(TAG, "station " MACSTR " leave, AID=%d",
-                 MAC2STR(event->mac), event->aid);
+        ESP_LOGI(TAG, "Station " MACSTR " left, AID=%d, reason:%d",
+                 MAC2STR(event->mac), event->aid, event->reason);
+    }
+    else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START)
+    {
+        esp_wifi_connect();
+        ESP_LOGI(TAG, "Station started");
+    }
+    else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP)
+    {
+        ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
+        ESP_LOGI(TAG, "Got IP:" IPSTR, IP2STR(&event->ip_info.ip));
+        s_retry_num = 0;
+        xEventGroupSetBits(s_wifi_event_group, BIT0);
+    }
+    else if (event_base == IP_EVENT && event_id == IP_EVENT_ASSIGNED_IP_TO_CLIENT)
+    {
+        const ip_event_assigned_ip_to_client_t *e = (const ip_event_assigned_ip_to_client_t *)event_data;
+        ESP_LOGI(TAG, "Assigned IP to client: " IPSTR ", MAC=" MACSTR ", hostname='%s'",
+                 IP2STR(&e->ip), MAC2STR(e->mac));
     }
 }
 
-void wifi_init_softap(void)
+esp_err_t wifi_init(wifi_mode_t wifi_mode, char wifi_ssid[32], char wifi_password[64])
 {
+    if (wifi_ssid == NULL || wifi_password == NULL || ((wifi_mode != WIFI_MODE_AP) && (wifi_mode != WIFI_MODE_STA)))
+        return ESP_FAIL;
+
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND)
     {
@@ -47,39 +82,83 @@ void wifi_init_softap(void)
 
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
-    esp_netif_create_default_wifi_ap();
 
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
-
-    ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
-                                                        ESP_EVENT_ANY_ID,
-                                                        &wifi_event_handler,
-                                                        NULL,
-                                                        NULL));
-
-    wifi_config_t wifi_config = {
-        .ap = {
-            .ssid = WIFI_SSID,
-            .ssid_len = strlen(WIFI_SSID),
-            .channel = WIFI_CHANNEL,
-            .password = WIFI_PASSWORD,
-            .max_connection = MAX_STA_CONN,
-            .authmode = WIFI_AUTH_WPA_WPA2_PSK,
-            .pmf_cfg = {
-                .required = false,
-            },
-        },
-    };
-    if (strlen(WIFI_PASSWORD) == 0)
+    switch (wifi_mode)
     {
-        wifi_config.ap.authmode = WIFI_AUTH_OPEN;
+    case WIFI_MODE_AP:
+    {
+        esp_netif_create_default_wifi_ap();
+
+        wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+        ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+
+        ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
+                                                            ESP_EVENT_ANY_ID,
+                                                            &wifi_event_handler,
+                                                            NULL,
+                                                            NULL));
+
+        wifi_config_t wifi_ap_config = {
+            .ap = {
+                // .ssid = (uint8_t *)wifi_ssid,
+                .ssid_len = strlen(wifi_ssid),
+                .channel = 1,
+                .max_connection = 3,
+                .authmode = WIFI_AUTH_OPEN,
+                .pmf_cfg = {
+                    .required = false,
+                },
+            },
+        };
+        snprintf((char *)wifi_ap_config.ap.ssid, sizeof(wifi_ap_config.sta.ssid), wifi_ssid);
+
+        ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
+        ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_ap_config));
+        ESP_ERROR_CHECK(esp_wifi_start());
+
+        ESP_LOGI(TAG, "wifi_init_softap finished. SSID:%s channel:%d",
+                 wifi_ssid, 1);
+        break;
     }
+    case WIFI_MODE_STA:
+    {
+        esp_netif_create_default_wifi_sta();
 
-    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
-    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_config));
-    ESP_ERROR_CHECK(esp_wifi_start());
+        wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+        ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
-    ESP_LOGI(TAG, "wifi_init_softap finished. SSID:%s password:%s channel:%d",
-             WIFI_SSID, WIFI_PASSWORD, WIFI_CHANNEL);
+        ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
+                                                            ESP_EVENT_ANY_ID,
+                                                            &wifi_event_handler,
+                                                            NULL,
+                                                            NULL));
+        wifi_config_t wifi_sta_config = {
+            .sta = {
+                // .ssid = wifi_ssid,
+                // .password = wifi_password,
+                .scan_method = WIFI_ALL_CHANNEL_SCAN,
+                .failure_retry_cnt = 5,
+                /* Authmode threshold resets to WPA2 as default if password matches WPA2 standards (password len => 8).
+                 * If you want to connect the device to deprecated WEP/WPA networks, Please set the threshold value
+                 * to WIFI_AUTH_WEP/WIFI_AUTH_WPA_PSK and set the password with length and format matching to
+                 * WIFI_AUTH_WEP/WIFI_AUTH_WPA_PSK standards.
+                 */
+                .threshold.authmode = WIFI_AUTH_WPA2_PSK,
+                .sae_pwe_h2e = WPA3_SAE_PWE_BOTH,
+            },
+        };
+        snprintf((char *)wifi_sta_config.sta.ssid, sizeof(wifi_sta_config.sta.ssid), wifi_ssid);
+        snprintf((char *)wifi_sta_config.sta.password, sizeof(wifi_sta_config.sta.password), wifi_password);
+
+        ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+        ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_sta_config));
+        ESP_ERROR_CHECK(esp_wifi_start());
+
+        ESP_LOGI(TAG, "wifi_init_sta finished.");
+        break;
+    }
+    default:
+        return ESP_FAIL;
+    }
+    return ESP_OK;
 }

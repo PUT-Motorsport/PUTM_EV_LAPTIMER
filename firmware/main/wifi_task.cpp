@@ -420,7 +420,7 @@ static esp_err_t csv_get_handler(httpd_req_t *req)
     httpd_resp_set_hdr(req, "Content-Disposition", "attachment; filename=\"laptimes.csv\"");
 
     // Header
-    httpd_resp_sendstr_chunk(req, "Number,Driver,Laptime [mm:ss:ms],Penalty Time [mm:ss],OC,DOO\n");
+    httpd_resp_sendstr_chunk(req, "Number,Laptime [mm:ss:ms], Driver, Penalty Time [mm:ss],OC,DOO\n");
 
     if (xSemaphoreTake(laptime_lists_mutex, portMAX_DELAY))
     {
@@ -546,7 +546,11 @@ static httpd_handle_t start_webserver(void)
  */
 void wifi_task(void *args)
 {
-    wifi_init_softap();
+    if (xSemaphoreTake(config_mutex, portMAX_DELAY) == pdTRUE)
+    {
+        wifi_init(config_main.wifi_mode, config_main.wifi_ssid, config_main.wifi_password);
+        xSemaphoreGive(config_mutex);
+    }
     start_webserver();
 
     data_mutex = xSemaphoreCreateMutex();
@@ -561,15 +565,15 @@ void wifi_task(void *args)
         if (driver_update_counter >= 100)
         {
             driver_update_counter = 0;
-            if (xSemaphoreTake(driver_list_mutex, 0) == pdTRUE)
+            if (xSemaphoreTake(config_mutex, 0) == pdTRUE)
             {
                 if (xSemaphoreTake(data_mutex, portMAX_DELAY) == pdTRUE)
                 {
-                    memcpy(driver_list_local.list, driver_list_main.list, sizeof(driver_list_local.list));
-                    driver_list_local.driver_count = driver_list_main.driver_count;
+                    memcpy(driver_list_local.list, config_main.driver_list.list, sizeof(driver_list_local));
+                    driver_list_local.driver_count = config_main.driver_list.driver_count;
                     xSemaphoreGive(data_mutex);
                 }
-                xSemaphoreGive(driver_list_mutex);
+                xSemaphoreGive(config_mutex);
             }
         }
 
