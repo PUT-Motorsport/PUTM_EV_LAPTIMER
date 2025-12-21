@@ -15,6 +15,9 @@ static Laptime current_laptime_data;
 
 static Driver_list driver_list_local;
 
+static char wifi_ssid[32] = "\0";
+static char wifi_password[64] = "\00";
+
 /**
  * @brief Status flags used to display on website
  */
@@ -548,9 +551,11 @@ void wifi_task(void *args)
 {
     if (xSemaphoreTake(config_mutex, portMAX_DELAY) == pdTRUE)
     {
-        wifi_init(config_main.wifi_mode, config_main.wifi_ssid, config_main.wifi_password);
+        snprintf(wifi_ssid, sizeof(wifi_ssid), config_main.wifi_ssid);
+        snprintf(wifi_password, sizeof(wifi_password), config_main.wifi_password);
         xSemaphoreGive(config_mutex);
     }
+    wifi_init(config_main.wifi_mode, wifi_ssid, wifi_password);
     start_webserver();
 
     data_mutex = xSemaphoreCreateMutex();
@@ -575,6 +580,11 @@ void wifi_task(void *args)
                 }
                 xSemaphoreGive(config_mutex);
             }
+        }
+
+        if (xSemaphoreTake(wifi_reset_semaphore, 0) == pdTRUE)
+        {
+            wifi_reinit(config_main.wifi_mode, wifi_ssid, wifi_password);
         }
 
         if (xQueueReceive(laptime_current_queue_wifi, &temp_lap, 0) == pdTRUE)

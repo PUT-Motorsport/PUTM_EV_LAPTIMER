@@ -214,9 +214,9 @@ struct Config
     Lap_mode lap_mode = ONE_GATE_MODE;
     Driver_list driver_list;
 
-    wifi_mode_t wifi_mode = WIFI_MODE_STA;
-    char wifi_ssid[32] = "iPhone (Hubert)";
-    char wifi_password[64] = "Mateusz123";
+    wifi_mode_t wifi_mode = WIFI_MODE_AP;
+    char wifi_ssid[32] = "PUTM_LAPTIMER";
+    char wifi_password[64] = "\0";
     uint8_t wifi_channel = 1;
     uint8_t wifi_max_connection = 3;
 };
@@ -229,6 +229,8 @@ struct Config
  */
 
 extern SemaphoreHandle_t config_mutex;
+
+extern SemaphoreHandle_t wifi_reset_semaphore;
 
 /**
  * @ingroup freertos

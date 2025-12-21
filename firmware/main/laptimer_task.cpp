@@ -194,6 +194,24 @@ bool driver_select()
     return false;
 }
 
+void wifi_reset_check()
+{
+    TickType_t tick = xTaskGetTickCount();
+    wifi_long_flag = btn_hold(gpio_get_level(WIFI_PIN), wifi_long_flag, tick - wifi_press_time);
+    switch (wifi_long_flag)
+    {
+    case BTN_HOLD_ACTION:
+
+        break;
+    case BTN_RELEASED_ACTION:
+        ESP_LOGI("A", "B");
+        xSemaphoreGive(wifi_reset_semaphore);
+        break;
+    default:
+        break;
+    }
+}
+
 /**
  * @brief ISR for first gate depends on active mode
  * lap_mode == ONE_GATE_MODE - first gate saves laptime and starts new lap on every negative edge
@@ -346,15 +364,18 @@ void laptimer_task(void *args)
 
     for (;;)
     {
-
-        if (xSemaphoreTake(config_mutex, 0) == pdTRUE)
+        if (driver_list_local.driver_count != config_main.driver_list.driver_count)
         {
-            memcpy(driver_list_local.list, config_main.driver_list.list, sizeof(driver_list_local));
-            driver_list_local.driver_count = config_main.driver_list.driver_count;
-            xSemaphoreGive(config_mutex);
+            if (xSemaphoreTake(config_mutex, 0) == pdTRUE)
+            {
+                memcpy(driver_list_local.list, config_main.driver_list.list, sizeof(driver_list_local));
+                driver_list_local.driver_count = config_main.driver_list.driver_count;
+                xSemaphoreGive(config_mutex);
+            }
         }
 
         driver_select();
+        wifi_reset_check();
 
         if (stop_flag == false)
         {
@@ -378,7 +399,6 @@ void laptimer_task(void *args)
 
         if (laptime_saved.time > 0 && xSemaphoreTake(laptime_lists_mutex, 0) == pdTRUE)
         {
-            ESP_LOGI(TAG, "DOO: %u, OC: %u, Penalty sum: %llu\n", laptime_saved.doo_count, laptime_saved.oc_count, laptime_saved.penalty_time);
             laptime_save_uart(laptime_saved);
             laptime_save_top(laptime_saved, laptime_list_top);
             laptime_save_last(laptime_saved, laptime_list_last);

@@ -8,7 +8,7 @@ idf_component_register(
         "drivers/gpio.c"
         "drivers/timer.c"
         "drivers/sdcard.c"
-        "drivers/wifi_ap.c"
+        "drivers/wifi.c"
         "fonts/font9x15-ISO8859-1.c"
         "fonts/font10x20-ISO8859-1.c"
     INCLUDE_DIRS 

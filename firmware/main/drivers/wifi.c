@@ -1,4 +1,4 @@
-#include "wifi_ap.h"
+#include "wifi.h"
 #include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -14,6 +14,7 @@ static const char *TAG = "WIFI_AP";
 
 static int s_retry_num = 0;
 static EventGroupHandle_t s_wifi_event_group;
+static esp_netif_t *s_wifi_netif = NULL;
 
 // static void wifi_event_handler(void *arg, esp_event_base_t event_base,
 //                                int32_t event_id, void *event_data)
@@ -80,14 +81,29 @@ esp_err_t wifi_init(wifi_mode_t wifi_mode, char wifi_ssid[32], char wifi_passwor
     }
     ESP_ERROR_CHECK(ret);
 
-    ESP_ERROR_CHECK(esp_netif_init());
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
+    ret = esp_netif_init();
+    if (ret != ESP_OK && ret != ESP_ERR_INVALID_STATE)
+    {
+        ESP_ERROR_CHECK(ret);
+    }
+
+    ret = esp_event_loop_create_default();
+    if (ret != ESP_OK && ret != ESP_ERR_INVALID_STATE)
+    {
+        ESP_ERROR_CHECK(ret);
+    }
+
+    if (s_wifi_netif)
+    {
+        esp_netif_destroy_default_wifi(s_wifi_netif);
+        s_wifi_netif = NULL;
+    }
 
     switch (wifi_mode)
     {
     case WIFI_MODE_AP:
     {
-        esp_netif_create_default_wifi_ap();
+        s_wifi_netif = esp_netif_create_default_wifi_ap();
 
         wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
         ESP_ERROR_CHECK(esp_wifi_init(&cfg));
@@ -100,7 +116,6 @@ esp_err_t wifi_init(wifi_mode_t wifi_mode, char wifi_ssid[32], char wifi_passwor
 
         wifi_config_t wifi_ap_config = {
             .ap = {
-                // .ssid = (uint8_t *)wifi_ssid,
                 .ssid_len = strlen(wifi_ssid),
                 .channel = 1,
                 .max_connection = 3,
@@ -116,13 +131,12 @@ esp_err_t wifi_init(wifi_mode_t wifi_mode, char wifi_ssid[32], char wifi_passwor
         ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_ap_config));
         ESP_ERROR_CHECK(esp_wifi_start());
 
-        ESP_LOGI(TAG, "wifi_init_softap finished. SSID:%s channel:%d",
-                 wifi_ssid, 1);
+        ESP_LOGI(TAG, "WIFI AP INIT OK");
         break;
     }
     case WIFI_MODE_STA:
     {
-        esp_netif_create_default_wifi_sta();
+        s_wifi_netif = esp_netif_create_default_wifi_sta();
 
         wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
         ESP_ERROR_CHECK(esp_wifi_init(&cfg));
@@ -134,8 +148,6 @@ esp_err_t wifi_init(wifi_mode_t wifi_mode, char wifi_ssid[32], char wifi_passwor
                                                             NULL));
         wifi_config_t wifi_sta_config = {
             .sta = {
-                // .ssid = wifi_ssid,
-                // .password = wifi_password,
                 .scan_method = WIFI_ALL_CHANNEL_SCAN,
                 .failure_retry_cnt = 5,
                 /* Authmode threshold resets to WPA2 as default if password matches WPA2 standards (password len => 8).
@@ -154,11 +166,19 @@ esp_err_t wifi_init(wifi_mode_t wifi_mode, char wifi_ssid[32], char wifi_passwor
         ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_sta_config));
         ESP_ERROR_CHECK(esp_wifi_start());
 
-        ESP_LOGI(TAG, "wifi_init_sta finished.");
+        ESP_LOGI(TAG, "WIFI STATION INIT OK");
         break;
     }
     default:
         return ESP_FAIL;
     }
     return ESP_OK;
+}
+
+esp_err_t wifi_reinit(wifi_mode_t wifi_mode, char wifi_ssid[32], char wifi_password[64])
+{
+    esp_wifi_stop();
+    esp_wifi_deinit();
+    ESP_LOGI(TAG, "WIFI DEINIT OK");
+    return wifi_init(wifi_mode, wifi_ssid, wifi_password);
 }
