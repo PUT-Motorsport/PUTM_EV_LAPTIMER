@@ -17,11 +17,11 @@ menu "PUTM EV Laptimer"
             help
                 Input for button that resets current laptime, tries to reinitialize sd card and checks status of LAP_MODE_PIN on negative edge
 
-        config MODE_PIN
-            int "Mode Switch Pin (GPIO)"
+        config WIFI_PIN
+            int "Wifi reset Pin (GPIO)"
             default 16
             help
-                Input for switching between 1 gate and 2 gate mode. LOW - 1 gate mode, HIGH - 2 gate mode
+                Resets wifi
 
         config DOO_PIN
             int "DOO Penalty Button Pin (GPIO)"

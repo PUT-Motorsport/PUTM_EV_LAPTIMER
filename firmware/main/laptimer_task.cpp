@@ -27,22 +27,13 @@ Laptime laptime_saved;
 
 volatile TickType_t doo_press_time = 0;
 volatile TickType_t oc_press_time = 0;
-volatile TickType_t ds_press_time = 0;
+volatile TickType_t driver_select_press_time = 0;
+volatile TickType_t wifi_press_time = 0;
+
 volatile btn_long_state doo_long_flag = BTN_STANDBY;
 volatile btn_long_state oc_long_flag = BTN_STANDBY;
-volatile btn_long_state ds_state = BTN_STANDBY;
-
-/**
- * @brief Checks active state of LAP_MODE_PIN
- * @return Active mode
- */
-Lap_mode lap_mode_check()
-{
-    if (gpio_get_level(LAP_MODE_PIN) == 0)
-        return ONE_GATE_MODE;
-    else
-        return TWO_GATE_MODE;
-}
+volatile btn_long_state driver_select_long_flag = BTN_STANDBY;
+volatile btn_long_state wifi_long_flag = BTN_STANDBY;
 
 /**
  * @brief Saves received laptime on local best/last lists sorted
@@ -184,8 +175,8 @@ void penalty_check(Laptime *laptime)
 bool driver_select()
 {
     TickType_t tick = xTaskGetTickCount();
-    ds_state = btn_hold(gpio_get_level(DRIVER_SELECT_PIN), ds_state, tick - ds_press_time);
-    switch (ds_state)
+    driver_select_long_flag = btn_hold(gpio_get_level(DRIVER_SELECT_PIN), driver_select_long_flag, tick - driver_select_press_time);
+    switch (driver_select_long_flag)
     {
     case BTN_HOLD_ACTION:
         laptime_current.driver_id--;
@@ -298,10 +289,20 @@ void oc_pin_isr()
 void driver_select_pin_isr()
 {
     TickType_t tick = xTaskGetTickCountFromISR();
-    if ((tick - ds_press_time) > pdMS_TO_TICKS(100) && ds_state == BTN_STANDBY)
+    if ((tick - driver_select_press_time) > pdMS_TO_TICKS(100) && driver_select_long_flag == BTN_STANDBY)
     {
-        ds_state = BTN_HOLD_WAIT;
-        ds_press_time = tick;
+        driver_select_long_flag = BTN_HOLD_WAIT;
+        driver_select_press_time = tick;
+    }
+}
+
+void wifi_pin_isr()
+{
+    TickType_t tick = xTaskGetTickCountFromISR();
+    if ((tick - wifi_press_time) > pdMS_TO_TICKS(100) && wifi_long_flag == BTN_STANDBY)
+    {
+        wifi_long_flag = BTN_HOLD_WAIT;
+        wifi_press_time = tick;
     }
 }
 
@@ -319,6 +320,8 @@ esp_err_t isr_init()
                                          (gpio_isr_t)oc_pin_isr, NULL));
     ESP_ERROR_CHECK(gpio_isr_handler_add(DRIVER_SELECT_PIN,
                                          (gpio_isr_t)driver_select_pin_isr, NULL));
+    ESP_ERROR_CHECK(gpio_isr_handler_add(WIFI_PIN,
+                                         (gpio_isr_t)wifi_pin_isr, NULL));
     ESP_LOGI("ISR", "INIT OK");
     return ESP_OK;
 }

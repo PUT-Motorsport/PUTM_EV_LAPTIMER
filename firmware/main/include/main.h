@@ -35,7 +35,7 @@
  * LOW - 1 gate mode
  * HIGH - 2 gate mode
  */
-#define LAP_MODE_PIN ((gpio_num_t)CONFIG_MODE_PIN)
+#define LAP_MODE_PIN ((gpio_num_t)CONFIG_WIFI_PIN)
 
 /**
  * @ingroup pinout_defines
@@ -50,6 +50,8 @@
 #define LAP_OC_PIN ((gpio_num_t)CONFIG_OC_PIN)
 
 #define DRIVER_SELECT_PIN ((gpio_num_t)CONFIG_DRIVER_SELECT_PIN)
+
+#define WIFI_PIN ((gpio_num_t)CONFIG_WIFI_PIN)
 
 /// @ingroup pinout_defines
 /// @brief SDCARD pinout
