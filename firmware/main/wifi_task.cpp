@@ -561,6 +561,7 @@ void wifi_task(void *args)
     data_mutex = xSemaphoreCreateMutex();
 
     int driver_update_counter = 0;
+    bool wifi_reset_flag = false;
 
     for (;;)
     {
@@ -582,9 +583,18 @@ void wifi_task(void *args)
             }
         }
 
-        if (xSemaphoreTake(wifi_reset_semaphore, 0) == pdTRUE)
+        if (xQueueReceive(wifi_reset_queue, &wifi_reset_flag, 0) == pdTRUE)
         {
-            wifi_reinit(config_main.wifi_mode, wifi_ssid, wifi_password);
+            // reinit with config values
+            if (wifi_reset_flag == false)
+            {
+                wifi_reinit(config_main.wifi_mode, wifi_ssid, wifi_password);
+            }
+            // reinit with safe values
+            else if (wifi_reset_flag == true)
+            {
+                wifi_reinit(WIFI_MODE_AP, WIFI_SSID_DEFAULT, WIFI_PASSWORD_DEFAULT);
+            }
         }
 
         if (xQueueReceive(laptime_current_queue_wifi, &temp_lap, 0) == pdTRUE)

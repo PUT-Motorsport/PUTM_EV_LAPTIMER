@@ -187,17 +187,19 @@ bool driver_select()
 
 void wifi_reset_check()
 {
+    bool wifi_reset_flag = false;
     switch (wifi_press.state = button_hold(gpio_get_level(WIFI_PIN), wifi_press))
     {
     case BTN_HOLD_ACTION:
-
+        wifi_reset_flag = true;
         break;
     case BTN_RELEASED_ACTION:
-        xSemaphoreGive(wifi_reset_semaphore);
+        wifi_reset_flag = false;
         break;
     default:
-        break;
+        return;
     }
+    xQueueSend(wifi_reset_queue, &wifi_reset_flag, 0);
 }
 
 void button_isr(Button_press *button_press)
@@ -222,6 +224,7 @@ void gate1_pin_isr()
     case ONE_GATE_MODE:
         if (stop_flag == false && laptime_current.time > LAPTIME_MIN)
         {
+            laptime_current.time = timer_get_time(laptime_timer);
             laptime_saved = laptime_current;
             laptime_saved.time += laptime_current.penalty_time;
             timer_reset(laptime_timer);
@@ -259,6 +262,7 @@ void gate2_pin_isr()
     case TWO_GATE_MODE:
         if (stop_flag == false && laptime_current.time > LAPTIME_MIN)
         {
+            laptime_current.time = timer_get_time(laptime_timer);
             laptime_saved = laptime_current;
             laptime_saved.time += laptime_current.penalty_time;
             stop_flag = true;

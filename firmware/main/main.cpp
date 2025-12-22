@@ -10,7 +10,7 @@
 
 SemaphoreHandle_t config_mutex = xSemaphoreCreateMutex();
 
-SemaphoreHandle_t wifi_reset_semaphore = xSemaphoreCreateBinary();
+QueueHandle_t wifi_reset_queue = xQueueCreate(1, sizeof(bool));
 
 QueueHandle_t laptime_saved_queue_sd = xQueueCreate(LAPTIME_LIST_SIZE_LOCAL, sizeof(Laptime));
 

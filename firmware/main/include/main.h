@@ -96,7 +96,7 @@ struct Config
 
 extern SemaphoreHandle_t config_mutex;
 
-extern SemaphoreHandle_t wifi_reset_semaphore;
+extern SemaphoreHandle_t wifi_reset_queue;
 
 /**
  * @ingroup freertos
