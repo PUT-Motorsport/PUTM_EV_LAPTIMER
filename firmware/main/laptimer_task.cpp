@@ -1,7 +1,5 @@
 #include "laptimer_task.h"
 
-#include "sdcard_task.h"
-
 #include "gpio.h"
 #include "main.h"
 #include "sdcard.h"
@@ -14,6 +12,8 @@ static const char *TAG = "LAPTIMER_TASK";
 
 static Driver_list driver_list_local;
 
+volatile bool stop_flag = true;
+
 /**
  * @brief Global variable used to store current laptime that is readed from timer in main loop and saved in ISR
  */
@@ -25,15 +25,10 @@ Laptime laptime_current;
  */
 Laptime laptime_saved;
 
-volatile TickType_t doo_press_time = 0;
-volatile TickType_t oc_press_time = 0;
-volatile TickType_t driver_select_press_time = 0;
-volatile TickType_t wifi_press_time = 0;
-
-volatile btn_long_state doo_long_flag = BTN_STANDBY;
-volatile btn_long_state oc_long_flag = BTN_STANDBY;
-volatile btn_long_state driver_select_long_flag = BTN_STANDBY;
-volatile btn_long_state wifi_long_flag = BTN_STANDBY;
+Button_press doo_press;
+Button_press oc_press;
+Button_press driver_select_press;
+Button_press wifi_press;
 
 /**
  * @brief Saves received laptime on local best/last lists sorted
@@ -93,24 +88,25 @@ esp_err_t laptime_save_driver(Laptime laptime, Laptime list_driver[DRIVER_MAX_CO
 
 static void laptime_save_uart(Laptime laptime)
 {
-    char laptime_saved_str[LAPTIME_STR_LENGTH] = "--, --:--.--";
-    laptime.convert_string(laptime_saved_str,
-                           sizeof(laptime_saved_str));
+    char laptime_saved_str[LAPTIME_STR_LENGTH] = LAPTIME_STR_DEFAULT;
+    laptime.convert_string_full(laptime_saved_str,
+                                sizeof(laptime_saved_str));
     printf("%s", laptime_saved_str);
     printf("\n");
 }
 
-btn_long_state btn_hold(bool btn_state, volatile btn_long_state btn_press_state, TickType_t press_time)
+button_state button_hold(bool btn_level, Button_press button_press)
 {
-    switch (btn_press_state)
+    TickType_t tick = xTaskGetTickCount();
+    switch (button_press.state)
     {
     case BTN_STANDBY:
         return BTN_STANDBY;
 
     case BTN_HOLD_WAIT:
-        if (btn_state == 1)
+        if (btn_level == 1)
             return BTN_RELEASED_ACTION;
-        else if (press_time > pdMS_TO_TICKS(1000))
+        else if (tick - button_press.time > pdMS_TO_TICKS(1000))
             return BTN_HOLD_ACTION;
         else
             return BTN_HOLD_WAIT;
@@ -121,7 +117,7 @@ btn_long_state btn_hold(bool btn_state, volatile btn_long_state btn_press_state,
         return BTN_STANDBY;
 
     case BTN_AFTER_HOLD:
-        if (btn_state == 1)
+        if (btn_level == 1)
             return BTN_STANDBY;
         return BTN_AFTER_HOLD;
 
@@ -132,11 +128,8 @@ btn_long_state btn_hold(bool btn_state, volatile btn_long_state btn_press_state,
 
 void penalty_check(Laptime *laptime)
 {
-    TickType_t tick = xTaskGetTickCount();
-    doo_long_flag = btn_hold(gpio_get_level(LAP_DOO_PIN), doo_long_flag, tick - doo_press_time);
-    oc_long_flag = btn_hold(gpio_get_level(LAP_OC_PIN), oc_long_flag, tick - oc_press_time);
 
-    switch (doo_long_flag)
+    switch (doo_press.state = button_hold(gpio_get_level(LAP_DOO_PIN), doo_press))
     {
     case BTN_HOLD_ACTION:
         if (laptime->penalty_time >= DOO_TIME_PENALTY && laptime->doo_count > 0)
@@ -153,7 +146,7 @@ void penalty_check(Laptime *laptime)
         break;
     }
 
-    switch (oc_long_flag)
+    switch (oc_press.state = button_hold(gpio_get_level(LAP_OC_PIN), oc_press))
     {
     case BTN_HOLD_ACTION:
         if (laptime->penalty_time >= OC_TIME_PENALTY && laptime->oc_count > 0)
@@ -174,9 +167,7 @@ void penalty_check(Laptime *laptime)
 
 bool driver_select()
 {
-    TickType_t tick = xTaskGetTickCount();
-    driver_select_long_flag = btn_hold(gpio_get_level(DRIVER_SELECT_PIN), driver_select_long_flag, tick - driver_select_press_time);
-    switch (driver_select_long_flag)
+    switch (driver_select_press.state = button_hold(gpio_get_level(DRIVER_SELECT_PIN), driver_select_press))
     {
     case BTN_HOLD_ACTION:
         laptime_current.driver_id--;
@@ -196,19 +187,26 @@ bool driver_select()
 
 void wifi_reset_check()
 {
-    TickType_t tick = xTaskGetTickCount();
-    wifi_long_flag = btn_hold(gpio_get_level(WIFI_PIN), wifi_long_flag, tick - wifi_press_time);
-    switch (wifi_long_flag)
+    switch (wifi_press.state = button_hold(gpio_get_level(WIFI_PIN), wifi_press))
     {
     case BTN_HOLD_ACTION:
 
         break;
     case BTN_RELEASED_ACTION:
-        ESP_LOGI("A", "B");
         xSemaphoreGive(wifi_reset_semaphore);
         break;
     default:
         break;
+    }
+}
+
+void button_isr(Button_press *button_press)
+{
+    TickType_t tick = xTaskGetTickCountFromISR();
+    if ((tick - button_press->time) > pdMS_TO_TICKS(100) && button_press->state == BTN_STANDBY)
+    {
+        button_press->state = BTN_HOLD_WAIT;
+        button_press->time = tick;
     }
 }
 
@@ -286,42 +284,22 @@ void reset_pin_isr()
 
 void doo_pin_isr()
 {
-    TickType_t tick = xTaskGetTickCountFromISR();
-    if ((tick - doo_press_time) > pdMS_TO_TICKS(100) && doo_long_flag == BTN_STANDBY)
-    {
-        doo_long_flag = BTN_HOLD_WAIT;
-        doo_press_time = tick;
-    }
+    button_isr(&doo_press);
 }
 
 void oc_pin_isr()
 {
-    TickType_t tick = xTaskGetTickCountFromISR();
-    if ((tick - oc_press_time) > pdMS_TO_TICKS(100) && oc_long_flag == BTN_STANDBY)
-    {
-        oc_long_flag = BTN_HOLD_WAIT;
-        oc_press_time = tick;
-    }
+    button_isr(&oc_press);
 }
 
 void driver_select_pin_isr()
 {
-    TickType_t tick = xTaskGetTickCountFromISR();
-    if ((tick - driver_select_press_time) > pdMS_TO_TICKS(100) && driver_select_long_flag == BTN_STANDBY)
-    {
-        driver_select_long_flag = BTN_HOLD_WAIT;
-        driver_select_press_time = tick;
-    }
+    button_isr(&driver_select_press);
 }
 
 void wifi_pin_isr()
 {
-    TickType_t tick = xTaskGetTickCountFromISR();
-    if ((tick - wifi_press_time) > pdMS_TO_TICKS(100) && wifi_long_flag == BTN_STANDBY)
-    {
-        wifi_long_flag = BTN_HOLD_WAIT;
-        wifi_press_time = tick;
-    }
+    button_isr(&wifi_press);
 }
 
 esp_err_t isr_init()
@@ -346,10 +324,12 @@ esp_err_t isr_init()
 
 /**
  * @brief Laptimer main logic task in main loop:
- * 1. Updates current laptime if stop_flag is false
- * 2. On every stop_flag change checks if laptime mode changed
- * 3. Tries to reinit sdcard when LAP_RESET_PIN is clicked
- * 4. When laptime is saved, stores it locally and sends through UART, sd card, shows it on LCD and WIFI page
+ * 1. Updates local drivers list if needed
+ * 2. Checks buttons ISRs
+ * 3. Updates current laptime from timer if stop_flag is false
+ * 4. Sends current laptime to other tasks
+ * 5. Sends status flags to other tasks if changed
+ * 6. When laptime is saved, stores it locally and sends through UART, sd card, shows it on LCD and WIFI page
  */
 void laptimer_task(void *args)
 {
@@ -382,17 +362,13 @@ void laptimer_task(void *args)
             laptime_current.time = timer_get_time(laptime_timer);
             penalty_check(&laptime_current);
         }
+
         xQueueSend(laptime_current_queue_lcd, &laptime_current, 0);
         xQueueSend(laptime_current_queue_wifi, &laptime_current, 0);
 
-        if (stop_flag != stop_flag_old)
+        if (stop_flag != stop_flag_old || sd_active_flag_old != sd_active_flag)
         {
             stop_flag_old = stop_flag;
-            status_update_flag = true;
-        }
-
-        if (sd_active_flag_old != sd_active_flag)
-        {
             sd_active_flag_old = sd_active_flag;
             status_update_flag = true;
         }

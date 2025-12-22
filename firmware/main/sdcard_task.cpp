@@ -138,8 +138,8 @@ esp_err_t sdcard_save_laptime(Laptime laptime_saved)
     char laptime_doo_str[PENALTY_COUNT_STR_LENGTH] = {0};
     char laptime_driver_str[DRIVER_TAG_LENGTH] = {0};
 
-    laptime_saved.convert_string(laptime_saved_str, sizeof(laptime_saved_str));
-    laptime_saved.penalty_string(laptime_penalty_str, sizeof(laptime_penalty_str));
+    laptime_saved.convert_string_full(laptime_saved_str, sizeof(laptime_saved_str));
+    laptime_saved.convert_string_penalty(laptime_penalty_str, sizeof(laptime_penalty_str));
     snprintf(laptime_oc_str, sizeof(laptime_oc_str), "%3u,", laptime_saved.oc_count);
     snprintf(laptime_doo_str, sizeof(laptime_doo_str), "%3u,", laptime_saved.doo_count);
     snprintf(laptime_driver_str, sizeof(laptime_driver_str), "%s", driver_list_local.list[laptime_saved.driver_id]);
@@ -149,50 +149,32 @@ esp_err_t sdcard_save_laptime(Laptime laptime_saved)
 
     ret = sdcard_append("laptimer.csv", session_str);
     if (ret)
-    {
         return ret;
-    }
 
     ret = sdcard_append("laptimer.csv", laptime_saved_str);
     if (ret)
-    {
         return ret;
-    }
     ret = sdcard_append("laptimer.csv", ",");
     if (ret)
-    {
         return ret;
-    }
     ret = sdcard_append("laptimer.csv", laptime_penalty_str);
     if (ret)
-    {
         return ret;
-    }
     ret = sdcard_append("laptimer.csv", ",");
     if (ret)
-    {
         return ret;
-    }
     ret = sdcard_append("laptimer.csv", laptime_oc_str);
     if (ret)
-    {
         return ret;
-    }
     ret = sdcard_append("laptimer.csv", laptime_doo_str);
     if (ret)
-    {
         return ret;
-    }
     ret = sdcard_append("laptimer.csv", laptime_driver_str);
     if (ret)
-    {
         return ret;
-    }
     ret = sdcard_append("laptimer.csv", "\n");
     if (ret)
-    {
         return ret;
-    }
     if (ret == ESP_OK)
         ESP_LOGI(TAG, "LAPTIME SAVE OK");
     else
@@ -229,11 +211,15 @@ esp_err_t sdcard_check_integrity(char laptime_check_str[LAPTIME_STR_LENGTH])
 void sdcard_task(void *args)
 {
     sdmmc_card_t *card_handle = NULL;
+
     if (sdcard_spi_init() == ESP_FAIL)
         vTaskDelete(NULL);
+
     if ((sd_detect_flag = !gpio_get_level((gpio_num_t)SD_CD)) == true)
         sd_active_flag = !sdcard_init(&card_handle);
+
     static Laptime laptime_saved;
+
     for (;;)
     {
         if (xSemaphoreTake(config_mutex, 0) == pdTRUE)

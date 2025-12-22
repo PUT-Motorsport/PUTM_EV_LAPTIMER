@@ -4,6 +4,14 @@
 
 #include "sd_protocol_types.h"
 
+/// @brief SD card pinout
+#define SD_SPI_CLK CONFIG_SD_SPI_CLK
+#define SD_SPI_MISO CONFIG_SD_SPI_MISO
+#define SD_SPI_MOSI CONFIG_SD_SPI_MOSI
+#define SD_SPI_CS CONFIG_SD_SPI_CS
+
+#define SD_CD CONFIG_SD_CD
+
 #ifdef __cplusplus
 extern "C"
 {

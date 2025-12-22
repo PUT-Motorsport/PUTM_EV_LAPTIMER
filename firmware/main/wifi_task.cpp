@@ -15,8 +15,8 @@ static Laptime current_laptime_data;
 
 static Driver_list driver_list_local;
 
-static char wifi_ssid[32] = "\0";
-static char wifi_password[64] = "\00";
+static char wifi_ssid[32] = WIFI_SSID_DEFAULT;
+static char wifi_password[64] = WIFI_PASSWORD_DEFAULT;
 
 /**
  * @brief Status flags used to display on website
@@ -276,15 +276,15 @@ static esp_err_t data_get_handler(httpd_req_t *req)
 {
     cJSON *root = cJSON_CreateObject();
 
-    char temp_str[LAPTIME_STR_LENGTH] = {0};
-    char temp_pen_str[PENALTY_TIME_STR_LENGTH] = {0};
-    char temp_count_str[PENALTY_COUNT_STR_LENGTH] = {0};
+    char laptime_current_str[LAPTIME_STR_LENGTH] = {0};
+    char penalty_time_str[PENALTY_TIME_STR_LENGTH] = {0};
+    char penalty_count_str[PENALTY_COUNT_STR_LENGTH] = {0};
 
     // Take local mutex for atomic access to local data
     if (xSemaphoreTake(data_mutex, portMAX_DELAY))
     {
-        current_laptime_data.convert_string(temp_str, sizeof(temp_str));
-        cJSON_AddStringToObject(root, "current", temp_str);
+        current_laptime_data.convert_string_full(laptime_current_str, sizeof(laptime_current_str));
+        cJSON_AddStringToObject(root, "current", laptime_current_str);
 
         int id = current_laptime_data.driver_id;
         if (id < 0 || id >= DRIVER_MAX_COUNT)
@@ -292,14 +292,14 @@ static esp_err_t data_get_handler(httpd_req_t *req)
         cJSON_AddStringToObject(root, "current_driver_tag", driver_list_local.list[id]);
         cJSON_AddNumberToObject(root, "current_driver_id", id);
 
-        current_laptime_data.penalty_string(temp_pen_str, sizeof(temp_pen_str));
-        cJSON_AddStringToObject(root, "penalty_time", temp_pen_str);
+        current_laptime_data.convert_string_penalty(penalty_time_str, sizeof(penalty_time_str));
+        cJSON_AddStringToObject(root, "penalty_time", penalty_time_str);
 
-        snprintf(temp_count_str, sizeof(temp_count_str), "%u", current_laptime_data.oc_count);
-        cJSON_AddStringToObject(root, "penalty_oc", temp_count_str);
+        snprintf(penalty_count_str, sizeof(penalty_count_str), "%u", current_laptime_data.oc_count);
+        cJSON_AddStringToObject(root, "penalty_oc", penalty_count_str);
 
-        snprintf(temp_count_str, sizeof(temp_count_str), "%u", current_laptime_data.doo_count);
-        cJSON_AddStringToObject(root, "penalty_doo", temp_count_str);
+        snprintf(penalty_count_str, sizeof(penalty_count_str), "%u", current_laptime_data.doo_count);
+        cJSON_AddStringToObject(root, "penalty_doo", penalty_count_str);
 
         cJSON *status = cJSON_CreateObject();
         cJSON_AddBoolToObject(status, "mode", status_flags[0]);
@@ -321,19 +321,19 @@ static esp_err_t data_get_handler(httpd_req_t *req)
             {
                 cJSON_AddItemToArray(drivers_arr, cJSON_CreateString(driver_list_local.list[i]));
 
-                laptime_list_driver[i].convert_string_time(temp_str, sizeof(temp_str));
-                cJSON_AddItemToArray(driver_best_arr, cJSON_CreateString(temp_str));
+                laptime_list_driver[i].convert_string_time(laptime_current_str, sizeof(laptime_current_str));
+                cJSON_AddItemToArray(driver_best_arr, cJSON_CreateString(laptime_current_str));
 
                 cJSON_AddItemToArray(driver_lap_count_arr, cJSON_CreateNumber(laptime_list_driver[i].count - 1));
 
-                laptime_list_driver[i].penalty_string(temp_pen_str, sizeof(temp_pen_str));
-                cJSON_AddItemToArray(driver_pen_time_arr, cJSON_CreateString(temp_pen_str));
+                laptime_list_driver[i].convert_string_penalty(penalty_time_str, sizeof(penalty_time_str));
+                cJSON_AddItemToArray(driver_pen_time_arr, cJSON_CreateString(penalty_time_str));
 
-                snprintf(temp_count_str, sizeof(temp_count_str), "%u", laptime_list_driver[i].oc_count);
-                cJSON_AddItemToArray(driver_pen_oc_arr, cJSON_CreateString(temp_count_str));
+                snprintf(penalty_count_str, sizeof(penalty_count_str), "%u", laptime_list_driver[i].oc_count);
+                cJSON_AddItemToArray(driver_pen_oc_arr, cJSON_CreateString(penalty_count_str));
 
-                snprintf(temp_count_str, sizeof(temp_count_str), "%u", laptime_list_driver[i].doo_count);
-                cJSON_AddItemToArray(driver_pen_doo_arr, cJSON_CreateString(temp_count_str));
+                snprintf(penalty_count_str, sizeof(penalty_count_str), "%u", laptime_list_driver[i].doo_count);
+                cJSON_AddItemToArray(driver_pen_doo_arr, cJSON_CreateString(penalty_count_str));
             }
             cJSON_AddItemToObject(root, "all_drivers", drivers_arr);
             cJSON_AddItemToObject(root, "driver_best", driver_best_arr);
@@ -357,8 +357,8 @@ static esp_err_t data_get_handler(httpd_req_t *req)
             for (int i = 0; i < LAPTIME_LIST_SIZE_WIFI; i++)
             {
                 // Last
-                laptime_list_last[i].convert_string(temp_str, sizeof(temp_str));
-                cJSON_AddItemToArray(last_arr, cJSON_CreateString(temp_str));
+                laptime_list_last[i].convert_string_full(laptime_current_str, sizeof(laptime_current_str));
+                cJSON_AddItemToArray(last_arr, cJSON_CreateString(laptime_current_str));
 
                 int drv_id = laptime_list_last[i].driver_id;
                 if (drv_id < 0 || drv_id >= DRIVER_MAX_COUNT)
@@ -366,18 +366,18 @@ static esp_err_t data_get_handler(httpd_req_t *req)
                 cJSON_AddItemToArray(last_driver_tag_arr, cJSON_CreateString(driver_list_local.list[drv_id]));
                 cJSON_AddItemToArray(last_driver_id_arr, cJSON_CreateNumber(drv_id));
 
-                laptime_list_last[i].penalty_string(temp_pen_str, sizeof(temp_pen_str));
-                cJSON_AddItemToArray(last_pen_time_arr, cJSON_CreateString(temp_pen_str));
+                laptime_list_last[i].convert_string_penalty(penalty_time_str, sizeof(penalty_time_str));
+                cJSON_AddItemToArray(last_pen_time_arr, cJSON_CreateString(penalty_time_str));
 
-                snprintf(temp_count_str, sizeof(temp_count_str), "%u", laptime_list_last[i].oc_count);
-                cJSON_AddItemToArray(last_pen_oc_arr, cJSON_CreateString(temp_count_str));
+                snprintf(penalty_count_str, sizeof(penalty_count_str), "%u", laptime_list_last[i].oc_count);
+                cJSON_AddItemToArray(last_pen_oc_arr, cJSON_CreateString(penalty_count_str));
 
-                snprintf(temp_count_str, sizeof(temp_count_str), "%u", laptime_list_last[i].doo_count);
-                cJSON_AddItemToArray(last_pen_doo_arr, cJSON_CreateString(temp_count_str));
+                snprintf(penalty_count_str, sizeof(penalty_count_str), "%u", laptime_list_last[i].doo_count);
+                cJSON_AddItemToArray(last_pen_doo_arr, cJSON_CreateString(penalty_count_str));
 
                 // Top
-                laptime_list_top[i].convert_string(temp_str, sizeof(temp_str));
-                cJSON_AddItemToArray(top_arr, cJSON_CreateString(temp_str));
+                laptime_list_top[i].convert_string_full(laptime_current_str, sizeof(laptime_current_str));
+                cJSON_AddItemToArray(top_arr, cJSON_CreateString(laptime_current_str));
 
                 drv_id = laptime_list_top[i].driver_id;
                 if (drv_id < 0 || drv_id >= DRIVER_MAX_COUNT)
@@ -417,7 +417,7 @@ static esp_err_t data_get_handler(httpd_req_t *req)
  * @param req HTTP request structure
  * @return Error check
  */
-static esp_err_t csv_get_handler(httpd_req_t *req)
+static esp_err_t laptimes_csv_get_handler(httpd_req_t *req)
 {
     httpd_resp_set_type(req, "text/csv");
     httpd_resp_set_hdr(req, "Content-Disposition", "attachment; filename=\"laptimes.csv\"");
@@ -433,8 +433,8 @@ static esp_err_t csv_get_handler(httpd_req_t *req)
 
         for (int i = 0; i < LAPTIME_LIST_SIZE_WIFI; i++)
         {
-            laptime_list_last[i].convert_string(time_str, sizeof(time_str));
-            laptime_list_last[i].penalty_string(pen_str, sizeof(pen_str));
+            laptime_list_last[i].convert_string_full(time_str, sizeof(time_str));
+            laptime_list_last[i].convert_string_penalty(pen_str, sizeof(pen_str));
 
             int drv_id = laptime_list_last[i].driver_id;
             if (drv_id < 0 || drv_id >= DRIVER_MAX_COUNT)
@@ -477,7 +477,7 @@ static esp_err_t drivers_csv_get_handler(httpd_req_t *req)
         for (int i = 1; i <= driver_list_local.driver_count; i++)
         {
             laptime_list_driver[i].convert_string_time(time_str, sizeof(time_str));
-            laptime_list_driver[i].penalty_string(pen_str, sizeof(pen_str));
+            laptime_list_driver[i].convert_string_penalty(pen_str, sizeof(pen_str));
 
             snprintf(line, sizeof(line), "%s,%s,%u,%s,%u,%u\n",
                      driver_list_local.list[i],
@@ -525,7 +525,7 @@ static httpd_handle_t start_webserver(void)
         httpd_uri_t csv = {
             .uri = "/api/csv",
             .method = HTTP_GET,
-            .handler = csv_get_handler,
+            .handler = laptimes_csv_get_handler,
             .user_ctx = NULL};
         httpd_register_uri_handler(server, &csv);
 
