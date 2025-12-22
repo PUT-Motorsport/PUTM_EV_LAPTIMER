@@ -29,6 +29,7 @@
 #define PENALTY_STR_DEFAULT "+00:00"
 #define COUNT_STR_DEFAULT "0"
 
+#define WIFI_IP_DEFAULT
 #define WIFI_SSID_DEFAULT "PUTM_LAPTIMER"
 #define WIFI_PASSWORD_DEFAULT "\0"
 #define WIFI_CHANNEL_DEFAULT 1
@@ -80,9 +81,9 @@ struct Config
     Lap_mode lap_mode = ONE_GATE_MODE;
     Driver_list driver_list;
 
-    wifi_mode_t wifi_mode = WIFI_MODE_AP;
-    char wifi_ssid[32] = WIFI_SSID_DEFAULT;
-    char wifi_password[64] = WIFI_PASSWORD_DEFAULT;
+    wifi_mode_t wifi_mode = WIFI_MODE_STA;
+    char wifi_ssid[32] = "Andzia";
+    char wifi_password[64] = "Mateusz20095G";
     uint8_t wifi_channel = WIFI_CHANNEL_DEFAULT;
     uint8_t wifi_max_connection = WIFI_MAX_CONN_DEFAULT;
 };

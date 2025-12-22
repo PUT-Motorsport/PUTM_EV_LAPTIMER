@@ -6,32 +6,35 @@
 #include "esp_event.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
+#include "mdns.h"
 
 #include "lwip/err.h"
 #include "lwip/sys.h"
+#include <esp_err.h>
 
 static const char *TAG = "WIFI_AP";
 
 static int s_retry_num = 0;
 static EventGroupHandle_t s_wifi_event_group;
 static esp_netif_t *s_wifi_netif = NULL;
+static bool mdns_started = false;
 
-// static void wifi_event_handler(void *arg, esp_event_base_t event_base,
-//                                int32_t event_id, void *event_data)
-// {
-//     if (event_id == WIFI_EVENT_AP_STACONNECTED)
-//     {
-//         wifi_event_ap_staconnected_t *event = (wifi_event_ap_staconnected_t *)event_data;
-//         ESP_LOGI(TAG, "station " MACSTR " join, AID=%d",
-//                  MAC2STR(event->mac), event->aid);
-//     }
-//     else if (event_id == WIFI_EVENT_AP_STADISCONNECTED)
-//     {
-//         wifi_event_ap_stadisconnected_t *event = (wifi_event_ap_stadisconnected_t *)event_data;
-//         ESP_LOGI(TAG, "station " MACSTR " leave, AID=%d",
-//                  MAC2STR(event->mac), event->aid);
-//     }
-// }
+static void start_mdns(void)
+{
+    esp_err_t err = mdns_init();
+    if (err != ESP_OK && err != ESP_ERR_INVALID_STATE)
+    {
+        ESP_LOGE(TAG, "mDNS init failed: %s", esp_err_to_name(err));
+        return;
+    }
+
+    mdns_hostname_set("putm_laptimer");
+    mdns_instance_name_set("PUTM EV Laptimer");
+
+    mdns_service_add(NULL, "_http", "_tcp", 80, NULL, 0);
+
+    ESP_LOGI(TAG, "mDNS started: http://putm_laptimer.local");
+}
 
 static void wifi_event_handler(void *arg, esp_event_base_t event_base,
                                int32_t event_id, void *event_data)
@@ -59,12 +62,22 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
         ESP_LOGI(TAG, "Got IP:" IPSTR, IP2STR(&event->ip_info.ip));
         s_retry_num = 0;
         xEventGroupSetBits(s_wifi_event_group, BIT0);
+
+        if (!mdns_started)
+        {
+            start_mdns();
+            mdns_started = true;
+        }
     }
     else if (event_base == IP_EVENT && event_id == IP_EVENT_ASSIGNED_IP_TO_CLIENT)
     {
         const ip_event_assigned_ip_to_client_t *e = (const ip_event_assigned_ip_to_client_t *)event_data;
         ESP_LOGI(TAG, "Assigned IP to client: " IPSTR ", MAC=" MACSTR ", hostname='%s'",
                  IP2STR(&e->ip), MAC2STR(e->mac));
+    }
+    else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED)
+    {
+        mdns_started = false;
     }
 }
 
@@ -91,6 +104,11 @@ esp_err_t wifi_init(wifi_mode_t wifi_mode, char wifi_ssid[32], char wifi_passwor
     if (ret != ESP_OK && ret != ESP_ERR_INVALID_STATE)
     {
         ESP_ERROR_CHECK(ret);
+    }
+
+    if (!s_wifi_event_group)
+    {
+        s_wifi_event_group = xEventGroupCreate();
     }
 
     if (s_wifi_netif)
@@ -141,11 +159,19 @@ esp_err_t wifi_init(wifi_mode_t wifi_mode, char wifi_ssid[32], char wifi_passwor
         wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
         ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
-        ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
-                                                            ESP_EVENT_ANY_ID,
-                                                            &wifi_event_handler,
-                                                            NULL,
-                                                            NULL));
+        ESP_ERROR_CHECK(esp_event_handler_instance_register(
+            WIFI_EVENT,
+            ESP_EVENT_ANY_ID,
+            &wifi_event_handler,
+            NULL,
+            NULL));
+
+        ESP_ERROR_CHECK(esp_event_handler_instance_register(
+            IP_EVENT,
+            ESP_EVENT_ANY_ID,
+            &wifi_event_handler,
+            NULL,
+            NULL));
         wifi_config_t wifi_sta_config = {
             .sta = {
                 .scan_method = WIFI_ALL_CHANNEL_SCAN,
@@ -165,7 +191,6 @@ esp_err_t wifi_init(wifi_mode_t wifi_mode, char wifi_ssid[32], char wifi_passwor
         ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
         ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_sta_config));
         ESP_ERROR_CHECK(esp_wifi_start());
-
         ESP_LOGI(TAG, "WIFI STATION INIT OK");
         break;
     }
@@ -179,6 +204,7 @@ esp_err_t wifi_reinit(wifi_mode_t wifi_mode, char wifi_ssid[32], char wifi_passw
 {
     esp_wifi_stop();
     esp_wifi_deinit();
+    mdns_started = false;
     ESP_LOGI(TAG, "WIFI DEINIT OK");
     return wifi_init(wifi_mode, wifi_ssid, wifi_password);
 }
