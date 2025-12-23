@@ -214,14 +214,14 @@ void button_isr(Button_press *button_press)
 
 /**
  * @brief ISR for first gate depends on active mode
- * lap_mode == ONE_GATE_MODE - first gate saves laptime and starts new lap on every negative edge
- * lap_mode == TWO_GATE_MODE - first gate only starts new lap on negative edge if stop_flag is true
+ * gates_mode_2 == false - first gate saves laptime and starts new lap on every negative edge
+ * gates_mode_2 == true - first gate only starts new lap on negative edge if stop_flag is true
  */
 void gate1_pin_isr()
 {
-    switch (config_main.lap_mode)
+    switch (config_main.gates_mode_2)
     {
-    case ONE_GATE_MODE:
+    case false:
         if (stop_flag == false && laptime_current.time > LAPTIME_MIN)
         {
             laptime_current.time = timer_get_time(laptime_timer);
@@ -236,7 +236,7 @@ void gate1_pin_isr()
             timer_reset(laptime_timer);
         }
         break;
-    case TWO_GATE_MODE:
+    case true:
         if (stop_flag == true)
         {
             stop_flag = false;
@@ -250,16 +250,16 @@ void gate1_pin_isr()
 
 /**
  * @brief ISR for second gate depends on active mode
- * lap_mode == ONE_GATE_MODE - second gate is not active
- * lap_mode == TWO_GATE_MODE - second gates saves laptime on negative edge if stop_flag is false
+ * gates_mode_2 == false - second gate is not active
+ * gates_mode_2 == true - second gates saves laptime on negative edge if stop_flag is false
  */
 void gate2_pin_isr()
 {
-    switch (config_main.lap_mode)
+    switch (config_main.gates_mode_2)
     {
-    case ONE_GATE_MODE:
+    case false:
         break;
-    case TWO_GATE_MODE:
+    case true:
         if (stop_flag == false && laptime_current.time > LAPTIME_MIN)
         {
             laptime_current.time = timer_get_time(laptime_timer);
@@ -389,7 +389,7 @@ void laptimer_task(void *args)
         }
         if (status_update_flag == true)
         {
-            bool status_list[3] = {config_main.lap_mode, stop_flag, sd_active_flag};
+            bool status_list[3] = {config_main.gates_mode_2, stop_flag, sd_active_flag};
             xQueueSend(laptime_status_queue_lcd, status_list, 0);
             xQueueSend(laptime_status_queue_wifi, status_list, 0);
             status_update_flag = false;

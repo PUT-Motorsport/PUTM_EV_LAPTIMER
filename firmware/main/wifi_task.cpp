@@ -17,6 +17,7 @@ static Driver_list driver_list_local;
 
 static char wifi_ssid[32] = WIFI_SSID_DEFAULT;
 static char wifi_password[64] = WIFI_PASSWORD_DEFAULT;
+static wifi_mode_t wifi_mode_local = WIFI_MODE_AP;
 
 /**
  * @brief Status flags used to display on website
@@ -263,6 +264,128 @@ static esp_err_t drivers_csv_get_handler(httpd_req_t *req)
 }
 
 /**
+ * @brief Handler returns current config in JSON format
+ * @param req HTTP request structure
+ * @return Error check
+ */
+static esp_err_t config_get_handler(httpd_req_t *req)
+{
+    cJSON *root = cJSON_CreateObject();
+    if (xSemaphoreTake(config_mutex, portMAX_DELAY))
+    {
+        cJSON_AddBoolToObject(root, "gates_mode_2", config_main.gates_mode_2);
+        // Return current wifi mode as number (0 for AP, 1 for STA)
+        cJSON_AddNumberToObject(root, "wifi_mode", config_main.wifi_mode);
+        cJSON_AddStringToObject(root, "wifi_ssid", config_main.wifi_ssid);
+        cJSON_AddStringToObject(root, "wifi_password", config_main.wifi_password);
+
+        cJSON *drivers = cJSON_CreateArray();
+        // Driver list starts from 1, index 0 is placeholder
+        for (int i = 1; i <= config_main.driver_list.driver_count; i++)
+        {
+            cJSON_AddItemToArray(drivers, cJSON_CreateString(config_main.driver_list.list[i]));
+        }
+        cJSON_AddItemToObject(root, "driver_list", drivers);
+
+        xSemaphoreGive(config_mutex);
+    }
+    const char *resp = cJSON_PrintUnformatted(root);
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_send(req, resp, strlen(resp));
+    free((void *)resp);
+    cJSON_Delete(root);
+    return ESP_OK;
+}
+
+/**
+ * @brief Handler receives new config via POST
+ * @param req HTTP request structure
+ * @return Error check
+ */
+static esp_err_t config_post_handler(httpd_req_t *req)
+{
+    char buf[1024];
+    int ret, remaining = req->content_len;
+    if (remaining >= sizeof(buf))
+    {
+        httpd_resp_send_500(req);
+        return ESP_FAIL;
+    }
+    ret = httpd_req_recv(req, buf, remaining);
+    if (ret <= 0)
+        return ESP_FAIL;
+    buf[ret] = '\0';
+
+    cJSON *root = cJSON_Parse(buf);
+    if (!root)
+    {
+        httpd_resp_send_500(req);
+        return ESP_FAIL;
+    }
+
+    if (xSemaphoreTake(config_mutex, portMAX_DELAY))
+    {
+        cJSON *gates = cJSON_GetObjectItem(root, "gates_mode_2");
+        if (gates)
+            config_main.gates_mode_2 = cJSON_IsTrue(gates);
+
+        cJSON *wifi_mode_json = cJSON_GetObjectItem(root, "wifi_mode");
+        if (wifi_mode_json)
+        {
+            if (cJSON_IsNumber(wifi_mode_json))
+            {
+                config_main.wifi_mode = (wifi_mode_json->valueint == 1) ? WIFI_MODE_STA : WIFI_MODE_AP;
+            }
+            else if (cJSON_IsBool(wifi_mode_json))
+            {
+                config_main.wifi_mode = cJSON_IsTrue(wifi_mode_json) ? WIFI_MODE_STA : WIFI_MODE_AP;
+            }
+        }
+
+        cJSON *ssid = cJSON_GetObjectItem(root, "wifi_ssid");
+        if (ssid && ssid->valuestring)
+        {
+            strncpy(config_main.wifi_ssid, ssid->valuestring, sizeof(config_main.wifi_ssid) - 1);
+            config_main.wifi_ssid[sizeof(config_main.wifi_ssid) - 1] = '\0';
+        }
+
+        cJSON *pass = cJSON_GetObjectItem(root, "wifi_password");
+        if (pass && pass->valuestring)
+        {
+            strncpy(config_main.wifi_password, pass->valuestring, sizeof(config_main.wifi_password) - 1);
+            config_main.wifi_password[sizeof(config_main.wifi_password) - 1] = '\0';
+        }
+
+        cJSON *drivers = cJSON_GetObjectItem(root, "driver_list");
+        if (drivers && cJSON_IsArray(drivers))
+        {
+            int count = cJSON_GetArraySize(drivers);
+            // Limit to max count (minus 1 for the placeholder at index 0)
+            if (count > DRIVER_MAX_COUNT - 1)
+                count = DRIVER_MAX_COUNT - 1;
+
+            config_main.driver_list.driver_count = count;
+
+            // Clear existing list beyond count if needed, or just overwrite
+            // We overwrite from index 1
+            for (int i = 0; i < count; i++)
+            {
+                cJSON *item = cJSON_GetArrayItem(drivers, i);
+                if (item && item->valuestring)
+                {
+                    strncpy(config_main.driver_list.list[i + 1], item->valuestring, DRIVER_TAG_LENGTH - 1);
+                    config_main.driver_list.list[i + 1][DRIVER_TAG_LENGTH - 1] = '\0';
+                }
+            }
+        }
+        xSemaphoreGive(config_mutex);
+    }
+    cJSON_Delete(root);
+    httpd_resp_send(req, "OK", 2);
+    return ESP_OK;
+}
+
+/**
  * @brief Initialization of web server
  * @return Handle to http instance
  */
@@ -303,6 +426,20 @@ static httpd_handle_t start_webserver(void)
             .user_ctx = NULL};
         httpd_register_uri_handler(server, &drivers_csv);
 
+        httpd_uri_t config_get = {
+            .uri = "/api/config",
+            .method = HTTP_GET,
+            .handler = config_get_handler,
+            .user_ctx = NULL};
+        httpd_register_uri_handler(server, &config_get);
+
+        httpd_uri_t config_post = {
+            .uri = "/api/config",
+            .method = HTTP_POST,
+            .handler = config_post_handler,
+            .user_ctx = NULL};
+        httpd_register_uri_handler(server, &config_post);
+
         return server;
     }
 
@@ -320,9 +457,10 @@ void wifi_task(void *args)
     {
         snprintf(wifi_ssid, sizeof(wifi_ssid), config_main.wifi_ssid);
         snprintf(wifi_password, sizeof(wifi_password), config_main.wifi_password);
+        wifi_mode_local = config_main.wifi_mode;
         xSemaphoreGive(config_mutex);
     }
-    wifi_init(config_main.wifi_mode, wifi_ssid, wifi_password);
+    wifi_init(wifi_mode_local, wifi_ssid, wifi_password);
     start_webserver();
 
     data_mutex = xSemaphoreCreateMutex();
@@ -355,7 +493,14 @@ void wifi_task(void *args)
             // reinit with config values
             if (wifi_reset_flag == false)
             {
-                wifi_reinit(config_main.wifi_mode, wifi_ssid, wifi_password);
+                if (xSemaphoreTake(config_mutex, portMAX_DELAY) == pdTRUE)
+                {
+                    snprintf(wifi_ssid, sizeof(wifi_ssid), config_main.wifi_ssid);
+                    snprintf(wifi_password, sizeof(wifi_password), config_main.wifi_password);
+                    wifi_mode_local = config_main.wifi_mode;
+                    xSemaphoreGive(config_mutex);
+                }
+                wifi_reinit(wifi_mode_local, wifi_ssid, wifi_password);
             }
             // reinit with safe values
             else if (wifi_reset_flag == true)

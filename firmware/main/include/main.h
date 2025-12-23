@@ -35,12 +35,6 @@
 #define WIFI_CHANNEL_DEFAULT 1
 #define WIFI_MAX_CONN_DEFAULT 3
 
-enum Lap_mode
-{
-    ONE_GATE_MODE,
-    TWO_GATE_MODE,
-};
-
 #ifdef __cplusplus
 
 class Laptime
@@ -78,9 +72,8 @@ struct Driver_list
 
 struct Config
 {
-    Lap_mode lap_mode = ONE_GATE_MODE;
+    bool gates_mode_2 = false;
     Driver_list driver_list;
-
     wifi_mode_t wifi_mode = WIFI_MODE_STA;
     char wifi_ssid[32] = "Andzia";
     char wifi_password[64] = "Mateusz20095G";

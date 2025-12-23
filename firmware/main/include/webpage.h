@@ -128,6 +128,32 @@ h3 { margin-top: 0; color: #ccc; border-bottom: 1px solid #555; padding-bottom: 
         <form action="/api/drivers_csv" method="get">
           <button type="submit" class="download-btn">DOWNLOAD DRIVERS CSV</button>
         </form>
+        <button onclick="toggleSettings()" class="download-btn">SETTINGS</button>
+     </div>
+
+     <div id="settings-box" style="display:none; margin-top: 20px; border-top: 1px solid #444; padding-top: 20px; text-align: left;">
+        <h3>CONFIGURATION</h3>
+        <div style="margin-bottom: 10px;">
+            <label style="color:#aaa; display:block; margin-bottom:5px;">Mode</label>
+            <label><input type="checkbox" id="cfg_gates"> 2 GATES MODE</label>
+        </div>
+        <div style="margin-bottom: 10px;">
+            <label style="color:#aaa; display:block; margin-bottom:5px;">WiFi Mode</label>
+            <label><input type="checkbox" id="cfg_wifi_mode"> Enable Station Mode (STA)</label>
+        </div>
+        <div style="margin-bottom: 10px;">
+            <label style="color:#aaa; display:block; margin-bottom:5px;">WiFi SSID</label>
+            <input type="text" id="cfg_ssid" style="width:100%; padding:8px; background:#333; border:1px solid #555; color:#fff;">
+        </div>
+        <div style="margin-bottom: 10px;">
+            <label style="color:#aaa; display:block; margin-bottom:5px;">WiFi Password</label>
+            <input type="password" id="cfg_pass" style="width:100%; padding:8px; background:#333; border:1px solid #555; color:#fff;">
+        </div>
+        <div style="margin-bottom: 10px;">
+            <label style="color:#aaa; display:block; margin-bottom:5px;">Drivers (one per line)</label>
+            <textarea id="cfg_drivers" rows="6" style="width:100%; padding:8px; background:#333; border:1px solid #555; color:#fff;"></textarea>
+        </div>
+        <button onclick="saveConfig()" class="download-btn" style="background:#0056b3;">SAVE CONFIG</button>
      </div>
   </div>
 
@@ -135,6 +161,48 @@ h3 { margin-top: 0; color: #ccc; border-bottom: 1px solid #555; padding-bottom: 
 
 <script>
 const colors = ['black', 'blue', 'red', 'yellow', 'green', 'magenta', 'brown', 'cyan', 'purple', 'olive'];
+
+function toggleSettings() {
+    let box = document.getElementById('settings-box');
+    if (box.style.display === 'none') {
+        box.style.display = 'block';
+        loadConfig();
+    } else {
+        box.style.display = 'none';
+    }
+}
+
+function loadConfig() {
+    fetch('/api/config').then(r => r.json()).then(d => {
+        document.getElementById('cfg_gates').checked = d.gates_mode_2;
+        // if wifi_mode is WIFI_MODE_STA (true), checkbox should be checked
+        document.getElementById('cfg_wifi_mode').checked = (d.wifi_mode === 1); // WIFI_MODE_STA is 1
+        document.getElementById('cfg_ssid').value = d.wifi_ssid || "";
+        document.getElementById('cfg_pass').value = d.wifi_password || "";
+        if (d.driver_list) {
+            document.getElementById('cfg_drivers').value = d.driver_list.join('\n');
+        }
+    }).catch(e => console.error(e));
+}
+
+function saveConfig() {
+    let drivers = document.getElementById('cfg_drivers').value.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+    let data = {
+        gates_mode_2: document.getElementById('cfg_gates').checked,
+        wifi_mode: document.getElementById('cfg_wifi_mode').checked ? 1 : 0, // 1 for STA, 0 for AP
+        wifi_ssid: document.getElementById('cfg_ssid').value,
+        wifi_password: document.getElementById('cfg_pass').value,
+        driver_list: drivers
+    };
+    fetch('/api/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    }).then(r => {
+        if (r.ok) alert("Config Saved!");
+        else alert("Error saving config");
+    }).catch(e => alert("Error: " + e));
+}
 
 function update() {
   fetch('/api/data?t=' + new Date().getTime()).then(r => r.json()).then(d => {

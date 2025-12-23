@@ -1,5 +1,5 @@
 {
-    "lap_mode" : "ONE_GATE",
+    "gates_number" : 1,
     "wifi_config" : {
         "mode" : "AP",
         "ssid" : "PUTM_LAPTIMER",

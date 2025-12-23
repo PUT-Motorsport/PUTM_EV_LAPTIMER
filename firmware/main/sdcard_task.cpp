@@ -11,6 +11,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <cJSON.h>
+
 static const char *TAG = "SDCARD_TASK";
 
 char session_str[14] = {"#00"};
@@ -20,35 +22,75 @@ static Driver_list driver_list_local;
 
 bool sd_detect_flag = false;
 
-esp_err_t sdcard_get_driver_list(sdmmc_card_t **card_pointer)
+esp_err_t sdcard_get_config(sdmmc_card_t **card_pointer)
 {
     unsigned int br;
     char sd_buffer[SD_BUFFER_SIZE] = "\0";
 
-    char *driver_tag_temp = {0};
-    char driver_list_temp[DRIVER_MAX_COUNT - 1][DRIVER_TAG_LENGTH] = {"---"};
-    uint8_t driver_count_temp = 0;
+    Config config_temp;
 
-    if (sdcard_read("DRIVERS.csv", sd_buffer, sizeof(sd_buffer), &br) ==
+    if (sdcard_read("config.txt", sd_buffer, sizeof(sd_buffer), &br) ==
         ESP_OK)
     {
         sd_buffer[br] = '\0';
-        driver_tag_temp = strtok(sd_buffer, ",");
-        for (; (driver_count_temp < DRIVER_MAX_COUNT - 1 && driver_tag_temp != NULL); driver_count_temp++)
+        cJSON *config_json = cJSON_Parse(sd_buffer);
+        if (config_json == NULL)
         {
-            driver_tag_temp[DRIVER_TAG_LENGTH - 1] = '\0';
-            ESP_LOGI(TAG, "DRIVER: %s", driver_tag_temp);
-            strcpy(driver_list_temp[driver_count_temp], driver_tag_temp);
-            driver_tag_temp = strtok(NULL, ",");
+            return ESP_FAIL;
         }
-        ESP_LOGI(TAG, "COUNT: %d", driver_count_temp);
+
+        cJSON *gates_json = cJSON_GetObjectItem(config_json, "gates_mode_2");
+        cJSON *wifi_json = cJSON_GetObjectItem(config_json, "wifi_config");
+        cJSON *driver_list_json = cJSON_GetObjectItem(config_json, "driver_list");
+
+        if (gates_json)
+        {
+            config_temp.gates_mode_2 = (bool)cJSON_GetNumberValue(gates_json);
+            ESP_LOGI(TAG, "Gates number: %u\n", (uint8_t)config_temp.gates_mode_2);
+        }
+
+        if (wifi_json)
+        {
+            cJSON *wifi_mode_json = cJSON_GetObjectItem(wifi_json, "mode");
+            cJSON *wifi_ssid_json = cJSON_GetObjectItem(wifi_json, "ssid");
+            cJSON *wifi_password_json = cJSON_GetObjectItem(wifi_json, "password");
+            if ((bool)cJSON_GetNumberValue(wifi_mode_json) == false)
+                config_temp.wifi_mode = WIFI_MODE_AP;
+            else
+                config_temp.wifi_mode = WIFI_MODE_STA;
+
+            if (cJSON_IsString(wifi_ssid_json) && (wifi_ssid_json->valuestring != NULL))
+            {
+                snprintf(config_temp.wifi_ssid, sizeof(config_temp.wifi_ssid), "%s", wifi_ssid_json->valuestring);
+            }
+            if (cJSON_IsString(wifi_password_json) && (wifi_password_json->valuestring != NULL))
+            {
+                snprintf(config_temp.wifi_password, sizeof(config_temp.wifi_password), "%s", wifi_password_json->valuestring);
+            }
+            ESP_LOGI(TAG, "Wifi ssid: %s, Wifi password: %s\n", config_temp.wifi_ssid, config_temp.wifi_password);
+        }
+
+        if (driver_list_json)
+        {
+            config_temp.driver_list.driver_count = cJSON_GetArraySize(driver_list_json);
+            ESP_LOGI(TAG, "Driver_count: %u\n", config_temp.driver_list.driver_count);
+
+            for (int i = 0; i < config_temp.driver_list.driver_count; i++)
+            {
+                cJSON *driver_temp_json = cJSON_GetArrayItem(driver_list_json, i);
+                if (cJSON_IsString(driver_temp_json) && (driver_temp_json->valuestring != NULL))
+                {
+                    snprintf(config_temp.driver_list.list[i + 1], sizeof(config_temp.driver_list.list[i + 1]), "%s", driver_temp_json->valuestring);
+                    ESP_LOGI(TAG, "DRIVER: %s\n", config_temp.driver_list.list[i + 1]);
+                }
+            }
+        }
+
+        cJSON_Delete(config_json);
+
         if (xSemaphoreTake(config_mutex, portMAX_DELAY) == pdTRUE)
         {
-            for (int i = 0; i < driver_count_temp; i++)
-            {
-                strncpy(config_main.driver_list.list[i + 1], driver_list_temp[i], sizeof(config_main.driver_list.list[i + 1]));
-            }
-            config_main.driver_list.driver_count = driver_count_temp;
+            memcpy(&config_main, &config_temp, sizeof(config_main));
             xSemaphoreGive(config_mutex);
         }
     }
@@ -107,7 +149,7 @@ esp_err_t sdcard_init(sdmmc_card_t **card_pointer)
             session_num++;
         }
     }
-    sdcard_get_driver_list(card_pointer);
+    sdcard_get_config(card_pointer);
     sprintf(session_str, "#%d,", session_num);
     ESP_LOGI(TAG, "INIT OK");
     return ret;
@@ -217,7 +259,6 @@ void sdcard_task(void *args)
 
     if ((sd_detect_flag = !gpio_get_level((gpio_num_t)SD_CD)) == true)
         sd_active_flag = !sdcard_init(&card_handle);
-
     static Laptime laptime_saved;
 
     for (;;)
