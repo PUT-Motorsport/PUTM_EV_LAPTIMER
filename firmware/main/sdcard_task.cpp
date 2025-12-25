@@ -39,14 +39,14 @@ esp_err_t sdcard_get_config(sdmmc_card_t **card_pointer)
             return ESP_FAIL;
         }
 
-        cJSON *gates_json = cJSON_GetObjectItem(config_json, "gates_mode_2");
+        cJSON *gates_json = cJSON_GetObjectItem(config_json, "two_gate_mode");
         cJSON *wifi_json = cJSON_GetObjectItem(config_json, "wifi_config");
         cJSON *driver_list_json = cJSON_GetObjectItem(config_json, "driver_list");
 
         if (gates_json)
         {
-            config_temp.gates_mode_2 = (bool)cJSON_GetNumberValue(gates_json);
-            ESP_LOGI(TAG, "Gates number: %u\n", (uint8_t)config_temp.gates_mode_2);
+            config_temp.two_gate_mode = (bool)cJSON_GetNumberValue(gates_json);
+            ESP_LOGI(TAG, "Gates number: %u\n", (uint8_t)config_temp.two_gate_mode);
         }
 
         if (wifi_json)

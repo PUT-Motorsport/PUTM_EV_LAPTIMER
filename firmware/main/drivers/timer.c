@@ -2,6 +2,10 @@
 #include "esp_err.h"
 #include "esp_log.h"
 #include "soc/clk_tree_defs.h"
+#include <time.h>
+#include <sys/time.h>
+
+static const char *TAG = "TIMER";
 
 gptimer_handle_t laptime_timer;
 
@@ -31,4 +35,21 @@ uint64_t timer_get_time(gptimer_handle_t timer_handle)
 esp_err_t timer_reset(gptimer_handle_t timer_handle)
 {
     return gptimer_set_raw_count(timer_handle, 0);
+}
+
+esp_err_t system_get_time(char time_buf[9], char date_buf[11])
+{
+    if (time_buf == NULL || date_buf == NULL)
+        return ESP_FAIL;
+    time_t now;
+    struct tm timeinfo;
+
+    time(&now);
+    setenv("TZ", "CET", 1);
+    tzset();
+
+    localtime_r(&now, &timeinfo);
+    strftime(time_buf, sizeof(char[9]), "%X", &timeinfo);
+    strftime(date_buf, sizeof(char[11]), "%d/%m/%Y", &timeinfo);
+    return ESP_OK;
 }

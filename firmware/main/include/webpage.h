@@ -174,7 +174,7 @@ function toggleSettings() {
 
 function loadConfig() {
     fetch('/api/config').then(r => r.json()).then(d => {
-        document.getElementById('cfg_gates').checked = d.gates_mode_2;
+        document.getElementById('cfg_gates').checked = d.two_gate_mode;
         // if wifi_mode is WIFI_MODE_STA (true), checkbox should be checked
         document.getElementById('cfg_wifi_mode').checked = (d.wifi_mode === 1); // WIFI_MODE_STA is 1
         document.getElementById('cfg_ssid').value = d.wifi_ssid || "";
@@ -188,7 +188,7 @@ function loadConfig() {
 function saveConfig() {
     let drivers = document.getElementById('cfg_drivers').value.split('\n').map(s => s.trim()).filter(s => s.length > 0);
     let data = {
-        gates_mode_2: document.getElementById('cfg_gates').checked,
+        two_gate_mode: document.getElementById('cfg_gates').checked,
         wifi_mode: document.getElementById('cfg_wifi_mode').checked ? 1 : 0, // 1 for STA, 0 for AP
         wifi_ssid: document.getElementById('cfg_ssid').value,
         wifi_password: document.getElementById('cfg_pass').value,

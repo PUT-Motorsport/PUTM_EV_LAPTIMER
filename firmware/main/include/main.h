@@ -16,6 +16,9 @@
 
 #define PENALTY_COUNT_STR_LENGTH 25
 
+#define TIMEOFDAY_STR_LENGTH 9
+#define DATE_STR_LENGTH 11
+
 /// @brief Number of status flags displayed on LCD and webpage (gate mode, stop flag, sd flag)
 #define STATUS_LIST_LENGTH 3
 
@@ -49,6 +52,9 @@ public:
 
     int8_t driver_id = 0;
 
+    char timeofday[TIMEOFDAY_STR_LENGTH] = "21:37:00";
+    char date[DATE_STR_LENGTH] = "01/01/2026";
+
     void reset();
     void new_lap();
 
@@ -72,15 +78,16 @@ struct Driver_list
 
 struct Config
 {
-    bool gates_mode_2 = false;
+    bool two_gate_mode = false;
     Driver_list driver_list;
     wifi_mode_t wifi_mode = WIFI_MODE_STA;
-    char wifi_ssid[32] = "Andzia";
-    char wifi_password[64] = "Mateusz20095G";
-    uint8_t wifi_channel = WIFI_CHANNEL_DEFAULT;
-    uint8_t wifi_max_connection = WIFI_MAX_CONN_DEFAULT;
+    char wifi_ssid[32] = "aaa";
+    char wifi_password[64] = "";
+    char time_set[9] = "11:53:22";
+    char date_set[11] = "24.12.2025";
+    // uint8_t wifi_channel = WIFI_CHANNEL_DEFAULT;
+    // uint8_t wifi_max_connection = WIFI_MAX_CONN_DEFAULT;
 };
-
 #endif
 
 /**
@@ -114,7 +121,7 @@ extern SemaphoreHandle_t laptime_lists_mutex;
 /**
  * @ingroup freertos
  * @brief Queue passes active status flags from main logic laptimer_task to lcd_task and wifi_task
- * bool[0] - mode
+ * bool[0] - two_gates_mode
  * bool[1] - stop_flag
  * bool[2] - sdcard_flag
  */

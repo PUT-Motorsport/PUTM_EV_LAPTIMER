@@ -214,14 +214,13 @@ void button_isr(Button_press *button_press)
 
 /**
  * @brief ISR for first gate depends on active mode
- * gates_mode_2 == false - first gate saves laptime and starts new lap on every negative edge
- * gates_mode_2 == true - first gate only starts new lap on negative edge if stop_flag is true
+ * two_gate_mode == false - first gate saves laptime and starts new lap on every negative edge
+ * two_gate_mode == true - first gate only starts new lap on negative edge if stop_flag is true
  */
 void gate1_pin_isr()
 {
-    switch (config_main.gates_mode_2)
+    if (config_main.two_gate_mode == false)
     {
-    case false:
         if (stop_flag == false && laptime_current.time > LAPTIME_MIN)
         {
             laptime_current.time = timer_get_time(laptime_timer);
@@ -235,31 +234,30 @@ void gate1_pin_isr()
             stop_flag = false;
             timer_reset(laptime_timer);
         }
-        break;
-    case true:
+        return;
+    }
+    else
+    {
         if (stop_flag == true)
         {
             stop_flag = false;
             timer_reset(laptime_timer);
         }
-        break;
-    default:
-        break;
     }
+    return;
 }
 
 /**
  * @brief ISR for second gate depends on active mode
- * gates_mode_2 == false - second gate is not active
- * gates_mode_2 == true - second gates saves laptime on negative edge if stop_flag is false
+ * two_gate_mode == false - second gate is not active
+ * two_gate_mode == true - second gates saves laptime on negative edge if stop_flag is false
  */
 void gate2_pin_isr()
 {
-    switch (config_main.gates_mode_2)
+    if (config_main.two_gate_mode == false)
+        return;
+    else
     {
-    case false:
-        break;
-    case true:
         if (stop_flag == false && laptime_current.time > LAPTIME_MIN)
         {
             laptime_current.time = timer_get_time(laptime_timer);
@@ -268,10 +266,8 @@ void gate2_pin_isr()
             stop_flag = true;
             laptime_current.new_lap();
         }
-        break;
-    default:
-        break;
     }
+    return;
 }
 
 /**
@@ -379,6 +375,8 @@ void laptimer_task(void *args)
 
         if (laptime_saved.time > 0 && xSemaphoreTake(laptime_lists_mutex, 0) == pdTRUE)
         {
+            ESP_ERROR_CHECK(system_get_time(laptime_saved.timeofday, laptime_saved.date));
+            ESP_LOGI(TAG, "TIMEOFDAY: %s, DATE: %s", laptime_saved.timeofday, laptime_saved.date);
             laptime_save_uart(laptime_saved);
             laptime_save_top(laptime_saved, laptime_list_top);
             laptime_save_last(laptime_saved, laptime_list_last);
@@ -387,9 +385,10 @@ void laptimer_task(void *args)
             xSemaphoreGive(laptime_lists_mutex);
             laptime_saved.reset();
         }
+
         if (status_update_flag == true)
         {
-            bool status_list[3] = {config_main.gates_mode_2, stop_flag, sd_active_flag};
+            bool status_list[3] = {config_main.two_gate_mode, stop_flag, sd_active_flag};
             xQueueSend(laptime_status_queue_lcd, status_list, 0);
             xQueueSend(laptime_status_queue_wifi, status_list, 0);
             status_update_flag = false;

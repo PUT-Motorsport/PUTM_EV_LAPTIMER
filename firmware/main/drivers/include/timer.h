@@ -4,16 +4,19 @@
 #include "esp_err.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-extern gptimer_handle_t laptime_timer;
+    extern gptimer_handle_t laptime_timer;
 
-esp_err_t timer_init();
+    esp_err_t timer_init();
 
-uint64_t timer_get_time(gptimer_handle_t timer_handle);
+    uint64_t timer_get_time(gptimer_handle_t timer_handle);
 
-esp_err_t timer_reset(gptimer_handle_t timer_handle);
+    esp_err_t timer_reset(gptimer_handle_t timer_handle);
+
+    esp_err_t system_get_time(char time_buf[9], char date_buf[11]);
 
 #ifdef __cplusplus
 }

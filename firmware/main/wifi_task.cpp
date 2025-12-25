@@ -48,7 +48,6 @@ static esp_err_t data_get_handler(httpd_req_t *req)
     char penalty_time_str[PENALTY_TIME_STR_LENGTH] = {0};
     char penalty_count_str[PENALTY_COUNT_STR_LENGTH] = {0};
 
-    // Take local mutex for atomic access to local data
     if (xSemaphoreTake(data_mutex, portMAX_DELAY))
     {
         current_laptime_data.convert_string_full(laptime_current_str, sizeof(laptime_current_str));
@@ -273,7 +272,7 @@ static esp_err_t config_get_handler(httpd_req_t *req)
     cJSON *root = cJSON_CreateObject();
     if (xSemaphoreTake(config_mutex, portMAX_DELAY))
     {
-        cJSON_AddBoolToObject(root, "gates_mode_2", config_main.gates_mode_2);
+        cJSON_AddBoolToObject(root, "two_gate_mode", config_main.two_gate_mode);
         // Return current wifi mode as number (0 for AP, 1 for STA)
         cJSON_AddNumberToObject(root, "wifi_mode", config_main.wifi_mode);
         cJSON_AddStringToObject(root, "wifi_ssid", config_main.wifi_ssid);
@@ -325,9 +324,9 @@ static esp_err_t config_post_handler(httpd_req_t *req)
 
     if (xSemaphoreTake(config_mutex, portMAX_DELAY))
     {
-        cJSON *gates = cJSON_GetObjectItem(root, "gates_mode_2");
+        cJSON *gates = cJSON_GetObjectItem(root, "two_gate_mode");
         if (gates)
-            config_main.gates_mode_2 = cJSON_IsTrue(gates);
+            config_main.two_gate_mode = cJSON_IsTrue(gates);
 
         cJSON *wifi_mode_json = cJSON_GetObjectItem(root, "wifi_mode");
         if (wifi_mode_json)
