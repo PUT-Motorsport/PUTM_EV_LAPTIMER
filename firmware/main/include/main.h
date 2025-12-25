@@ -16,15 +16,15 @@
 
 #define PENALTY_COUNT_STR_LENGTH 25
 
-#define TIMEOFDAY_STR_LENGTH 9
-#define DATE_STR_LENGTH 11
-
 /// @brief Number of status flags displayed on LCD and webpage (gate mode, stop flag, sd flag)
 #define STATUS_LIST_LENGTH 3
 
 #define DRIVER_MAX_COUNT 10
 
 #define DRIVER_TAG_LENGTH 4
+
+#define TIMEOFDAY_STR_LENGTH 9
+#define DATE_STR_LENGTH 11
 
 #define DRIVER_LIST_DEFAULT {"---", "AAA", "BBB", "CCC"}
 

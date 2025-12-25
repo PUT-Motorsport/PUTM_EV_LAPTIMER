@@ -2,6 +2,7 @@
 
 #include "driver/gptimer_types.h"
 #include "esp_err.h"
+#include "main.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -16,7 +17,9 @@ extern "C"
 
     esp_err_t timer_reset(gptimer_handle_t timer_handle);
 
-    esp_err_t system_get_time(char time_buf[9], char date_buf[11]);
+    esp_err_t system_set_time(char time_buf[TIMEOFDAY_STR_LENGTH], char date_buf[DATE_STR_LENGTH]);
+
+    esp_err_t system_get_time(char time_buf[TIMEOFDAY_STR_LENGTH], char date_buf[DATE_STR_LENGTH]);
 
 #ifdef __cplusplus
 }
