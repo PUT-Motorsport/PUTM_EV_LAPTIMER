@@ -4,13 +4,11 @@
 #include "freertos/task.h"
 #include "esp_mac.h"
 #include "esp_event.h"
-#include "esp_log.h"
 #include "nvs_flash.h"
 #include "mdns.h"
 
 #include "lwip/err.h"
 #include "lwip/sys.h"
-#include <esp_err.h>
 
 static const char *TAG = "WIFI_AP";
 
@@ -81,7 +79,7 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
     }
 }
 
-esp_err_t wifi_init(wifi_mode_t wifi_mode, char wifi_ssid[32], char wifi_password[64])
+esp_err_t wifi_init(wifi_mode_t wifi_mode, char wifi_ssid[WIFI_SSID_STR_LENGTH], char wifi_password[WIFI_PASSWORD_STR_LENGTH])
 {
     if (wifi_ssid == NULL || wifi_password == NULL || ((wifi_mode != WIFI_MODE_AP) && (wifi_mode != WIFI_MODE_STA)))
         return ESP_FAIL;
@@ -200,11 +198,22 @@ esp_err_t wifi_init(wifi_mode_t wifi_mode, char wifi_ssid[32], char wifi_passwor
     return ESP_OK;
 }
 
-esp_err_t wifi_reinit(wifi_mode_t wifi_mode, char wifi_ssid[32], char wifi_password[64])
+esp_err_t wifi_reinit(wifi_mode_t wifi_mode, char wifi_ssid[WIFI_SSID_STR_LENGTH], char wifi_password[WIFI_PASSWORD_STR_LENGTH])
 {
     esp_wifi_stop();
     esp_wifi_deinit();
     mdns_started = false;
     ESP_LOGI(TAG, "WIFI DEINIT OK");
     return wifi_init(wifi_mode, wifi_ssid, wifi_password);
+}
+
+esp_err_t wifi_get_ip(char ip_string[52])
+{
+    esp_netif_ip_info_t ip_info;
+    if (s_wifi_netif == NULL || ip_string == NULL)
+        return ESP_FAIL;
+    if (esp_netif_get_ip_info(s_wifi_netif, &ip_info) != ESP_OK)
+        return ESP_FAIL;
+    snprintf(ip_string, 52, "%3d.%3d.%3d.%3d", IP2STR(&ip_info.ip));
+    return ESP_OK;
 }

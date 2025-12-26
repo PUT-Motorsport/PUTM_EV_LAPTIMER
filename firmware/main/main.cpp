@@ -22,6 +22,8 @@ SemaphoreHandle_t laptime_lists_mutex = xSemaphoreCreateMutex();
 QueueHandle_t laptime_status_queue_lcd = xQueueCreate(1, sizeof(bool[3]));
 QueueHandle_t laptime_status_queue_wifi = xQueueCreate(1, sizeof(bool[3]));
 
+QueueHandle_t ip_queue = xQueueCreate(1, sizeof(char[52]));
+
 Config config_main;
 
 Laptime laptime_list_top[LAPTIME_LIST_SIZE_LOCAL];

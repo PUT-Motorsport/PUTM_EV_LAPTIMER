@@ -132,7 +132,7 @@ esp_err_t sdcard_init(sdmmc_card_t **card_pointer)
         ESP_OK)
     {
         ESP_LOGI(TAG, "CREATING NEW FILE");
-        ret = sdcard_write("laptimer.csv", "SESSION, LAP, TIME, PENALTY, OC, DOO, DRIVER\n");
+        ret = sdcard_write("laptimer.csv", "SESSION, LAP, TIME, PENALTY, OC, DOO, DRIVER, DATE, HOUR\n");
         if (ret)
         {
             return ret;
@@ -212,6 +212,12 @@ esp_err_t sdcard_save_laptime(Laptime laptime_saved)
     if (ret)
         return ret;
     ret = sdcard_append("laptimer.csv", laptime_driver_str);
+    if (ret)
+        return ret;
+    ret = sdcard_append("laptimer.csv", laptime_saved.date);
+    if (ret)
+        return ret;
+    ret = sdcard_append("laptimer.csv", laptime_saved.timeofday);
     if (ret)
         return ret;
     ret = sdcard_append("laptimer.csv", "\n");

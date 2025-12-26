@@ -26,6 +26,9 @@
 #define TIMEOFDAY_STR_LENGTH 9
 #define DATE_STR_LENGTH 11
 
+#define WIFI_SSID_STR_LENGTH 32
+#define WIFI_PASSWORD_STR_LENGTH 64
+
 #define DRIVER_LIST_DEFAULT {"---", "AAA", "BBB", "CCC"}
 
 #define LAPTIME_STR_DEFAULT "--, --:--.--"
@@ -37,6 +40,8 @@
 #define WIFI_PASSWORD_DEFAULT "\0"
 #define WIFI_CHANNEL_DEFAULT 1
 #define WIFI_MAX_CONN_DEFAULT 3
+#define TIMEOFDAY_STR_DEFAULT "21:37:00"
+#define DATE_STR_DEFAULT "01/01/2026"
 
 #ifdef __cplusplus
 
@@ -52,8 +57,8 @@ public:
 
     int8_t driver_id = 0;
 
-    char timeofday[TIMEOFDAY_STR_LENGTH] = "21:37:00";
-    char date[DATE_STR_LENGTH] = "01/01/2026";
+    char timeofday[TIMEOFDAY_STR_LENGTH] = TIMEOFDAY_STR_DEFAULT;
+    char date[DATE_STR_LENGTH] = DATE_STR_DEFAULT;
 
     void reset();
     void new_lap();
@@ -81,10 +86,10 @@ struct Config
     bool two_gate_mode = false;
     Driver_list driver_list;
     wifi_mode_t wifi_mode = WIFI_MODE_STA;
-    char wifi_ssid[32] = "aaa";
-    char wifi_password[64] = "";
-    char time_set[9] = "11:53:22";
-    char date_set[11] = "24.12.2025";
+    char wifi_ssid[WIFI_SSID_STR_LENGTH] = WIFI_SSID_DEFAULT;
+    char wifi_password[WIFI_PASSWORD_STR_LENGTH] = WIFI_PASSWORD_DEFAULT;
+    char time_set[TIMEOFDAY_STR_LENGTH] = TIMEOFDAY_STR_DEFAULT;
+    char date_set[DATE_STR_LENGTH] = DATE_STR_DEFAULT;
     // uint8_t wifi_channel = WIFI_CHANNEL_DEFAULT;
     // uint8_t wifi_max_connection = WIFI_MAX_CONN_DEFAULT;
 };
@@ -127,6 +132,8 @@ extern SemaphoreHandle_t laptime_lists_mutex;
  */
 extern QueueHandle_t laptime_status_queue_lcd;
 extern QueueHandle_t laptime_status_queue_wifi;
+
+extern QueueHandle_t ip_queue;
 
 #ifdef __cplusplus
 

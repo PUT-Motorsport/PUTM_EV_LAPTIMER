@@ -15,10 +15,6 @@ static Laptime current_laptime_data;
 
 static Driver_list driver_list_local;
 
-static char wifi_ssid[32] = WIFI_SSID_DEFAULT;
-static char wifi_password[64] = WIFI_PASSWORD_DEFAULT;
-static wifi_mode_t wifi_mode_local = WIFI_MODE_AP;
-
 /**
  * @brief Status flags used to display on website
  */
@@ -44,9 +40,9 @@ static esp_err_t data_get_handler(httpd_req_t *req)
 {
     cJSON *root = cJSON_CreateObject();
 
-    char laptime_current_str[LAPTIME_STR_LENGTH] = {0};
-    char penalty_time_str[PENALTY_TIME_STR_LENGTH] = {0};
-    char penalty_count_str[PENALTY_COUNT_STR_LENGTH] = {0};
+    char laptime_current_str[LAPTIME_STR_LENGTH] = LAPTIME_STR_DEFAULT;
+    char penalty_time_str[PENALTY_TIME_STR_LENGTH] = PENALTY_STR_DEFAULT;
+    char penalty_count_str[PENALTY_COUNT_STR_LENGTH] = COUNT_STR_DEFAULT;
 
     if (xSemaphoreTake(data_mutex, portMAX_DELAY))
     {
@@ -452,6 +448,11 @@ static httpd_handle_t start_webserver(void)
  */
 void wifi_task(void *args)
 {
+    char wifi_ssid[WIFI_SSID_STR_LENGTH] = WIFI_SSID_DEFAULT;
+    char wifi_password[WIFI_PASSWORD_STR_LENGTH] = WIFI_PASSWORD_DEFAULT;
+    wifi_mode_t wifi_mode_local = WIFI_MODE_AP;
+    static char ip_str[52] = {0};
+
     if (xSemaphoreTake(config_mutex, portMAX_DELAY) == pdTRUE)
     {
         snprintf(wifi_ssid, sizeof(wifi_ssid), config_main.wifi_ssid);
@@ -459,9 +460,8 @@ void wifi_task(void *args)
         wifi_mode_local = config_main.wifi_mode;
         xSemaphoreGive(config_mutex);
     }
-    wifi_init(wifi_mode_local, wifi_ssid, wifi_password);
-    start_webserver();
-
+    if (wifi_init(wifi_mode_local, wifi_ssid, wifi_password) == ESP_OK)
+        start_webserver();
     data_mutex = xSemaphoreCreateMutex();
 
     int driver_update_counter = 0;
@@ -499,12 +499,14 @@ void wifi_task(void *args)
                     wifi_mode_local = config_main.wifi_mode;
                     xSemaphoreGive(config_mutex);
                 }
-                wifi_reinit(wifi_mode_local, wifi_ssid, wifi_password);
+                if (wifi_reinit(wifi_mode_local, wifi_ssid, wifi_password) == ESP_OK)
+                    start_webserver();
             }
             // reinit with safe values
             else if (wifi_reset_flag == true)
             {
-                wifi_reinit(WIFI_MODE_AP, WIFI_SSID_DEFAULT, WIFI_PASSWORD_DEFAULT);
+                if (wifi_reinit(WIFI_MODE_AP, WIFI_SSID_DEFAULT, WIFI_PASSWORD_DEFAULT) == ESP_OK)
+                    start_webserver();
             }
         }
 
@@ -526,6 +528,8 @@ void wifi_task(void *args)
                 xSemaphoreGive(data_mutex);
             }
         }
+        wifi_get_ip(ip_str);
+        xQueueSend(ip_queue, ip_str, 0);
 
         vTaskDelay(pdMS_TO_TICKS(20));
     }

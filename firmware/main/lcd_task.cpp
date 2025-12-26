@@ -106,6 +106,8 @@ void print_ui()
 void print_status()
 {
     bool status_list[3] = {0};
+    static char ip_str[52];
+
     if (xQueueReceive(laptime_status_queue_lcd, status_list, 0) == pdTRUE)
     {
         if (!status_list[0])
@@ -130,6 +132,10 @@ void print_status()
             lcd_print_str(LCD_WIDTH / 2 + UI_LETTER_WIDTH * 5, PADDING, "  ",
                           UI_FONT, BLACK);
     }
+    if (xQueueReceive(ip_queue, ip_str, 0) == pdTRUE)
+    {
+        lcd_print_str(LCD_WIDTH / 2, PADDING + 10, ip_str, UI_FONT, WHITE);
+    }
 }
 
 /// @brief Prints current laptime received from queue on LCD
@@ -137,25 +143,25 @@ void print_current_laptime()
 {
     static Laptime laptime_current;
 
-    if (xQueueReceive(laptime_current_queue_lcd, &laptime_current, 0) != pdTRUE)
-        return;
+    if (xQueueReceive(laptime_current_queue_lcd, &laptime_current, 0) == pdTRUE)
+    {
+        char laptime_current_str[LAPTIME_STR_LENGTH] = {0};
+        char laptime_penalty_str[PENALTY_TIME_STR_LENGTH] = {0};
+        char laptime_oc_str[PENALTY_COUNT_STR_LENGTH] = {0};
+        char laptime_doo_str[PENALTY_COUNT_STR_LENGTH] = {0};
 
-    char laptime_current_str[LAPTIME_STR_LENGTH] = {0};
-    char laptime_penalty_str[PENALTY_TIME_STR_LENGTH] = {0};
-    char laptime_oc_str[PENALTY_COUNT_STR_LENGTH] = {0};
-    char laptime_doo_str[PENALTY_COUNT_STR_LENGTH] = {0};
+        laptime_current.convert_string_full(laptime_current_str, sizeof(laptime_current_str));
+        laptime_current.convert_string_penalty(laptime_penalty_str, sizeof(laptime_penalty_str));
+        snprintf(laptime_oc_str, sizeof(laptime_oc_str), "%3u", laptime_current.oc_count);
+        snprintf(laptime_doo_str, sizeof(laptime_doo_str), "%3u", laptime_current.doo_count);
 
-    laptime_current.convert_string_full(laptime_current_str, sizeof(laptime_current_str));
-    laptime_current.convert_string_penalty(laptime_penalty_str, sizeof(laptime_penalty_str));
-    snprintf(laptime_oc_str, sizeof(laptime_oc_str), "%3u", laptime_current.oc_count);
-    snprintf(laptime_doo_str, sizeof(laptime_doo_str), "%3u", laptime_current.doo_count);
-
-    lcd_print_str(LAPTIME_CURRENT_POS_X, LAPTIME_CURRENT_POS_Y, laptime_current_str, LAPTIME_CURRENT_FONT, WHITE);
-    lcd_print_str(LAPTIME_CURRENT_POS_X + LAPTIME_CURRENT_LETTER_WIDTH * 13, LAPTIME_CURRENT_POS_Y, laptime_penalty_str, UI_FONT, YELLOW);
-    lcd_print_str(LAPTIME_LISTS_POS_X + UI_LETTER_WIDTH * 4, LAPTIME_CURRENT_POS_Y + 25, laptime_oc_str, UI_FONT, YELLOW);
-    lcd_print_str(LAPTIME_LISTS_POS_X + UI_LETTER_WIDTH * 13, LAPTIME_CURRENT_POS_Y + 25, laptime_doo_str, UI_FONT, YELLOW);
-    lcd_print_str(LAPTIME_LISTS_POS_X + UI_LETTER_WIDTH * 26, LAPTIME_CURRENT_POS_Y + 25, driver_list_local.list[laptime_current.driver_id], UI_FONT, WHITE);
-    lcd_print_tag(LAPTIME_LISTS_POS_X + UI_LETTER_WIDTH * 30, LAPTIME_CURRENT_POS_Y + 25, 25, 10, driver_color_list[laptime_current.driver_id]);
+        lcd_print_str(LAPTIME_CURRENT_POS_X, LAPTIME_CURRENT_POS_Y, laptime_current_str, LAPTIME_CURRENT_FONT, WHITE);
+        lcd_print_str(LAPTIME_CURRENT_POS_X + LAPTIME_CURRENT_LETTER_WIDTH * 13, LAPTIME_CURRENT_POS_Y, laptime_penalty_str, UI_FONT, YELLOW);
+        lcd_print_str(LAPTIME_LISTS_POS_X + UI_LETTER_WIDTH * 4, LAPTIME_CURRENT_POS_Y + 25, laptime_oc_str, UI_FONT, YELLOW);
+        lcd_print_str(LAPTIME_LISTS_POS_X + UI_LETTER_WIDTH * 13, LAPTIME_CURRENT_POS_Y + 25, laptime_doo_str, UI_FONT, YELLOW);
+        lcd_print_str(LAPTIME_LISTS_POS_X + UI_LETTER_WIDTH * 26, LAPTIME_CURRENT_POS_Y + 25, driver_list_local.list[laptime_current.driver_id], UI_FONT, WHITE);
+        lcd_print_tag(LAPTIME_LISTS_POS_X + UI_LETTER_WIDTH * 30, LAPTIME_CURRENT_POS_Y + 25, 25, 10, driver_color_list[laptime_current.driver_id]);
+    }
 }
 
 /// @brief Reads laptime lists from global variable after receiving samphore and prints them on LCD
