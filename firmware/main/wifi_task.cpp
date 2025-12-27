@@ -462,14 +462,15 @@ void wifi_task(void *args)
     }
     if (wifi_init(wifi_mode_local, wifi_ssid, wifi_password) == ESP_OK)
         start_webserver();
+    xQueueSend(wifi_mode_queue, &wifi_mode_local, 0);
+
     data_mutex = xSemaphoreCreateMutex();
 
     int driver_update_counter = 0;
-    bool wifi_reset_flag = false;
+    Wifi_reset wifi_reset_flag = WIFI_RESET_DEFAULTS;
 
     for (;;)
     {
-        Laptime temp_lap;
 
         driver_update_counter++;
         if (driver_update_counter >= 100)
@@ -487,10 +488,11 @@ void wifi_task(void *args)
             }
         }
 
+        /// Wifi reinitialization
         if (xQueueReceive(wifi_reset_queue, &wifi_reset_flag, 0) == pdTRUE)
         {
-            // reinit with config values
-            if (wifi_reset_flag == false)
+            /// Reinit with config values
+            if (wifi_reset_flag == WIFI_RESET_CONFIG)
             {
                 if (xSemaphoreTake(config_mutex, portMAX_DELAY) == pdTRUE)
                 {
@@ -502,14 +504,19 @@ void wifi_task(void *args)
                 if (wifi_reinit(wifi_mode_local, wifi_ssid, wifi_password) == ESP_OK)
                     start_webserver();
             }
-            // reinit with safe values
-            else if (wifi_reset_flag == true)
+            /// Reinit with safe values
+            else if (wifi_reset_flag == WIFI_RESET_DEFAULTS)
             {
                 if (wifi_reinit(WIFI_MODE_AP, WIFI_SSID_DEFAULT, WIFI_PASSWORD_DEFAULT) == ESP_OK)
+                {
+                    wifi_get_mode(&wifi_mode_local);
                     start_webserver();
+                }
             }
+            xQueueSend(wifi_mode_queue, &wifi_mode_local, 0);
         }
 
+        Laptime temp_lap;
         if (xQueueReceive(laptime_current_queue_wifi, &temp_lap, 0) == pdTRUE)
         {
             if (xSemaphoreTake(data_mutex, portMAX_DELAY))

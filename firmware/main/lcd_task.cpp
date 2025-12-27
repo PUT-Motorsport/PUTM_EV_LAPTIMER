@@ -86,7 +86,6 @@ void lcd_set_clip(int16_t pos_x0, int16_t pos_y0, int16_t pos_x1, int16_t pos_y1
 /// @brief Prints static ui elements on LCD
 void print_ui()
 {
-    lcd_print_str(PADDING, PADDING, "CURRENT LAP", UI_FONT, WHITE);
     lcd_print_str(LAPTIME_LISTS_POS_X, LAPTIME_LISTS_POS_Y,
                   "LAST 5 LAPS", UI_FONT,
                   WHITE);
@@ -107,34 +106,64 @@ void print_status()
 {
     bool status_list[3] = {0};
     static char ip_str[52];
+    static char gate_str[8];
+    static char stop_str[5];
+    static char sd_str[7];
+    static char wifi_str[9];
+    wifi_mode_t wifi_mode = WIFI_MODE_NULL;
+    uint16_t color = WHITE;
 
     if (xQueueReceive(laptime_status_queue_lcd, status_list, 0) == pdTRUE)
     {
         if (!status_list[0])
-        {
-            lcd_print_str(LCD_WIDTH - UI_LETTER_WIDTH * 6 - PADDING, PADDING, "1 GATE ",
-                          UI_FONT, GRAY);
-        }
+            snprintf(gate_str, sizeof(gate_str), "1 GATE");
         else
-        {
-            lcd_print_str(LCD_WIDTH - UI_LETTER_WIDTH * 6 - PADDING, PADDING, "2 GATE ",
-                          UI_FONT, GRAY);
-        }
-        if (status_list[1])
-            lcd_print_str(LCD_WIDTH / 2, PADDING, "STOP", UI_FONT, RED);
-        else
-            lcd_print_str(LCD_WIDTH / 2, PADDING, "    ", UI_FONT, BLACK);
+            snprintf(gate_str, sizeof(gate_str), "2 GATE");
+        lcd_print_str(LCD_WIDTH - UI_LETTER_WIDTH * 6 - PADDING, PADDING, gate_str, UI_FONT, GRAY);
 
-        if (status_list[2])
-            lcd_print_str(LCD_WIDTH / 2 + UI_LETTER_WIDTH * 5, PADDING, "SD",
-                          UI_FONT, GREEN);
+        if (status_list[1])
+            snprintf(stop_str, sizeof(stop_str), "STOP");
+
         else
-            lcd_print_str(LCD_WIDTH / 2 + UI_LETTER_WIDTH * 5, PADDING, "  ",
-                          UI_FONT, BLACK);
+            snprintf(stop_str, sizeof(stop_str), "    ");
+        color = RED;
+        lcd_print_str(PADDING, PADDING, stop_str, UI_FONT, color);
+
+        if (sd_active_flag == true)
+        {
+            snprintf(sd_str, sizeof(sd_str), "SD ON ");
+            color = GREEN;
+        }
+        else
+        {
+            snprintf(sd_str, sizeof(sd_str), "SD OFF");
+            color = RED;
+        }
+        lcd_print_str(PADDING + 18 * UI_LETTER_WIDTH, PADDING, sd_str, UI_FONT, color);
     }
+
     if (xQueueReceive(ip_queue, ip_str, 0) == pdTRUE)
     {
-        lcd_print_str(LCD_WIDTH / 2, PADDING + 10, ip_str, UI_FONT, WHITE);
+        lcd_print_str(LCD_WIDTH / 2, PADDING + 15, ip_str, UI_FONT, WHITE);
+    }
+    if (xQueueReceive(wifi_mode_queue, &wifi_mode, 0) == pdTRUE)
+    {
+        if (wifi_mode == WIFI_MODE_AP)
+        {
+            snprintf(wifi_str, sizeof(wifi_str), "WIFI AP ");
+            color = GREEN;
+        }
+        else if (wifi_mode == WIFI_MODE_STA)
+        {
+            snprintf(wifi_str, sizeof(wifi_str), "WIFI STA");
+            color = GREEN;
+        }
+        else
+        {
+            snprintf(wifi_str, sizeof(wifi_str), "WIFI OFF");
+            color = RED;
+        }
+        lcd_print_str(PADDING + 7 * UI_LETTER_WIDTH, PADDING, wifi_str, UI_FONT, color);
     }
 }
 

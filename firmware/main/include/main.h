@@ -93,6 +93,13 @@ struct Config
     // uint8_t wifi_channel = WIFI_CHANNEL_DEFAULT;
     // uint8_t wifi_max_connection = WIFI_MAX_CONN_DEFAULT;
 };
+
+enum Wifi_reset
+{
+    WIFI_RESET_CONFIG,
+    WIFI_RESET_DEFAULTS,
+};
+
 #endif
 
 /**
@@ -134,6 +141,7 @@ extern QueueHandle_t laptime_status_queue_lcd;
 extern QueueHandle_t laptime_status_queue_wifi;
 
 extern QueueHandle_t ip_queue;
+extern QueueHandle_t wifi_mode_queue;
 
 #ifdef __cplusplus
 

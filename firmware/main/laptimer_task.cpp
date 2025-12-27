@@ -21,7 +21,7 @@ Laptime laptime_current;
 
 /**
  * @brief Global variable used to store saved laptime after current laptime is saved in ISR,
- * laptime is then saved on lists and sent to other tasks
+laptime is then saved on lists and sent to other tasks
  */
 Laptime laptime_saved;
 
@@ -187,14 +187,14 @@ bool driver_select()
 
 void wifi_reset_check()
 {
-    bool wifi_reset_flag = false;
+    Wifi_reset wifi_reset_flag = WIFI_RESET_DEFAULTS;
     switch (wifi_press.state = button_hold(gpio_get_level(WIFI_PIN), wifi_press))
     {
     case BTN_HOLD_ACTION:
-        wifi_reset_flag = true;
+        wifi_reset_flag = WIFI_RESET_DEFAULTS;
         break;
     case BTN_RELEASED_ACTION:
-        wifi_reset_flag = false;
+        wifi_reset_flag = WIFI_RESET_CONFIG;
         break;
     default:
         return;
@@ -202,7 +202,7 @@ void wifi_reset_check()
     xQueueSend(wifi_reset_queue, &wifi_reset_flag, 0);
 }
 
-void button_isr(Button_press *button_press)
+void IRAM_ATTR button_isr(Button_press *button_press)
 {
     TickType_t tick = xTaskGetTickCountFromISR();
     if ((tick - button_press->time) > pdMS_TO_TICKS(100) && button_press->state == BTN_STANDBY)
@@ -217,7 +217,7 @@ void button_isr(Button_press *button_press)
  * two_gate_mode == false - first gate saves laptime and starts new lap on every negative edge
  * two_gate_mode == true - first gate only starts new lap on negative edge if stop_flag is true
  */
-void gate1_pin_isr()
+void IRAM_ATTR gate1_pin_isr()
 {
     if (config_main.two_gate_mode == false)
     {
@@ -252,7 +252,7 @@ void gate1_pin_isr()
  * two_gate_mode == false - second gate is not active
  * two_gate_mode == true - second gates saves laptime on negative edge if stop_flag is false
  */
-void gate2_pin_isr()
+void IRAM_ATTR gate2_pin_isr()
 {
     if (config_main.two_gate_mode == false)
         return;
@@ -273,7 +273,7 @@ void gate2_pin_isr()
 /**
  * @brief ISR for reset button, resets current laptime and activates stop_flag
  */
-void reset_pin_isr()
+void IRAM_ATTR reset_pin_isr()
 {
     if (stop_flag == false)
     {
@@ -282,22 +282,22 @@ void reset_pin_isr()
     }
 }
 
-void doo_pin_isr()
+void IRAM_ATTR doo_pin_isr()
 {
     button_isr(&doo_press);
 }
 
-void oc_pin_isr()
+void IRAM_ATTR oc_pin_isr()
 {
     button_isr(&oc_press);
 }
 
-void driver_select_pin_isr()
+void IRAM_ATTR driver_select_pin_isr()
 {
     button_isr(&driver_select_press);
 }
 
-void wifi_pin_isr()
+void IRAM_ATTR wifi_pin_isr()
 {
     button_isr(&wifi_press);
 }
@@ -375,15 +375,17 @@ void laptimer_task(void *args)
 
         if (laptime_saved.time > 0 && xSemaphoreTake(laptime_lists_mutex, 0) == pdTRUE)
         {
-            ESP_ERROR_CHECK(system_get_time(laptime_saved.timeofday, laptime_saved.date));
-            ESP_LOGI(TAG, "TIMEOFDAY: %s, DATE: %s", laptime_saved.timeofday, laptime_saved.date);
-            laptime_save_uart(laptime_saved);
-            laptime_save_top(laptime_saved, laptime_list_top);
-            laptime_save_last(laptime_saved, laptime_list_last);
-            laptime_save_driver(laptime_saved, laptime_list_driver);
-            xQueueSend(laptime_saved_queue_sd, &laptime_saved, 0);
-            xSemaphoreGive(laptime_lists_mutex);
+            Laptime laptime_saved_local = laptime_saved;
             laptime_saved.reset();
+
+            ESP_ERROR_CHECK(system_get_time(laptime_saved_local.timeofday, laptime_saved_local.date));
+            ESP_LOGI(TAG, "TIMEOFDAY: %s, DATE: %s", laptime_saved_local.timeofday, laptime_saved_local.date);
+            laptime_save_uart(laptime_saved_local);
+            laptime_save_top(laptime_saved_local, laptime_list_top);
+            laptime_save_last(laptime_saved_local, laptime_list_last);
+            laptime_save_driver(laptime_saved_local, laptime_list_driver);
+            xQueueSend(laptime_saved_queue_sd, &laptime_saved_local, 0);
+            xSemaphoreGive(laptime_lists_mutex);
         }
 
         if (status_update_flag == true)

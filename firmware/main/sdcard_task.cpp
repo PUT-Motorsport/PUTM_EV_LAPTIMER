@@ -13,6 +13,9 @@
 
 #include <cJSON.h>
 
+const char *config_file_name = "config.txt";
+const char *laptimes_file_name = "laptimer.csv";
+
 static const char *TAG = "SDCARD_TASK";
 
 char session_str[14] = {"#00"};
@@ -29,7 +32,7 @@ esp_err_t sdcard_get_config(sdmmc_card_t **card_pointer)
 
     Config config_temp;
 
-    if (sdcard_read("config.txt", sd_buffer, sizeof(sd_buffer), &br) ==
+    if (sdcard_read(config_file_name, sd_buffer, sizeof(sd_buffer), &br) ==
         ESP_OK)
     {
         sd_buffer[br] = '\0';
@@ -128,11 +131,11 @@ esp_err_t sdcard_init(sdmmc_card_t **card_pointer)
     char sd_buffer[SD_BUFFER_SIZE] = "\0";
 
     /// Try to read laptimer file, if it's missing create one with session number 0
-    if (sdcard_read("laptimer.csv", sd_buffer, sizeof(sd_buffer), &br) !=
+    if (sdcard_read(laptimes_file_name, sd_buffer, sizeof(sd_buffer), &br) !=
         ESP_OK)
     {
         ESP_LOGI(TAG, "CREATING NEW FILE");
-        ret = sdcard_write("laptimer.csv", "SESSION, LAP, TIME, PENALTY, OC, DOO, DRIVER, DATE, HOUR\n");
+        ret = sdcard_write(laptimes_file_name, "SESSION, LAP, TIME, PENALTY, OC, DOO, DRIVER, DATE, HOUR\n");
         if (ret)
         {
             return ret;
@@ -150,7 +153,7 @@ esp_err_t sdcard_init(sdmmc_card_t **card_pointer)
         }
     }
     sdcard_get_config(card_pointer);
-    sprintf(session_str, "#%d,", session_num);
+    sprintf(session_str, "#%d", session_num);
     ESP_LOGI(TAG, "INIT OK");
     return ret;
 }
@@ -173,56 +176,22 @@ esp_err_t sdcard_deinit(sdmmc_card_t **card_pointer)
 esp_err_t sdcard_save_laptime(Laptime laptime_saved)
 {
     esp_err_t ret = ESP_OK;
+    char laptime_record_str[LAPTIME_STR_LENGTH + PENALTY_TIME_STR_LENGTH + 2 * PENALTY_COUNT_STR_LENGTH + DRIVER_TAG_LENGTH + DATE_STR_LENGTH + TIMEOFDAY_STR_LENGTH] = {0};
 
     char laptime_saved_str[LAPTIME_STR_LENGTH] = {0};
     char laptime_penalty_str[PENALTY_TIME_STR_LENGTH] = {0};
-    char laptime_oc_str[PENALTY_COUNT_STR_LENGTH] = {0};
-    char laptime_doo_str[PENALTY_COUNT_STR_LENGTH] = {0};
-    char laptime_driver_str[DRIVER_TAG_LENGTH] = {0};
 
     laptime_saved.convert_string_full(laptime_saved_str, sizeof(laptime_saved_str));
     laptime_saved.convert_string_penalty(laptime_penalty_str, sizeof(laptime_penalty_str));
-    snprintf(laptime_oc_str, sizeof(laptime_oc_str), "%3u,", laptime_saved.oc_count);
-    snprintf(laptime_doo_str, sizeof(laptime_doo_str), "%3u,", laptime_saved.doo_count);
-    snprintf(laptime_driver_str, sizeof(laptime_driver_str), "%s", driver_list_local.list[laptime_saved.driver_id]);
+    snprintf(laptime_record_str, sizeof(laptime_record_str), "%s,%s,%s,%3u,%3u,%s,%s,%s\n", session_str, laptime_saved_str, laptime_penalty_str, laptime_saved.oc_count, laptime_saved.doo_count, driver_list_local.list[laptime_saved.driver_id], laptime_saved.date, laptime_saved.timeofday);
 
     if (sd_active_flag == false)
         return ESP_FAIL;
 
-    ret = sdcard_append("laptimer.csv", session_str);
+    ret = sdcard_append(laptimes_file_name, laptime_record_str);
     if (ret)
         return ret;
 
-    ret = sdcard_append("laptimer.csv", laptime_saved_str);
-    if (ret)
-        return ret;
-    ret = sdcard_append("laptimer.csv", ",");
-    if (ret)
-        return ret;
-    ret = sdcard_append("laptimer.csv", laptime_penalty_str);
-    if (ret)
-        return ret;
-    ret = sdcard_append("laptimer.csv", ",");
-    if (ret)
-        return ret;
-    ret = sdcard_append("laptimer.csv", laptime_oc_str);
-    if (ret)
-        return ret;
-    ret = sdcard_append("laptimer.csv", laptime_doo_str);
-    if (ret)
-        return ret;
-    ret = sdcard_append("laptimer.csv", laptime_driver_str);
-    if (ret)
-        return ret;
-    ret = sdcard_append("laptimer.csv", laptime_saved.date);
-    if (ret)
-        return ret;
-    ret = sdcard_append("laptimer.csv", laptime_saved.timeofday);
-    if (ret)
-        return ret;
-    ret = sdcard_append("laptimer.csv", "\n");
-    if (ret)
-        return ret;
     if (ret == ESP_OK)
         ESP_LOGI(TAG, "LAPTIME SAVE OK");
     else
@@ -238,7 +207,7 @@ esp_err_t sdcard_check_integrity(char laptime_check_str[LAPTIME_STR_LENGTH])
     esp_err_t ret = ESP_OK;
     unsigned int br;
     char sd_buffer[SD_BUFFER_SIZE] = "\0";
-    ret = sdcard_read("laptimer.csv", sd_buffer, sizeof(sd_buffer), &br);
+    ret = sdcard_read(laptimes_file_name, sd_buffer, sizeof(sd_buffer), &br);
     if (ret)
     {
         return ret;

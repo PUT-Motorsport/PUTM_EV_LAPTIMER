@@ -10,7 +10,7 @@
 
 SemaphoreHandle_t config_mutex = xSemaphoreCreateMutex();
 
-QueueHandle_t wifi_reset_queue = xQueueCreate(1, sizeof(bool));
+QueueHandle_t wifi_reset_queue = xQueueCreate(1, sizeof(Wifi_reset));
 
 QueueHandle_t laptime_saved_queue_sd = xQueueCreate(LAPTIME_LIST_SIZE_LOCAL, sizeof(Laptime));
 
@@ -23,6 +23,7 @@ QueueHandle_t laptime_status_queue_lcd = xQueueCreate(1, sizeof(bool[3]));
 QueueHandle_t laptime_status_queue_wifi = xQueueCreate(1, sizeof(bool[3]));
 
 QueueHandle_t ip_queue = xQueueCreate(1, sizeof(char[52]));
+QueueHandle_t wifi_mode_queue = xQueueCreate(1, sizeof(wifi_mode_t));
 
 Config config_main;
 

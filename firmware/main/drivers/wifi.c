@@ -217,3 +217,10 @@ esp_err_t wifi_get_ip(char ip_string[52])
     snprintf(ip_string, 52, "%3d.%3d.%3d.%3d", IP2STR(&ip_info.ip));
     return ESP_OK;
 }
+
+esp_err_t wifi_get_mode(wifi_mode_t *wifi_mode)
+{
+    if (esp_wifi_get_mode(wifi_mode) != ESP_OK)
+        return ESP_FAIL;
+    return ESP_OK;
+}
