@@ -9,7 +9,7 @@ esp_err_t gpio_init(void)
         .mode = GPIO_MODE_INPUT,
         .pull_up_en = false,
         .pull_down_en = true,
-        .intr_type = GPIO_INTR_NEGEDGE,
+        .intr_type = GPIO_INTR_POSEDGE,
     };
 
     gpio_config_t gate2_btn_config = {
@@ -17,7 +17,7 @@ esp_err_t gpio_init(void)
         .mode = GPIO_MODE_INPUT,
         .pull_up_en = false,
         .pull_down_en = true,
-        .intr_type = GPIO_INTR_NEGEDGE,
+        .intr_type = GPIO_INTR_POSEDGE,
     };
 
     gpio_config_t stop_btn_config = {

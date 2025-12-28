@@ -471,8 +471,8 @@ void wifi_task(void *args)
 {
     char wifi_ssid[WIFI_SSID_STR_LENGTH] = WIFI_SSID_DEFAULT;
     char wifi_password[WIFI_PASSWORD_STR_LENGTH] = WIFI_PASSWORD_DEFAULT;
-    wifi_mode_t wifi_mode_local = WIFI_MODE_AP;
-    static char ip_str[52] = {0};
+    wifi_mode_t wifi_mode_local = WIFI_MODE_NULL;
+    char ip_str[52] = {0};
 
     if (xSemaphoreTake(config_mutex, portMAX_DELAY) == pdTRUE)
     {
@@ -481,6 +481,7 @@ void wifi_task(void *args)
         wifi_mode_local = config_main.wifi_mode;
         xSemaphoreGive(config_mutex);
     }
+
     if (wifi_init(wifi_mode_local, wifi_ssid, wifi_password) == ESP_OK)
         start_webserver();
     xQueueSend(wifi_mode_queue, &wifi_mode_local, 0);
