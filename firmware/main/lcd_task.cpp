@@ -42,8 +42,6 @@
 #define LAPTIME_LISTS_LETTER_WIDTH 10
 #define UI_LETTER_WIDTH 9
 
-static Driver_list driver_list_local;
-
 const uint16_t driver_color_list[DRIVER_MAX_COUNT] = {BLACK, BLUE, RED, YELLOW, GREEN, MAGENTA, BROWN, CYAN, PURPLE, OLIVE};
 
 hagl_backend_t display_struct;
@@ -168,7 +166,7 @@ void print_status()
 }
 
 /// @brief Prints current laptime received from queue on LCD
-void print_current_laptime()
+void print_current_laptime(Driver_list *driver_list)
 {
     static Laptime laptime_current;
 
@@ -188,7 +186,7 @@ void print_current_laptime()
         lcd_print_str(LAPTIME_CURRENT_POS_X + LAPTIME_CURRENT_LETTER_WIDTH * 13, LAPTIME_CURRENT_POS_Y, laptime_penalty_str, UI_FONT, YELLOW);
         lcd_print_str(LAPTIME_LISTS_POS_X + UI_LETTER_WIDTH * 4, LAPTIME_CURRENT_POS_Y + 25, laptime_oc_str, UI_FONT, YELLOW);
         lcd_print_str(LAPTIME_LISTS_POS_X + UI_LETTER_WIDTH * 13, LAPTIME_CURRENT_POS_Y + 25, laptime_doo_str, UI_FONT, YELLOW);
-        lcd_print_str(LAPTIME_LISTS_POS_X + UI_LETTER_WIDTH * 26, LAPTIME_CURRENT_POS_Y + 25, driver_list_local.list[laptime_current.driver_id], UI_FONT, WHITE);
+        lcd_print_str(LAPTIME_LISTS_POS_X + UI_LETTER_WIDTH * 26, LAPTIME_CURRENT_POS_Y + 25, driver_list->list[laptime_current.driver_id], UI_FONT, WHITE);
         lcd_print_tag(LAPTIME_LISTS_POS_X + UI_LETTER_WIDTH * 30, LAPTIME_CURRENT_POS_Y + 25, 25, 10, driver_color_list[laptime_current.driver_id]);
     }
 }
@@ -225,6 +223,7 @@ void print_laptime_lists()
  */
 void lcd_task(void *args)
 {
+    static Driver_list driver_list_local;
 
     lcd_init();
     lcd_clear();
@@ -240,7 +239,7 @@ void lcd_task(void *args)
             xSemaphoreGive(config_mutex);
         }
 
-        print_current_laptime();
+        print_current_laptime(&driver_list_local);
         print_laptime_lists();
         print_status();
         vTaskDelay(20 / portTICK_PERIOD_MS);

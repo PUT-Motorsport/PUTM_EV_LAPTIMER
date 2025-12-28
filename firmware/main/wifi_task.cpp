@@ -186,11 +186,11 @@ static esp_err_t laptimes_csv_get_handler(httpd_req_t *req)
     httpd_resp_set_hdr(req, "Content-Disposition", "attachment; filename=\"laptimes.csv\"");
 
     // Header
-    httpd_resp_sendstr_chunk(req, "Number,Laptime [mm:ss:ms], Driver, Penalty Time [mm:ss],OC,DOO\n");
+    httpd_resp_sendstr_chunk(req, "Number,Laptime [mm:ss:ms], Driver, Penalty Time [mm:ss],OC,DOO,Date,Hour\n");
 
     if (xSemaphoreTake(laptime_lists_mutex, portMAX_DELAY))
     {
-        char line[128];
+        char line[256];
         char time_str[LAPTIME_STR_LENGTH];
         char pen_str[PENALTY_TIME_STR_LENGTH];
 
@@ -203,12 +203,14 @@ static esp_err_t laptimes_csv_get_handler(httpd_req_t *req)
             if (drv_id < 0 || drv_id >= DRIVER_MAX_COUNT)
                 drv_id = 0;
 
-            snprintf(line, sizeof(line), "%s,%s,%s,%u,%u\n",
+            snprintf(line, sizeof(line), "%s,%s,%s,%u,%u,%s,%s\n",
                      time_str,
                      driver_list_local.list[drv_id],
                      pen_str,
                      laptime_list_last[i].oc_count,
-                     laptime_list_last[i].doo_count);
+                     laptime_list_last[i].doo_count,
+                     laptime_list_last[i].date,
+                     laptime_list_last[i].timeofday);
             httpd_resp_sendstr_chunk(req, line);
         }
         xSemaphoreGive(laptime_lists_mutex);
@@ -233,7 +235,7 @@ static esp_err_t drivers_csv_get_handler(httpd_req_t *req)
 
     if (xSemaphoreTake(laptime_lists_mutex, portMAX_DELAY))
     {
-        char line[128];
+        char line[256];
         char time_str[LAPTIME_STR_LENGTH];
         char pen_str[PENALTY_TIME_STR_LENGTH];
 

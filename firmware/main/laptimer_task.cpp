@@ -10,8 +10,6 @@
 
 static const char *TAG = "LAPTIMER_TASK";
 
-static Driver_list driver_list_local;
-
 volatile bool stop_flag = true;
 
 /**
@@ -165,18 +163,18 @@ void penalty_check(Laptime *laptime)
     return;
 }
 
-bool driver_select()
+bool driver_select(Driver_list *driver_list)
 {
     switch (driver_select_press.state = button_hold(gpio_get_level(DRIVER_SELECT_PIN), driver_select_press))
     {
     case BTN_HOLD_ACTION:
         laptime_current.driver_id--;
         if (laptime_current.driver_id < 1)
-            laptime_current.driver_id = driver_list_local.driver_count;
+            laptime_current.driver_id = driver_list->driver_count;
         return true;
     case BTN_RELEASED_ACTION:
         laptime_current.driver_id++;
-        if (laptime_current.driver_id > driver_list_local.driver_count)
+        if (laptime_current.driver_id > driver_list->driver_count)
             laptime_current.driver_id = 1;
         return true;
     default:
@@ -336,6 +334,7 @@ void laptimer_task(void *args)
     bool stop_flag_old = stop_flag;
     bool sd_active_flag_old = sd_active_flag;
     bool status_update_flag = true;
+    Driver_list driver_list_local;
 
     xQueueSend(laptime_current_queue_lcd, &laptime_current, 0);
     xQueueSend(laptime_current_queue_wifi, &laptime_current, 0);
@@ -354,7 +353,7 @@ void laptimer_task(void *args)
             }
         }
 
-        driver_select();
+        driver_select(&driver_list_local);
         wifi_reset_check();
 
         if (stop_flag == false)

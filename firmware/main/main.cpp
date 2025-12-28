@@ -73,7 +73,7 @@ void Laptime::convert_string_time(char laptime_str[LAPTIME_STR_LENGTH], size_t s
 
     if (this->time == 0)
     {
-        snprintf(laptime_str, size, LAPTIME_STR_DEFAULT);
+        snprintf(laptime_str, size, "--:--.--");
         return;
     }
 
@@ -110,6 +110,12 @@ extern "C" void app_main(void)
     ESP_ERROR_CHECK(gpio_init());
     ESP_ERROR_CHECK(timer_init());
     ESP_ERROR_CHECK(isr_init());
+
+    if (xSemaphoreTake(config_mutex, portMAX_DELAY))
+    {
+        ESP_ERROR_CHECK(system_set_time(config_main.time_set, config_main.date_set));
+        xSemaphoreGive(config_mutex);
+    }
 
     xTaskCreatePinnedToCore(sdcard_task, "SD_TASK", 4096, NULL, 0, NULL, 0);
     xTaskCreatePinnedToCore(laptimer_task, "LAPTIMER_TASK", 8192, NULL, 2, NULL, 1);

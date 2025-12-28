@@ -21,8 +21,6 @@ static const char *TAG = "SDCARD_TASK";
 char session_str[14] = {"#00"};
 int session_num = 0;
 
-static Driver_list driver_list_local;
-
 bool sd_detect_flag = false;
 
 esp_err_t sdcard_get_config(sdmmc_card_t **card_pointer)
@@ -173,7 +171,7 @@ esp_err_t sdcard_deinit(sdmmc_card_t **card_pointer)
  * @param laptime_saved_str
  * @return Error check
  */
-esp_err_t sdcard_save_laptime(Laptime laptime_saved)
+esp_err_t sdcard_save_laptime(Laptime laptime_saved, Driver_list *driver_list)
 {
     esp_err_t ret = ESP_OK;
     char laptime_record_str[LAPTIME_STR_LENGTH + PENALTY_TIME_STR_LENGTH + 2 * PENALTY_COUNT_STR_LENGTH + DRIVER_TAG_LENGTH + DATE_STR_LENGTH + TIMEOFDAY_STR_LENGTH] = {0};
@@ -183,7 +181,10 @@ esp_err_t sdcard_save_laptime(Laptime laptime_saved)
 
     laptime_saved.convert_string_full(laptime_saved_str, sizeof(laptime_saved_str));
     laptime_saved.convert_string_penalty(laptime_penalty_str, sizeof(laptime_penalty_str));
-    snprintf(laptime_record_str, sizeof(laptime_record_str), "%s,%s,%s,%3u,%3u,%s,%s,%s\n", session_str, laptime_saved_str, laptime_penalty_str, laptime_saved.oc_count, laptime_saved.doo_count, driver_list_local.list[laptime_saved.driver_id], laptime_saved.date, laptime_saved.timeofday);
+    snprintf(laptime_record_str, sizeof(laptime_record_str), "%s,%s,%s,%3u,%3u,%s,%s,%s\n", session_str, laptime_saved_str, laptime_penalty_str,
+             laptime_saved.oc_count, laptime_saved.doo_count,
+             driver_list->list[laptime_saved.driver_id],
+             laptime_saved.date, laptime_saved.timeofday);
 
     if (sd_active_flag == false)
         return ESP_FAIL;
@@ -234,7 +235,9 @@ void sdcard_task(void *args)
 
     if ((sd_detect_flag = !gpio_get_level((gpio_num_t)SD_CD)) == true)
         sd_active_flag = !sdcard_init(&card_handle);
-    static Laptime laptime_saved;
+
+    Laptime laptime_saved;
+    Driver_list driver_list_local;
 
     for (;;)
     {
@@ -257,7 +260,7 @@ void sdcard_task(void *args)
         {
             if (xQueueReceive(laptime_saved_queue_sd, &laptime_saved, 0) == pdTRUE)
             {
-                sd_active_flag = !sdcard_save_laptime(laptime_saved);
+                sd_active_flag = !sdcard_save_laptime(laptime_saved, &driver_list_local);
                 // sdcard_check_integrity(laptime_saved_str);
             }
         }
