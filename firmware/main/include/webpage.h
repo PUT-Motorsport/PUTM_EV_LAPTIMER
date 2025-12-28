@@ -150,6 +150,14 @@ h3 { margin-top: 0; color: #ccc; border-bottom: 1px solid #555; padding-bottom: 
             <input type="password" id="cfg_pass" style="width:100%; padding:8px; background:#333; border:1px solid #555; color:#fff;">
         </div>
         <div style="margin-bottom: 10px;">
+            <label style="color:#aaa; display:block; margin-bottom:5px;">System Time</label>
+            <input type="time" step="1" id="cfg_time_set" style="width:100%; padding:8px; background:#333; border:1px solid #555; color:#fff;">
+        </div>
+        <div style="margin-bottom: 10px;">
+            <label style="color:#aaa; display:block; margin-bottom:5px;">System Date</label>
+            <input type="date" id="cfg_date_set" style="width:100%; padding:8px; background:#333; border:1px solid #555; color:#fff;">
+        </div>
+        <div style="margin-bottom: 10px;">
             <label style="color:#aaa; display:block; margin-bottom:5px;">Drivers (one per line)</label>
             <textarea id="cfg_drivers" rows="6" style="width:100%; padding:8px; background:#333; border:1px solid #555; color:#fff;"></textarea>
         </div>
@@ -179,6 +187,16 @@ function loadConfig() {
         document.getElementById('cfg_wifi_mode').checked = (d.wifi_mode === 1); // WIFI_MODE_STA is 1
         document.getElementById('cfg_ssid').value = d.wifi_ssid || "";
         document.getElementById('cfg_pass').value = d.wifi_password || "";
+        document.getElementById('cfg_time_set').value = d.time_set || "";
+        // Convert DD/MM/YYYY to YYYY-MM-DD for input type=date
+        if (d.date_set) {
+            let parts = d.date_set.split('/');
+            if(parts.length === 3) {
+                document.getElementById('cfg_date_set').value = `${parts[2]}-${parts[1]}-${parts[0]}`;
+            } else {
+                document.getElementById('cfg_date_set').value = "";
+            }
+        }
         if (d.driver_list) {
             document.getElementById('cfg_drivers').value = d.driver_list.join('\n');
         }
@@ -187,11 +205,23 @@ function loadConfig() {
 
 function saveConfig() {
     let drivers = document.getElementById('cfg_drivers').value.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+    // Convert YYYY-MM-DD to DD/MM/YYYY
+    let rawDate = document.getElementById('cfg_date_set').value;
+    let formattedDate = "";
+    if (rawDate) {
+        let parts = rawDate.split('-');
+        if(parts.length === 3) {
+            formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+    }
+
     let data = {
         two_gate_mode: document.getElementById('cfg_gates').checked,
         wifi_mode: document.getElementById('cfg_wifi_mode').checked ? 1 : 0, // 1 for STA, 0 for AP
         wifi_ssid: document.getElementById('cfg_ssid').value,
         wifi_password: document.getElementById('cfg_pass').value,
+        time_set: document.getElementById('cfg_time_set').value,
+        date_set: formattedDate,
         driver_list: drivers
     };
     fetch('/api/config', {

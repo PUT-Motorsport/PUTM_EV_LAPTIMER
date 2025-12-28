@@ -5,6 +5,7 @@
 #include "esp_http_server.h"
 #include "cJSON.h"
 #include <string.h>
+#include "timer.h"
 
 static const char *TAG = "WIFI_TASK";
 
@@ -275,6 +276,8 @@ static esp_err_t config_get_handler(httpd_req_t *req)
         cJSON_AddNumberToObject(root, "wifi_mode", config_main.wifi_mode);
         cJSON_AddStringToObject(root, "wifi_ssid", config_main.wifi_ssid);
         cJSON_AddStringToObject(root, "wifi_password", config_main.wifi_password);
+        cJSON_AddStringToObject(root, "time_set", config_main.time_set);
+        cJSON_AddStringToObject(root, "date_set", config_main.date_set);
 
         cJSON *drivers = cJSON_CreateArray();
         // Driver list starts from 1, index 0 is placeholder
@@ -352,6 +355,22 @@ static esp_err_t config_post_handler(httpd_req_t *req)
             strncpy(config_main.wifi_password, pass->valuestring, sizeof(config_main.wifi_password) - 1);
             config_main.wifi_password[sizeof(config_main.wifi_password) - 1] = '\0';
         }
+
+        cJSON *time_set_json = cJSON_GetObjectItem(root, "time_set");
+        if (time_set_json && time_set_json->valuestring)
+        {
+            strncpy(config_main.time_set, time_set_json->valuestring, sizeof(config_main.time_set) - 1);
+            config_main.time_set[sizeof(config_main.time_set) - 1] = '\0';
+        }
+
+        cJSON *date_set_json = cJSON_GetObjectItem(root, "date_set");
+        if (date_set_json && date_set_json->valuestring)
+        {
+            strncpy(config_main.date_set, date_set_json->valuestring, sizeof(config_main.date_set) - 1);
+            config_main.date_set[sizeof(config_main.date_set) - 1] = '\0';
+        }
+
+        system_set_time(config_main.time_set, config_main.date_set);
 
         cJSON *drivers = cJSON_GetObjectItem(root, "driver_list");
         if (drivers && cJSON_IsArray(drivers))
