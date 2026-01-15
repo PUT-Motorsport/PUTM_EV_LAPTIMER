@@ -20,18 +20,10 @@
 
 # Fabrication Toolkit
 /hardware/production/
-firmware/build/**
-firmware/.vscode/**
-firmware/components/hagl/.gitignore
-.vscode/**
+/firmware/build
+/firmware/.vscode
 .DS_Store
-firmware/sdkconfig.old
-firmware/components/fonts
-firmware/components/fonts
-firmware/.clangd
-firmware/sdkconfig 2.old
-firmware/sdkconfig.old
-firmware/sdkconfig.old
-firmware/TODO
-firmware/sdkconfig.old
-**/sdkconfig.old
+/firmware/.clangd
+/firmware/TODO
+/firmware/sdkconfig.old
+/firmware/managed_components/**
