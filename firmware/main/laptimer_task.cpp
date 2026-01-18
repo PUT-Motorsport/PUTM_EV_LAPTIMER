@@ -217,11 +217,11 @@ void IRAM_ATTR button_isr(Button_press *button_press)
  */
 void IRAM_ATTR gate1_pin_isr()
 {
+    laptime_current.time = timer_get_time(laptime_timer);
     if (config_main.two_gate_mode == false)
     {
         if (stop_flag == false && laptime_current.time > LAPTIME_MIN)
         {
-            laptime_current.time = timer_get_time(laptime_timer);
             laptime_saved = laptime_current;
             laptime_saved.time += laptime_current.penalty_time;
             timer_reset(laptime_timer);
@@ -252,13 +252,13 @@ void IRAM_ATTR gate1_pin_isr()
  */
 void IRAM_ATTR gate2_pin_isr()
 {
+    laptime_current.time = timer_get_time(laptime_timer);
     if (config_main.two_gate_mode == false)
         return;
     else
     {
         if (stop_flag == false && laptime_current.time > LAPTIME_MIN)
         {
-            laptime_current.time = timer_get_time(laptime_timer);
             laptime_saved = laptime_current;
             laptime_saved.time += laptime_current.penalty_time;
             stop_flag = true;
