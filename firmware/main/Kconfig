@@ -1,80 +1,92 @@
 menu "PUTM EV Laptimer"
         config GATE1_PIN
-            int "Start Gate Pin (GPIO)"
-            default 5
+            int "Gate 1 Pin (GPIO)"
+            default 14
             help
                 Input for first gate that starts new lap on negative edge
 
         config GATE2_PIN
-            int "Stop Gate Pin (GPIO)"
-            default 4
+            int "Gate 1 Pin (GPIO)"
+            default 13
             help
                 Input for second gate that stops lap on negative edge in 2 gate mode
 
         config STOP_PIN
             int "Stop Button Pin (GPIO)"
-            default 6
+            default 4
             help
                 Input for button that resets current laptime, tries to reinitialize sd card and checks status of LAP_MODE_PIN on negative edge
 
         config WIFI_PIN
             int "Wifi reset Pin (GPIO)"
-            default 16
+            default 5
             help
                 Resets wifi
 
         config DOO_PIN
             int "DOO Penalty Button Pin (GPIO)"
-            default 7
+            default 6
             help
                 Input for button that adds Down or Out time penalty to current laptime (2s for Endurance) on negative edge
 
         config OC_PIN
             int "Off-Course Penalty Button Pin (GPIO)"
-            default 15
+            default 7
             help
                 Input for button that adds Off-Course time penalty to current laptime (10s for Endurance) on negative edge
 
         config DRIVER_SELECT_PIN
             int "Driver Selection Button Pin (GPIO)"
-            default 17
+            default 15
             help
                 Input for button that switches current laptime driver on negative edge
 
+        config ADDITIONAL1_BTN
+            int "First Additional Button Pin (GPIO)"
+            default 16
+            help
+                No function
+
+        config ADDITIONAL2_BTN
+            int "Second Additional Button Pin (GPIO)"
+            default 17
+            help
+                No function
+
         config SD_SPI_CLK
             int "SD Card SPI CLK (GPIO)"
-            default 18
+            default 42
         
         config SD_SPI_MISO
             int "SD Card SPI MISO (GPIO)"
-            default 19
+            default 40
 
         config SD_SPI_MOSI
             int "SD Card SPI MOSI (GPIO)"
-            default 23
+            default 41
 
         config SD_SPI_CS
             int "SD Card SPI CS (GPIO)"
-            default 22
+            default 2
 
         config SD_CD
             int "SD Card CD (GPIO)"
-            default 9
+            default 1
 
         # config LCD_SPI_CLK
         #     int "LCD SPI CLK (GPIO)"
-        #     default 36
+        #     default 11
 
         # config LCD_SPI_MOSI
         #     int "LCD SPI MOSI (GPIO)"
-        #     default 35
+        #     default 9
 
         # config LCD_SPI_CS
         #     int "LCD SPI CS (GPIO)"
-        #     default 39
+        #     default 10
 
         # config LCD_DC
         #     int "LCD DC (GPIO)"
-        #     default 37
+        #     default 12
 
 endmenu
