@@ -232,6 +232,7 @@ void lcd_task(void *args)
 
     for (;;)
     {
+
         if (xSemaphoreTake(config_mutex, 0) == pdTRUE)
         {
             memcpy(driver_list_local.list, config_main.driver_list.list, sizeof(driver_list_local));

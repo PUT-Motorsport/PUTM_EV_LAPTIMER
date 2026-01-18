@@ -343,6 +343,7 @@ void laptimer_task(void *args)
 
     for (;;)
     {
+        // Update driver list from config
         if (driver_list_local.driver_count != config_main.driver_list.driver_count)
         {
             if (xSemaphoreTake(config_mutex, 0) == pdTRUE)
@@ -356,15 +357,18 @@ void laptimer_task(void *args)
         driver_select(&driver_list_local);
         wifi_reset_check();
 
+        // Read laptime and check penalties
         if (stop_flag == false)
         {
             laptime_current.time = timer_get_time(laptime_timer);
             penalty_check(&laptime_current);
         }
 
+        // Send laptime to lcd and wifi webpage
         xQueueSend(laptime_current_queue_lcd, &laptime_current, 0);
         xQueueSend(laptime_current_queue_wifi, &laptime_current, 0);
 
+        // Update flags
         if (stop_flag != stop_flag_old || sd_active_flag_old != sd_active_flag)
         {
             stop_flag_old = stop_flag;
@@ -372,6 +376,7 @@ void laptimer_task(void *args)
             status_update_flag = true;
         }
 
+        // Save laptime to lists and sd card, send with uart, reset laptime
         if (laptime_saved.time > 0 && xSemaphoreTake(laptime_lists_mutex, 0) == pdTRUE)
         {
             Laptime laptime_saved_local = laptime_saved;
@@ -387,6 +392,7 @@ void laptimer_task(void *args)
             xSemaphoreGive(laptime_lists_mutex);
         }
 
+        // Send status flags to other tasks
         if (status_update_flag == true)
         {
             bool status_list[3] = {config_main.two_gate_mode, stop_flag, sd_active_flag};
