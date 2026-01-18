@@ -3,6 +3,7 @@
 #include "driver/gptimer_types.h"
 #include "esp_err.h"
 #include "main.h"
+#include "RV3028C7.h"
 
 #ifdef __cplusplus
 extern "C"
