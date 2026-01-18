@@ -6381,16 +6381,6 @@
 		)
 		(uuid "0334ba72-b89b-4024-8cc8-4229d25395db")
 	)
-	(label "IO40_SD_SPI_MOSI"
-		(at 264.16 120.65 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "0454711b-af6a-4195-bc11-5e5a0029dfc6")
-	)
 	(label "IO15_PIN"
 		(at 123.19 63.5 0)
 		(effects
@@ -6443,7 +6433,7 @@
 		)
 		(uuid "0953a808-ba87-4f9e-8843-62ea88f7f6a8")
 	)
-	(label "IO39_SD_SPI_MISO"
+	(label "IO40_SD_SPI_MISO"
 		(at 170.18 142.24 0)
 		(effects
 			(font
@@ -6473,17 +6463,7 @@
 		)
 		(uuid "1179a93a-26d2-4dba-bdde-d9019f8a4894")
 	)
-	(label "IO48_RTC_I2C_SCL"
-		(at 264.16 140.97 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "1180bcb3-e2a2-461d-9b8d-303468072490")
-	)
-	(label "IO14_GATE1_PIN"
+	(label "IO14_GATE1"
 		(at 191.77 66.04 0)
 		(effects
 			(font
@@ -6502,6 +6482,16 @@
 			(justify left bottom)
 		)
 		(uuid "16ad14dd-39b4-49fd-88d2-edbeb8c2a4f5")
+	)
+	(label "IO40_SD_SPI_MISO"
+		(at 264.16 120.65 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "189a5657-65f1-450a-8034-6b6df61697b3")
 	)
 	(label "IO7_PIN"
 		(at 123.19 31.75 0)
@@ -6522,6 +6512,16 @@
 			(justify left bottom)
 		)
 		(uuid "21f086c3-be74-442c-85c8-01d000789706")
+	)
+	(label "IO2_SD_SPI_CS"
+		(at 264.16 113.03 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "29d5dd20-91c6-476c-bbaf-e4097a791df8")
 	)
 	(label "IO4_PIN"
 		(at 82.55 63.5 0)
@@ -6607,7 +6607,7 @@
 		)
 		(uuid "3dd0e411-571b-4dc6-aa2a-780a9c417804")
 	)
-	(label "IO13_GATE2_PIN"
+	(label "IO13_GATE2"
 		(at 231.14 77.47 180)
 		(effects
 			(font
@@ -6617,17 +6617,7 @@
 		)
 		(uuid "4022364d-ac8e-4fb4-8d3d-3627eb891d0a")
 	)
-	(label "IO39_SD_SPI_MISO"
-		(at 264.16 123.19 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "4231dbf9-5565-4897-b2a5-aedf656f85ec")
-	)
-	(label "RTC_NINT"
+	(label "IO39_RTC_NINT"
 		(at 87.63 177.8 0)
 		(effects
 			(font
@@ -6637,18 +6627,7 @@
 		)
 		(uuid "46d5cec9-39f4-4b3c-b514-0d8b30f3780a")
 	)
-	(label "IO21_PIN"
-		(at 264.16 74.93 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-				(color 194 194 194 1)
-			)
-			(justify left bottom)
-		)
-		(uuid "471afdc4-3e14-4a50-92ce-bd00235ce5e5")
-	)
-	(label "IO2_SD_CD"
+	(label "IO1_SD_CD"
 		(at 170.18 157.48 0)
 		(effects
 			(font
@@ -6691,6 +6670,16 @@
 		)
 		(uuid "4c91d1de-9354-4ca0-ba1a-8175ef429adf")
 	)
+	(label "IO21_RTC_I2C_SCL"
+		(at 264.16 74.93 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "4f779c13-4b9f-4874-a16e-0209909b3d99")
+	)
 	(label "ADD1_BTN"
 		(at 107.95 95.25 180)
 		(effects
@@ -6701,17 +6690,7 @@
 		)
 		(uuid "5093c2a9-ee6e-49fa-b007-5da411337a36")
 	)
-	(label "IO42_SD_SPI_CS"
-		(at 264.16 115.57 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "53718278-1b80-454b-b6c3-8adee5a5f696")
-	)
-	(label "IO41_SD_SPI_CLK"
+	(label "IO42_SD_SPI_CLK"
 		(at 170.18 147.32 0)
 		(effects
 			(font
@@ -6721,18 +6700,7 @@
 		)
 		(uuid "540bd141-5d3b-4eeb-acaa-cd0dd6871ec7")
 	)
-	(label "IO1_PIN"
-		(at 264.16 39.37 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-				(color 194 194 194 1)
-			)
-			(justify left bottom)
-		)
-		(uuid "54770dc1-81ba-444b-a654-279dfc4a006e")
-	)
-	(label "IO40_SD_SPI_MOSI"
+	(label "IO41_SD_SPI_MOSI"
 		(at 170.18 144.78 0)
 		(effects
 			(font
@@ -6742,15 +6710,25 @@
 		)
 		(uuid "5936e7d3-96bb-41ad-b60f-194035069280")
 	)
-	(label "IO48_RTC_I2C_SCL"
-		(at 264.16 69.85 0)
+	(label "IO47_RTC_I2C_SDA"
+		(at 264.16 143.51 0)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left bottom)
 		)
-		(uuid "5c45631d-7224-4ecd-8963-057afd7350d5")
+		(uuid "5d80154b-6a79-4102-bb9a-e6c9e26ebe53")
+	)
+	(label "IO39_RTC_NINT"
+		(at 264.16 123.19 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "5e5f01cb-c59d-454c-a19f-946dfdbe0325")
 	)
 	(label "IO7_PIN"
 		(at 231.14 118.11 180)
@@ -6762,15 +6740,15 @@
 		)
 		(uuid "5fcd86ca-e41e-49bc-b166-32310670c8c8")
 	)
-	(label "IO42_SD_SPI_CS"
-		(at 264.16 44.45 0)
+	(label "IO48_RTC_CLKOUT"
+		(at 264.16 140.97 0)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left bottom)
 		)
-		(uuid "63a8136c-a8b5-4cc3-a667-490a739e3083")
+		(uuid "643cf129-ae0f-498a-ae78-d1f50b3a0cc8")
 	)
 	(label "IO6_PIN"
 		(at 82.55 127 0)
@@ -6791,26 +6769,6 @@
 			(justify right bottom)
 		)
 		(uuid "694ef653-5220-43ee-a187-27f228905725")
-	)
-	(label "IO2_SD_CD"
-		(at 264.16 113.03 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "6a930efe-e96e-464c-b6cb-681734dda1c4")
-	)
-	(label "IO47_RTC_I2C_SDA"
-		(at 264.16 72.39 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "6deba62d-fdb4-473e-84be-75691519e547")
 	)
 	(label "ADD1_BTN"
 		(at 50.8 52.07 0)
@@ -6885,6 +6843,16 @@
 		)
 		(uuid "7fdfe354-a181-4672-bc51-846b69d7c5b5")
 	)
+	(label "IO21_RTC_I2C_SCL"
+		(at 264.16 146.05 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "82aa7f81-1e38-41d6-8d5f-1c13dee26caa")
+	)
 	(label "IO15_PIN"
 		(at 231.14 49.53 180)
 		(effects
@@ -6906,27 +6874,6 @@
 		)
 		(uuid "86651d90-171e-41f5-a20b-5c7bd1ddd901")
 	)
-	(label "IO41_SD_SPI_CLK"
-		(at 264.16 118.11 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "86cebdd6-c4ce-4e96-9a0d-1c29f37d24da")
-	)
-	(label "IO21_PIN"
-		(at 264.16 146.05 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-				(color 194 194 194 1)
-			)
-			(justify left bottom)
-		)
-		(uuid "89a991f7-42cb-4c38-9aa7-8f249819624a")
-	)
 	(label "RST_PIN"
 		(at 231.14 36.83 180)
 		(effects
@@ -6936,6 +6883,16 @@
 			(justify right bottom)
 		)
 		(uuid "8aa8e541-ac2c-4d6a-9754-823f24e6948f")
+	)
+	(label "IO39_RTC_NINT"
+		(at 264.16 52.07 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "8bc50f27-39cf-4045-a4b8-96ec1a68e263")
 	)
 	(label "IO9_LCD_SPI_MOSI"
 		(at 231.14 138.43 180)
@@ -6957,6 +6914,16 @@
 		)
 		(uuid "94cba4a2-7eb0-46da-84a5-356b71130939")
 	)
+	(label "IO41_SD_SPI_MOSI"
+		(at 264.16 118.11 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "9aa72c56-0bee-4d07-bdd8-21e7891058e0")
+	)
 	(label "OC_BTN"
 		(at 107.95 31.75 180)
 		(effects
@@ -6967,7 +6934,7 @@
 		)
 		(uuid "9fb0a10a-a26e-40df-abb1-34aa4373718b")
 	)
-	(label "IO48_RTC_I2C_SCL"
+	(label "IO21_RTC_I2C_SCL"
 		(at 87.63 165.1 0)
 		(effects
 			(font
@@ -7038,6 +7005,16 @@
 		)
 		(uuid "aa40389d-f2ac-4f81-bbfa-0cf1add9806f")
 	)
+	(label "IO42_SD_SPI_CLK"
+		(at 264.16 44.45 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "ab0231a9-9155-4e90-b836-20451c9bc7cd")
+	)
 	(label "IO8_PIN"
 		(at 231.14 130.81 180)
 		(effects
@@ -7070,7 +7047,17 @@
 		)
 		(uuid "b107a1c8-3627-48bd-afa7-ba1e85f5bc01")
 	)
-	(label "IO13_GATE2_PIN"
+	(label "IO42_SD_SPI_CLK"
+		(at 264.16 115.57 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "b246281f-63d2-4873-9bc8-25895694a1cc")
+	)
+	(label "IO13_GATE2"
 		(at 191.77 107.95 0)
 		(effects
 			(font
@@ -7079,6 +7066,26 @@
 			(justify left bottom)
 		)
 		(uuid "b3216cf5-271c-45ee-86ef-1fa9dbd0f141")
+	)
+	(label "IO2_SD_SPI_CS"
+		(at 264.16 41.91 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "b5737705-c26a-4b1f-8ba1-0c4bdee75039")
+	)
+	(label "IO48_RTC_CLKOUT"
+		(at 264.16 69.85 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "ba8b3899-46de-4388-91ba-20fe25ace25f")
 	)
 	(label "WIFI_BTN"
 		(at 50.8 41.91 0)
@@ -7110,7 +7117,7 @@
 		)
 		(uuid "bf625928-a519-4ec5-b76c-310006495c48")
 	)
-	(label "IO14_GATE1_PIN"
+	(label "IO14_GATE1"
 		(at 231.14 80.01 180)
 		(effects
 			(font
@@ -7140,26 +7147,6 @@
 		)
 		(uuid "c2a4f26e-c8e6-4eb2-b3c1-6770de7f0a1c")
 	)
-	(label "IO2_SD_CD"
-		(at 264.16 41.91 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "c3bdd030-f7fd-4848-818f-752b9d58199b")
-	)
-	(label "IO39_SD_SPI_MISO"
-		(at 264.16 52.07 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "c5ad9b69-e192-4765-ba30-e156edc9b3d7")
-	)
 	(label "IO10_LCD_SPI_CS"
 		(at 180.34 38.1 0)
 		(effects
@@ -7180,7 +7167,7 @@
 		)
 		(uuid "c6dbcfc8-ccfa-4ce4-b08b-1dac79e51cfa")
 	)
-	(label "IO42_SD_SPI_CS"
+	(label "IO2_SD_SPI_CS"
 		(at 170.18 149.86 0)
 		(effects
 			(font
@@ -7201,16 +7188,6 @@
 		)
 		(uuid "c9a7bd52-536e-456c-bc24-ab0ce9a3f4ea")
 	)
-	(label "IO41_SD_SPI_CLK"
-		(at 264.16 46.99 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "ca15abff-50d0-406a-891f-41432b5e5b1a")
-	)
 	(label "IO4_PIN"
 		(at 231.14 39.37 180)
 		(effects
@@ -7221,7 +7198,7 @@
 		)
 		(uuid "ca227f3f-e528-4729-ade1-e7baed54a56d")
 	)
-	(label "RTC_CLKOUT"
+	(label "IO48_RTC_CLKOUT"
 		(at 87.63 170.18 0)
 		(effects
 			(font
@@ -7368,6 +7345,16 @@
 		)
 		(uuid "e50c05c2-ac1f-4fce-9c7d-04557b5ed8b2")
 	)
+	(label "IO1_SD_CD"
+		(at 264.16 110.49 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "e5cf7e7c-6ac3-4528-adbb-a03420631cf8")
+	)
 	(label "IO10_LCD_SPI_CS"
 		(at 231.14 69.85 180)
 		(effects
@@ -7388,26 +7375,15 @@
 		)
 		(uuid "e731a820-103d-4b91-9fdf-2c43c5f8cf47")
 	)
-	(label "IO40_SD_SPI_MOSI"
-		(at 264.16 49.53 0)
+	(label "IO47_RTC_I2C_SDA"
+		(at 264.16 72.39 0)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left bottom)
 		)
-		(uuid "e9559a24-dd1a-43e6-9731-b7374313176d")
-	)
-	(label "IO1_PIN"
-		(at 264.16 110.49 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-				(color 194 194 194 1)
-			)
-			(justify left bottom)
-		)
-		(uuid "ea6239e9-c246-4eae-b5d3-e871a8cc5919")
+		(uuid "e972a655-7d99-490a-817e-956bacef15cf")
 	)
 	(label "IO38_PIN"
 		(at 264.16 54.61 0)
@@ -7450,6 +7426,26 @@
 		)
 		(uuid "f1daaeec-bf16-49cb-9b58-07bd74a18280")
 	)
+	(label "IO40_SD_SPI_MISO"
+		(at 264.16 49.53 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "f28458fa-126a-4319-a3c5-494cc6c5f662")
+	)
+	(label "IO1_SD_CD"
+		(at 264.16 39.37 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "f5b53bde-bc46-4d7f-ba71-a31e4bc4f450")
+	)
 	(label "IO19_PIN"
 		(at 264.16 80.01 0)
 		(effects
@@ -7482,6 +7478,16 @@
 		)
 		(uuid "fad1caf8-2997-4539-8144-20110559a0fd")
 	)
+	(label "IO41_SD_SPI_MOSI"
+		(at 264.16 46.99 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "faef65cf-1b38-4672-8eea-a07362308671")
+	)
 	(label "IO5_PIN"
 		(at 231.14 41.91 180)
 		(effects
@@ -7491,16 +7497,6 @@
 			(justify right bottom)
 		)
 		(uuid "fe43a620-5421-446f-b123-d6b3403ebbe7")
-	)
-	(label "IO47_RTC_I2C_SDA"
-		(at 264.16 143.51 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "fe7d31cd-0cc2-429c-832b-96d1bfac44c8")
 	)
 	(symbol
 		(lib_id "power:+3V3")
@@ -7596,7 +7592,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Connector_PinSocket_2.54mm:PinSocket_1x07_P2.54mm_Vertical"
 			(at 80.01 170.18 0)
 			(effects
 				(font
@@ -8228,7 +8224,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Connector_PinSocket_2.54mm:PinSocket_1x07_P2.54mm_Vertical"
 			(at 64.77 170.18 0)
 			(effects
 				(font
