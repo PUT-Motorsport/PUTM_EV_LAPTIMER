@@ -12,6 +12,8 @@ static const char *TAG = "TIMER";
 
 gptimer_handle_t laptime_timer;
 
+RV3028C7 rtc;
+
 esp_err_t timer_init()
 {
     gptimer_config_t timer_config = {.clk_src = GPTIMER_CLK_SRC_DEFAULT,
@@ -21,11 +23,17 @@ esp_err_t timer_init()
     ESP_ERROR_CHECK(gptimer_enable(laptime_timer));
     ESP_ERROR_CHECK(gptimer_start(laptime_timer));
 
-    // Ustawienie strefy czasowej (Polska: CET/CEST) raz przy inicjalizacji
     setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0/3", 1);
     tzset();
 
     ESP_LOGI("TIMER", "INIT OK");
+    return ESP_OK;
+}
+
+esp_err_t rtc_init()
+{
+    Wire.begin(CONFIG_RTC_I2C_SDA, CONFIG_RTC_I2C_SCL, 40000);
+    rtc.begin(Wire);
     return ESP_OK;
 }
 

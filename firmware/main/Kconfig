@@ -89,4 +89,11 @@ menu "PUTM EV Laptimer"
         #     int "LCD DC (GPIO)"
         #     default 12
 
+        config RTC_I2C_SDA
+            int "RV3028C8 RTC I2C SDA Pin (GPIO)"
+            default 47
+
+        config RTC_I2C_SCL
+            int "RV3028C8 RTC I2C SCL Pin (GPIO)"
+            default 21
 endmenu
