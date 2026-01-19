@@ -37,6 +37,9 @@ esp_err_t rtc_init()
     return ESP_OK;
 }
 
+// esp_err_t rtc_set_time(char time_buf[TIMEOFDAY_STR_LENGTH], char date_buf[DATE_STR_LENGTH]){
+//     rtc.setDateTimeFromISO8601()}
+
 uint64_t timer_get_time(gptimer_handle_t timer_handle)
 {
     uint64_t timer_value = 0;
@@ -61,7 +64,7 @@ esp_err_t system_set_time(char time_buf[TIMEOFDAY_STR_LENGTH], char date_buf[DAT
     struct tm t = {0};
     struct timeval tv = {0};
 
-    if (strptime(date_buf, "%d/%m/%Y", &t) == NULL)
+    if (strptime(date_buf, "%Y-%m-%d", &t) == NULL)
         return ESP_FAIL;
     if (strptime(time_buf, "%H:%M:%S", &t) == NULL)
         return ESP_FAIL;
@@ -84,6 +87,6 @@ esp_err_t system_get_time(char time_buf[TIMEOFDAY_STR_LENGTH], char date_buf[DAT
     time(&now);
     localtime_r(&now, &timeinfo);
     strftime(time_buf, TIMEOFDAY_STR_LENGTH, "%H:%M:%S", &timeinfo);
-    strftime(date_buf, DATE_STR_LENGTH, "%d/%m/%Y", &timeinfo);
+    strftime(date_buf, DATE_STR_LENGTH, "%Y-%m-%d", &timeinfo);
     return ESP_OK;
 }
