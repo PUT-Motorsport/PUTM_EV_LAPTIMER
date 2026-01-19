@@ -1,0 +1,9 @@
+{
+    "two_gate_mode" : false,
+    "wifi_config" : {
+        "mode" : 0,
+        "ssid" : "PUTM_LAPTIMER",
+        "password" : ""
+    },
+    "driver_list" : ["aaa", "bbb", "ccc"]
+}
