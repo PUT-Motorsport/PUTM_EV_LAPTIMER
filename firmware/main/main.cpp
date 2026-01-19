@@ -110,6 +110,7 @@ extern "C" void app_main(void)
     ESP_ERROR_CHECK(gpio_init());
     ESP_ERROR_CHECK(timer_init());
     ESP_ERROR_CHECK(isr_init());
+    // ESP_ERROR_CHECK(rtc_init());
 
     if (xSemaphoreTake(config_mutex, portMAX_DELAY))
     {

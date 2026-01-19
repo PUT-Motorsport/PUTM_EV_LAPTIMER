@@ -383,6 +383,7 @@ void laptimer_task(void *args)
             laptime_saved.reset();
 
             ESP_ERROR_CHECK(system_get_time(laptime_saved_local.timeofday, laptime_saved_local.date));
+            // ESP_ERROR_CHECK(rtc_set_time(laptime_saved_local.timeofday, laptime_saved_local.date));
             ESP_LOGI(TAG, "TIMEOFDAY: %s, DATE: %s", laptime_saved_local.timeofday, laptime_saved_local.date);
             laptime_save_uart(laptime_saved_local);
             laptime_save_top(laptime_saved_local, laptime_list_top);
