@@ -47,7 +47,7 @@ esp_err_t sdcard_get_config(sdmmc_card_t **card_pointer)
         if (gates_json)
         {
             config_temp.two_gate_mode = (bool)cJSON_GetNumberValue(gates_json);
-            ESP_LOGI(TAG, "Gates number: %u\n", (uint8_t)config_temp.two_gate_mode);
+            ESP_LOGI(TAG, "Gates number: %u\n", (uint8_t)config_temp.two_gate_mode + 1);
         }
 
         if (wifi_json)

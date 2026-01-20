@@ -1,5 +1,5 @@
 {
-    "two_gate_mode" : false,
+    "two_gate_mode" : 0,
     "wifi_config" : {
         "mode" : 0,
         "ssid" : "PUTM_LAPTIMER",
