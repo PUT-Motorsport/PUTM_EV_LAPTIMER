@@ -10186,7 +10186,7 @@
 		(at 144.363767 102.851585)
 		(tags "2091-1376 ")
 		(property "Reference" "J14"
-			(at -8.750003 0 0)
+			(at -18.363767 -1.851585 0)
 			(unlocked yes)
 			(layer "F.SilkS")
 			(uuid "01ec6777-c7a5-4c15-a441-593e0f77a71b")
@@ -10530,6 +10530,17 @@
 			(uuid "340571e3-4569-4b31-a156-1d287f38838b")
 		)
 		(embedded_fonts no)
+		(model "${KIPRJMOD}/Model/2091-1376.stp"
+			(offset
+				(xyz 1.8 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz -90 -0 90)
+			)
+		)
 	)
 	(footprint "Connector_PinSocket_2.00mm:PinSocket_1x05_P2.00mm_Vertical"
 		(layer "F.Cu")
