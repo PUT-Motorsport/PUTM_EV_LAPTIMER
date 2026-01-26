@@ -4203,7 +4203,7 @@
 	)
 	(rectangle
 		(start 135.255 46.99)
-		(end 207.645 162.56)
+		(end 207.645 129.54)
 		(stroke
 			(width 0)
 			(type default)
@@ -4249,6 +4249,18 @@
 		)
 		(uuid def65827-6fed-4a37-a048-516230a4cf7d)
 	)
+	(rectangle
+		(start 135.255 130.175)
+		(end 207.645 162.56)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(fill
+			(type none)
+		)
+		(uuid fbf8456b-fec2-4c82-952e-00369a4c04c5)
+	)
 	(text "MAIN ESP32S3-DEVKITC-1 CONNECTORS"
 		(exclude_from_sim no)
 		(at 229.108 16.002 0)
@@ -4259,7 +4271,7 @@
 		)
 		(uuid "1d82c3d7-f845-4c89-936f-a04d01d9cdb4")
 	)
-	(text "GATE CONNECTORS\n"
+	(text "GATES CONNECTORS"
 		(exclude_from_sim no)
 		(at 145.034 49.276 0)
 		(effects
@@ -4288,6 +4300,16 @@
 			)
 		)
 		(uuid "87bc6285-dd74-48be-980f-5a4de9a1ea78")
+	)
+	(text "5V/12V CONVERTER CONNECTOR\n"
+		(exclude_from_sim no)
+		(at 151.13 132.334 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "87fb8931-8f84-4a69-8f73-8c24d25958ec")
 	)
 	(text "MICROSD ADAPTER CONNECTOR\n"
 		(exclude_from_sim no)
@@ -8756,7 +8778,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Connector_PinHeader_2.00mm:PinHeader_2x05_P2.00mm_Vertical_SMD"
+		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_2x05_P2.54mm_Vertical_SMD"
 			(at 170.18 33.02 0)
 			(effects
 				(font
@@ -11134,7 +11156,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "CONN6_2091-1376_WAG"
+		(property "Footprint" "Footprint:CONN6_2091-1376_WAG"
 			(at 154.94 87.63 0)
 			(effects
 				(font
