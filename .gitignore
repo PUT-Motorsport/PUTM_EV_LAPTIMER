@@ -27,3 +27,4 @@
 /firmware/TODO
 /firmware/sdkconfig.old
 /firmware/managed_components/**
+/hardware/~putm_laptimer.kicad_pcb.lck
