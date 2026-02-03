@@ -7300,11 +7300,12 @@
 		)
 		(uuid "3dd0e411-571b-4dc6-aa2a-780a9c417804")
 	)
-	(label "IO13_GATE2"
+	(label "IO13"
 		(at 231.14 77.47 180)
 		(effects
 			(font
 				(size 1.27 1.27)
+				(color 132 132 132 1)
 			)
 			(justify right bottom)
 		)
@@ -7657,11 +7658,12 @@
 		)
 		(uuid "a46329eb-135d-4ab0-9a18-77f5faa53fe2")
 	)
-	(label "IO13_GATE2"
+	(label "IO13"
 		(at 231.14 148.59 180)
 		(effects
 			(font
 				(size 1.27 1.27)
+				(color 132 132 132 1)
 			)
 			(justify right bottom)
 		)
