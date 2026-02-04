@@ -174,7 +174,7 @@
 	(net 17 "/IO36_PIN")
 	(net 18 "/IO19_PIN")
 	(net 19 "/IO14_GATE1")
-	(net 20 "/IO13_GATE2")
+	(net 20 "/IO13")
 	(net 21 "/IO37_PIN")
 	(net 22 "/IO35_PIN")
 	(net 23 "/IO38_PIN")
@@ -370,7 +370,7 @@
 		(property "Reference" "J1"
 			(at 2.5 -0.95 0)
 			(layer "F.SilkS")
-			(uuid "3dd7c0e3-828b-496d-8129-ec5e4beb83ab")
+			(uuid "91a34aa2-ec06-46cb-bf28-1223e41e2f20")
 			(effects
 				(font
 					(size 1 1)
@@ -381,7 +381,7 @@
 		(property "Value" "Conn_01x22"
 			(at 0 56.11 0)
 			(layer "F.Fab")
-			(uuid "4df82d12-e341-499e-9550-3dd5584ce369")
+			(uuid "d62c1bfa-d8d5-4f3e-8a5a-b06c516542b3")
 			(effects
 				(font
 					(size 1 1)
@@ -393,7 +393,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "4259f592-ca58-4b62-a09e-0c4ab2272aca")
+			(uuid "8be4cacc-10db-4624-b666-23bea2f7f64e")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -405,7 +405,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "6a2b99ad-54e9-44bd-aee8-66159d123952")
+			(uuid "a90a9cf9-acd3-4d9e-a1ba-f0396e6f004d")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -783,7 +783,7 @@
 			(drill 1)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net 20 "/IO13_GATE2")
+			(net 20 "/IO13")
 			(pinfunction "Pin_19")
 			(pintype "passive")
 			(uuid "19483a6c-0362-4c3c-a13e-5f9c50820279")
@@ -1257,25 +1257,25 @@
 			)
 		)
 	)
-	(footprint "TestPoint:TestPoint_THTPad_D1.5mm_Drill0.7mm"
+	(footprint "TestPoint:TestPoint_THTPad_D2.0mm_Drill1.0mm"
 		(layer "F.Cu")
 		(uuid "124e671d-24f0-4b14-be5f-400944bfe367")
 		(at 133.96 91.5 90)
-		(descr "THT pad as test Point, diameter 1.5mm, hole diameter 0.7mm")
+		(descr "THT pad as test Point, diameter 2.0mm, hole diameter 1.0mm")
 		(tags "test point THT pad")
 		(property "Reference" "J14"
-			(at 4 0.124695 90)
+			(at 3 0.04 180)
 			(layer "F.SilkS")
 			(uuid "8e4c109b-dddc-41c1-a0b4-1f900731215f")
 			(effects
 				(font
-					(size 1 1)
+					(size 0.7 0.7)
 					(thickness 0.15)
 				)
 			)
 		)
 		(property "Value" "Conn_01x01"
-			(at 0 1.75 90)
+			(at 0 2.05 90)
 			(layer "F.Fab")
 			(uuid "d57d873b-6f27-43ac-a90b-24b5279b98d1")
 			(effects
@@ -1318,28 +1318,28 @@
 		(attr exclude_from_pos_files)
 		(fp_circle
 			(center 0 0)
-			(end 0 0.95)
+			(end 0 1.2)
 			(stroke
 				(width 0.12)
 				(type solid)
 			)
 			(fill no)
 			(layer "F.SilkS")
-			(uuid "de0267a9-4501-4b2a-819b-618cf49b1fbc")
+			(uuid "8347ffc8-fbed-4020-8e7b-223545990896")
 		)
 		(fp_circle
 			(center 0 0)
-			(end 1.25 0)
+			(end 1.5 0)
 			(stroke
 				(width 0.05)
 				(type solid)
 			)
 			(fill no)
 			(layer "F.CrtYd")
-			(uuid "34b09cbd-4ba4-49ff-9a46-f1185b5d95e6")
+			(uuid "792c8929-0436-4bdd-bf70-fcdf0b99c9b4")
 		)
 		(fp_text user "${REFERENCE}"
-			(at 0 -1.65 90)
+			(at 0 -2 90)
 			(layer "F.Fab")
 			(uuid "1370d8c0-9447-45b1-9b79-161b5613aa27")
 			(effects
@@ -1351,8 +1351,8 @@
 		)
 		(pad "1" thru_hole circle
 			(at 0 0 90)
-			(size 1.5 1.5)
-			(drill 0.7)
+			(size 2 2)
+			(drill 1)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
 			(net 1 "GND")
@@ -1362,25 +1362,25 @@
 		)
 		(embedded_fonts no)
 	)
-	(footprint "TestPoint:TestPoint_THTPad_D1.5mm_Drill0.7mm"
+	(footprint "TestPoint:TestPoint_THTPad_D2.0mm_Drill1.0mm"
 		(layer "F.Cu")
 		(uuid "12c528a6-7f52-4c2d-811c-4314155b2c17")
 		(at 136.5 91.5 90)
-		(descr "THT pad as test Point, diameter 1.5mm, hole diameter 0.7mm")
+		(descr "THT pad as test Point, diameter 2.0mm, hole diameter 1.0mm")
 		(tags "test point THT pad")
 		(property "Reference" "J15"
-			(at 4 0.084695 90)
+			(at 3 0 180)
 			(layer "F.SilkS")
 			(uuid "bd876ab0-3ba0-431d-b8b8-21b808d7e0e9")
 			(effects
 				(font
-					(size 1 1)
+					(size 0.7 0.7)
 					(thickness 0.15)
 				)
 			)
 		)
 		(property "Value" "Conn_01x01"
-			(at 0 1.75 90)
+			(at 0 2.05 90)
 			(layer "F.Fab")
 			(uuid "7cd4b374-29ee-4c4d-bfe7-dec4e3919f49")
 			(effects
@@ -1423,28 +1423,28 @@
 		(attr exclude_from_pos_files)
 		(fp_circle
 			(center 0 0)
-			(end 0 0.95)
+			(end 0 1.2)
 			(stroke
 				(width 0.12)
 				(type solid)
 			)
 			(fill no)
 			(layer "F.SilkS")
-			(uuid "859c5123-27b4-45f0-a1d3-be9fb82f637b")
+			(uuid "2b357309-f941-4690-8887-d11aadaeeb7d")
 		)
 		(fp_circle
 			(center 0 0)
-			(end 1.25 0)
+			(end 1.5 0)
 			(stroke
 				(width 0.05)
 				(type solid)
 			)
 			(fill no)
 			(layer "F.CrtYd")
-			(uuid "af4329b2-cc72-49ec-b0d1-df326e854e70")
+			(uuid "e19e0793-8d56-4f06-a16e-3a6d3c4afa19")
 		)
 		(fp_text user "${REFERENCE}"
-			(at 0 -1.65 90)
+			(at 0 -2 90)
 			(layer "F.Fab")
 			(uuid "c3432f16-2575-4efd-ba07-3f642fb19d05")
 			(effects
@@ -1456,8 +1456,8 @@
 		)
 		(pad "1" thru_hole circle
 			(at 0 0 90)
-			(size 1.5 1.5)
-			(drill 0.7)
+			(size 2 2)
+			(drill 1)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
 			(net 11 "+5V")
@@ -1608,25 +1608,25 @@
 			)
 		)
 	)
-	(footprint "TestPoint:TestPoint_THTPad_D1.5mm_Drill0.7mm"
+	(footprint "TestPoint:TestPoint_THTPad_D2.0mm_Drill1.0mm"
 		(layer "F.Cu")
 		(uuid "165712ca-cf78-43b2-888b-739d19b52ac9")
 		(at 128.88 91.5 90)
-		(descr "THT pad as test Point, diameter 1.5mm, hole diameter 0.7mm")
+		(descr "THT pad as test Point, diameter 2.0mm, hole diameter 1.0mm")
 		(tags "test point THT pad")
 		(property "Reference" "J12"
-			(at 4 0.08 90)
+			(at 3 0.06 180)
 			(layer "F.SilkS")
 			(uuid "738afdc8-8cdb-4ee9-8065-c5e9fe552f0e")
 			(effects
 				(font
-					(size 1 1)
+					(size 0.7 0.7)
 					(thickness 0.15)
 				)
 			)
 		)
 		(property "Value" "Conn_01x01"
-			(at 0 1.75 90)
+			(at 0 2.05 90)
 			(layer "F.Fab")
 			(uuid "fda429b1-9599-410c-87e4-38ce920e3ba3")
 			(effects
@@ -1669,28 +1669,28 @@
 		(attr exclude_from_pos_files)
 		(fp_circle
 			(center 0 0)
-			(end 0 0.95)
+			(end 0 1.2)
 			(stroke
 				(width 0.12)
 				(type solid)
 			)
 			(fill no)
 			(layer "F.SilkS")
-			(uuid "ab75790f-ed88-461e-a2f2-684663481055")
+			(uuid "679488e8-8cd4-4c40-9c3c-c60d044c56de")
 		)
 		(fp_circle
 			(center 0 0)
-			(end 1.25 0)
+			(end 1.5 0)
 			(stroke
 				(width 0.05)
 				(type solid)
 			)
 			(fill no)
 			(layer "F.CrtYd")
-			(uuid "8dd020c7-b623-4b7f-a513-efcb2bbe4aff")
+			(uuid "cd63e7a0-7bc4-41a4-b06a-f963df604188")
 		)
 		(fp_text user "${REFERENCE}"
-			(at 0 -1.65 90)
+			(at 0 -2 90)
 			(layer "F.Fab")
 			(uuid "04c2c0bd-aae4-4d96-b58b-14626cfd0a43")
 			(effects
@@ -1702,8 +1702,8 @@
 		)
 		(pad "1" thru_hole circle
 			(at 0 0 90)
-			(size 1.5 1.5)
-			(drill 0.7)
+			(size 2 2)
+			(drill 1)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
 			(net 65 "unconnected-(J12-Pin_1-Pad1)")
@@ -4439,7 +4439,7 @@
 		(property "Reference" "J3"
 			(at -2.69 -0.95 0)
 			(layer "F.SilkS")
-			(uuid "59e72bd0-2729-43dc-ba09-b496e59bc9b3")
+			(uuid "7fefc4c3-ebba-42c1-a197-9ebd712a8421")
 			(effects
 				(font
 					(size 1 1)
@@ -4450,7 +4450,7 @@
 		(property "Value" "Conn_01x22"
 			(at 0 56.11 0)
 			(layer "F.Fab")
-			(uuid "2dd7d106-9dde-45fd-9a6e-c1cd36f71eb5")
+			(uuid "0352614d-c0c3-4180-8a57-860bc1b220dc")
 			(effects
 				(font
 					(size 1 1)
@@ -4462,7 +4462,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "9baa4a96-e608-4c2b-9317-bb6577556266")
+			(uuid "e0d3e3c0-0dd4-423b-abbb-07099be3ce70")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4474,7 +4474,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "3cb7a28e-a7e5-4de2-8ce7-ee7ec64f720a")
+			(uuid "f953d1e0-fe35-4c09-933c-25d178eb3f8b")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4852,7 +4852,7 @@
 			(drill 1)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net 20 "/IO13_GATE2")
+			(net 20 "/IO13")
 			(pinfunction "Pin_19")
 			(pintype "passive")
 			(uuid "f7c9f6d7-c037-461d-9175-623b3c92db56")
@@ -6624,7 +6624,7 @@
 			(at 1.75 0 0)
 			(unlocked yes)
 			(layer "F.SilkS")
-			(uuid "fa4b0667-2221-4a99-80d6-9f46e5bc447a")
+			(uuid "e59d9662-fb7a-4652-b82e-dadc45287937")
 			(effects
 				(font
 					(size 1 1)
@@ -6636,7 +6636,7 @@
 			(at 1.75 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
-			(uuid "89d23d93-7531-4e90-8091-22b32195df72")
+			(uuid "53160670-c523-40b8-8a26-7cd67f99e845")
 			(effects
 				(font
 					(size 1 1)
@@ -6644,11 +6644,11 @@
 				)
 			)
 		)
-		(property "Datasheet" "734-162"
+		(property "Datasheet" "https://www.wago.com/pl/wielowtyki/wtyk-tht/p/734-162#details"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "e3836ec2-88a7-485b-8a34-b54dcfbc9fb1")
+			(uuid "b740b959-0b6a-4c21-a7fa-34a3c00625dc")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6660,7 +6660,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "9912709a-ca8d-4fd5-b384-ae9737206fbc")
+			(uuid "10d17a70-9f5a-40ad-ae02-b78a28bdd8fd")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8061,25 +8061,25 @@
 			)
 		)
 	)
-	(footprint "TestPoint:TestPoint_THTPad_D1.5mm_Drill0.7mm"
+	(footprint "TestPoint:TestPoint_THTPad_D2.0mm_Drill1.0mm"
 		(layer "F.Cu")
 		(uuid "98c548c8-4933-4124-a8e9-1567dbe5cc6e")
 		(at 131.42 91.5 90)
-		(descr "THT pad as test Point, diameter 1.5mm, hole diameter 0.7mm")
+		(descr "THT pad as test Point, diameter 2.0mm, hole diameter 1.0mm")
 		(tags "test point THT pad")
 		(property "Reference" "J13"
-			(at 4 0 90)
+			(at 3 0.08 180)
 			(layer "F.SilkS")
 			(uuid "5a8b9df9-c42b-48cb-8fda-d0e8c5cb7a43")
 			(effects
 				(font
-					(size 1 1)
+					(size 0.7 0.7)
 					(thickness 0.15)
 				)
 			)
 		)
 		(property "Value" "Conn_01x01"
-			(at 0 1.75 90)
+			(at 0 2.05 90)
 			(layer "F.Fab")
 			(uuid "bd0dfc2b-b58f-4475-a3c7-00ddf1c9f3f2")
 			(effects
@@ -8122,28 +8122,28 @@
 		(attr exclude_from_pos_files)
 		(fp_circle
 			(center 0 0)
-			(end 0 0.95)
+			(end 0 1.2)
 			(stroke
 				(width 0.12)
 				(type solid)
 			)
 			(fill no)
 			(layer "F.SilkS")
-			(uuid "0752dbae-b1c8-4f4d-b829-678e10a73ed1")
+			(uuid "2ddef6fa-e1a0-480a-a511-d4c66877fb4a")
 		)
 		(fp_circle
 			(center 0 0)
-			(end 1.25 0)
+			(end 1.5 0)
 			(stroke
 				(width 0.05)
 				(type solid)
 			)
 			(fill no)
 			(layer "F.CrtYd")
-			(uuid "74f84bfa-5042-4840-bc72-806b1dccc6ae")
+			(uuid "bde95f71-abf3-43e8-9d85-0cefd182788a")
 		)
 		(fp_text user "${REFERENCE}"
-			(at 0 -1.65 90)
+			(at 0 -2 90)
 			(layer "F.Fab")
 			(uuid "56e6ead6-83a5-4811-aa3f-5f7057585ec9")
 			(effects
@@ -8155,8 +8155,8 @@
 		)
 		(pad "1" thru_hole circle
 			(at 0 0 90)
-			(size 1.5 1.5)
-			(drill 0.7)
+			(size 2 2)
+			(drill 1)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
 			(net 52 "+12V")
@@ -10646,7 +10646,7 @@
 			(at 3.500001 0 0)
 			(unlocked yes)
 			(layer "F.SilkS")
-			(uuid "09b3b922-e0f0-4795-8fb2-f8689868d3fc")
+			(uuid "5f1ea375-3f08-4968-80f6-a67a36111cae")
 			(effects
 				(font
 					(size 1 1)
@@ -10658,7 +10658,7 @@
 			(at 3.500001 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
-			(uuid "753d7e92-e9fa-4d90-a48c-34953b9cc633")
+			(uuid "0957fd5a-a947-40f4-991a-15f0b500d1c8")
 			(effects
 				(font
 					(size 1 1)
@@ -10666,11 +10666,11 @@
 				)
 			)
 		)
-		(property "Datasheet" "734-163"
+		(property "Datasheet" "https://www.wago.com/pl/wielowtyki/wtyk-tht/p/734-163#details"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "5d7fbe4d-c57b-47fd-b92f-a7c5ce7c2a71")
+			(uuid "a8071279-8dd6-430b-a136-3443287ae6ae")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10682,7 +10682,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "a3d9aa11-0a10-4849-a402-44d029bf82c3")
+			(uuid "1d5f7c52-63c0-4158-91ec-76c6a8d14e70")
 			(effects
 				(font
 					(size 1.27 1.27)
