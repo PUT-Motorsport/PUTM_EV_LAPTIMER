@@ -12733,6 +12733,24 @@
 				(hide yes)
 			)
 		)
+		(property "Link" "https://www.tme.eu/pl/details/zl262-7sg/listwy-i-gniazda-kolkowe/connfly/ds1023-1-7s21/"
+			(at 48.26 170.18 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "ZL262-7SG"
+			(at 48.26 170.18 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "7"
 			(uuid "b6e1061b-fe80-49f6-ac29-f89c7713c3f0")
 		)
@@ -13089,6 +13107,15 @@
 				(hide yes)
 			)
 		)
+		(property "Link" "https://www.mouser.pl/ProductDetail/Diodes-Incorporated/MBR230S1F-7?qs=5V6w%252Be2aIqaf4rGxjeeHeQ%3D%3D"
+			(at 189.23 107.95 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "1"
 			(uuid "0ecf003c-b596-4fb3-952a-24439579c454")
 		)
@@ -13175,6 +13202,24 @@
 			)
 		)
 		(property "Sim.Pins" ""
+			(at 170.18 33.02 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Link" "https://www.tme.eu/pl/details/mx-70246-1004/zlacza-pozostale-molex/molex/70246-1004/?brutto=1&currency=PLN&utm_content=&campaign_id=20675111424&gad_campaignid=20675111424"
+			(at 170.18 33.02 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "MX-70246-1004"
 			(at 170.18 33.02 0)
 			(effects
 				(font
@@ -13631,6 +13676,24 @@
 				(hide yes)
 			)
 		)
+		(property "Link" "https://www.tme.eu/pl/details/zl262-7sg/listwy-i-gniazda-kolkowe/connfly/ds1023-1-7s21/"
+			(at 33.02 170.18 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "ZL262-7SG"
+			(at 33.02 170.18 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "7"
 			(uuid "ebbe3934-1134-4caf-8861-6d710ea60f81")
 		)
@@ -13742,6 +13805,24 @@
 				(hide yes)
 			)
 		)
+		(property "Link" "https://www.mouser.pl/ProductDetail/Bourns/CR0603-FX-1002ELF?qs=K5ddiUFZPT6XHG0dQH96QA%3D%3D"
+			(at 80.01 88.9 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "652-CR0603FX-1002ELF "
+			(at 80.01 88.9 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "64d5c1a3-cb46-4550-874f-c11144f51141")
 		)
@@ -13828,6 +13909,24 @@
 			)
 		)
 		(property "Sim.Pins" ""
+			(at 189.23 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Link" "https://www.mouser.pl/ProductDetail/Bourns/CR0603-FX-1002ELF?qs=K5ddiUFZPT6XHG0dQH96QA%3D%3D"
+			(at 189.23 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "652-CR0603FX-1002ELF "
 			(at 189.23 57.15 0)
 			(effects
 				(font
@@ -13925,6 +14024,24 @@
 			)
 		)
 		(property "Sim.Pins" ""
+			(at 80.01 69.85 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Link" "https://www.mouser.pl/ProductDetail/KYOCERA-AVX/06035A101KAT2A?qs=I5rfTV0A4wHSVYt8pWypSg%3D%3D"
+			(at 80.01 69.85 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "581-06035A101K "
 			(at 80.01 69.85 0)
 			(effects
 				(font
@@ -14098,6 +14215,15 @@
 				(hide yes)
 			)
 		)
+		(property "Link" "https://www.wago.com/pl/z%C5%82%C4%85czki-do-p%C5%82ytek-drukowanych/z%C5%82%C4%85cze-do%C2%A0pcb/p/2601-3109#downloads"
+			(at 30.48 80.01 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "6"
 			(uuid "21d337a8-a204-4f9d-acf9-a742ef98bfa5")
 		)
@@ -14243,6 +14369,24 @@
 				(hide yes)
 			)
 		)
+		(property "Link" "https://www.mouser.pl/ProductDetail/KYOCERA-AVX/06035A101KAT2A?qs=I5rfTV0A4wHSVYt8pWypSg%3D%3D"
+			(at 80.01 38.1 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "581-06035A101K "
+			(at 80.01 38.1 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "8bd1dc51-5a7d-4644-a383-d84b27df26dd")
 		)
@@ -14329,6 +14473,15 @@
 			)
 		)
 		(property "Sim.Pins" ""
+			(at 165.1 143.51 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Link" ""
 			(at 165.1 143.51 0)
 			(effects
 				(font
@@ -14598,6 +14751,24 @@
 				(hide yes)
 			)
 		)
+		(property "Link" "https://www.tme.eu/pl/details/zl262-50dg/listwy-i-gniazda-kolkowe/connfly/ds1023-2-25s21/"
+			(at 255.27 55.88 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "ZL262-50DG"
+			(at 255.27 55.88 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "21"
 			(uuid "4eb8a401-2a5e-4e29-80ee-ea401576af8e")
 		)
@@ -14819,6 +14990,24 @@
 				(hide yes)
 			)
 		)
+		(property "Link" "https://www.mouser.pl/ProductDetail/Bourns/CR0603-FX-1001ELF?qs=K5ddiUFZPT4YQXF75Ui8dQ%3D%3D"
+			(at 114.3 31.75 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "652-CR0603FX-1001ELF "
+			(at 114.3 31.75 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "6bc544d3-0d5d-49ff-801a-fe1d38598f8a")
 		)
@@ -14974,6 +15163,15 @@
 			)
 		)
 		(property "Sim.Pins" ""
+			(at 171.45 107.95 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Link" "https://www.wago.com/pl/z%C5%82%C4%85czki-do-p%C5%82ytek-drukowanych/z%C5%82%C4%85cze-do%C2%A0pcb/p/2601-1102#details"
 			(at 171.45 107.95 0)
 			(effects
 				(font
@@ -15150,6 +15348,24 @@
 				(hide yes)
 			)
 		)
+		(property "Link" "https://www.mouser.pl/ProductDetail/Bourns/CR0603-FX-1001ELF?qs=K5ddiUFZPT4YQXF75Ui8dQ%3D%3D"
+			(at 182.88 63.5 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "652-CR0603FX-1001ELF "
+			(at 182.88 63.5 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "2c03842c-a088-4e7f-8a63-8a8be2eddbf4")
 		)
@@ -15303,6 +15519,24 @@
 			)
 		)
 		(property "Sim.Pins" ""
+			(at 80.01 120.65 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Link" "https://www.mouser.pl/ProductDetail/Bourns/CR0603-FX-1002ELF?qs=K5ddiUFZPT6XHG0dQH96QA%3D%3D"
+			(at 80.01 120.65 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "652-CR0603FX-1002ELF "
 			(at 80.01 120.65 0)
 			(effects
 				(font
@@ -15530,6 +15764,24 @@
 			)
 		)
 		(property "Sim.Pins" ""
+			(at 114.3 127 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Link" "https://www.mouser.pl/ProductDetail/Bourns/CR0603-FX-1001ELF?qs=K5ddiUFZPT4YQXF75Ui8dQ%3D%3D"
+			(at 114.3 127 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "652-CR0603FX-1001ELF "
 			(at 114.3 127 90)
 			(effects
 				(font
@@ -15895,6 +16147,24 @@
 				(hide yes)
 			)
 		)
+		(property "Link" "https://www.mouser.pl/ProductDetail/Bourns/CR0603-FX-1001ELF?qs=K5ddiUFZPT4YQXF75Ui8dQ%3D%3D"
+			(at 73.66 31.75 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "652-CR0603FX-1001ELF "
+			(at 73.66 31.75 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "a4cc3e7e-c0a6-4a11-a215-e05b4b9162bd")
 		)
@@ -15983,6 +16253,24 @@
 			)
 		)
 		(property "Sim.Pins" ""
+			(at 120.65 25.4 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Link" "https://www.mouser.pl/ProductDetail/Bourns/CR0603-FX-1002ELF?qs=K5ddiUFZPT6XHG0dQH96QA%3D%3D"
+			(at 120.65 25.4 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "652-CR0603FX-1002ELF "
 			(at 120.65 25.4 0)
 			(effects
 				(font
@@ -16281,6 +16569,15 @@
 				(hide yes)
 			)
 		)
+		(property "Link" ""
+			(at 165.1 148.59 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "1"
 			(uuid "3303ec05-3891-4db7-8bfd-3f22a5c1c6ea")
 		)
@@ -16365,6 +16662,24 @@
 			)
 		)
 		(property "Sim.Pins" ""
+			(at 114.3 63.5 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Link" "https://www.mouser.pl/ProductDetail/Bourns/CR0603-FX-1001ELF?qs=K5ddiUFZPT4YQXF75Ui8dQ%3D%3D"
+			(at 114.3 63.5 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "652-CR0603FX-1001ELF "
 			(at 114.3 63.5 90)
 			(effects
 				(font
@@ -16462,6 +16777,24 @@
 			)
 		)
 		(property "Sim.Pins" ""
+			(at 120.65 101.6 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Link" "https://www.mouser.pl/ProductDetail/KYOCERA-AVX/06035A101KAT2A?qs=I5rfTV0A4wHSVYt8pWypSg%3D%3D"
+			(at 120.65 101.6 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "581-06035A101K "
 			(at 120.65 101.6 0)
 			(effects
 				(font
@@ -16698,6 +17031,24 @@
 				(hide yes)
 			)
 		)
+		(property "Link" "https://www.mouser.pl/ProductDetail/KYOCERA-AVX/06035A101KAT2A?qs=I5rfTV0A4wHSVYt8pWypSg%3D%3D"
+			(at 120.65 38.1 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "581-06035A101K "
+			(at 120.65 38.1 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "0768d264-4ec5-40b1-bb2a-0990bc40a35d")
 		)
@@ -16857,6 +17208,15 @@
 				(hide yes)
 			)
 		)
+		(property "Link" ""
+			(at 165.1 151.13 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "1"
 			(uuid "3c1d22d4-ae08-4521-b69b-0123016d7604")
 		)
@@ -16978,6 +17338,24 @@
 			)
 		)
 		(property "Description" "Generic connector, double row, 02x22, odd/even pin numbering scheme (row 1 odd numbers, row 2 even numbers), script generated (kicad-library-utils/schlib/autogen/connector/)"
+			(at 238.76 55.88 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Link" "https://www.tme.eu/pl/details/zl262-50dg/listwy-i-gniazda-kolkowe/connfly/ds1023-2-25s21/"
+			(at 238.76 55.88 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "ZL262-50DG"
 			(at 238.76 55.88 0)
 			(effects
 				(font
@@ -17208,6 +17586,24 @@
 				(hide yes)
 			)
 		)
+		(property "Link" "https://www.mouser.pl/ProductDetail/Bourns/CR0603-FX-1002ELF?qs=K5ddiUFZPT6XHG0dQH96QA%3D%3D"
+			(at 120.65 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "652-CR0603FX-1002ELF "
+			(at 120.65 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "834f9257-9e0d-4161-9f41-f95e3505b0de")
 		)
@@ -17296,6 +17692,24 @@
 			)
 		)
 		(property "Sim.Pins" ""
+			(at 80.01 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Link" "https://www.mouser.pl/ProductDetail/Bourns/CR0603-FX-1002ELF?qs=K5ddiUFZPT6XHG0dQH96QA%3D%3D"
+			(at 80.01 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "652-CR0603FX-1002ELF "
 			(at 80.01 57.15 0)
 			(effects
 				(font
@@ -17726,6 +18140,24 @@
 				(hide yes)
 			)
 		)
+		(property "Link" "https://www.mouser.pl/ProductDetail/Bourns/CR0603-FX-1001ELF?qs=K5ddiUFZPT4YQXF75Ui8dQ%3D%3D"
+			(at 73.66 127 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "652-CR0603FX-1001ELF "
+			(at 73.66 127 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "9ef51b51-b114-4078-a2ed-283896ec7f8c")
 		)
@@ -18086,6 +18518,15 @@
 				(hide yes)
 			)
 		)
+		(property "Link" "https://www.wago.com/pl/z%C5%82%C4%85czki-do-p%C5%82ytek-drukowanych/z%C5%82%C4%85cze-do%C2%A0pcb/p/2601-1103#details"
+			(at 156.21 71.12 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "3"
 			(uuid "fd83de70-2f8d-4007-94b3-270b7413e412")
 		)
@@ -18187,6 +18628,24 @@
 			)
 		)
 		(property "Sim.Pins" ""
+			(at 97.79 172.72 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Link" "https://www.tme.eu/pl/details/zl262-9sg/listwy-i-gniazda-kolkowe/connfly/ds1023-1-9s21/"
+			(at 97.79 172.72 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "ZL262-9SG"
 			(at 97.79 172.72 0)
 			(effects
 				(font
@@ -18311,6 +18770,24 @@
 				(hide yes)
 			)
 		)
+		(property "Link" "https://www.mouser.pl/ProductDetail/Bourns/CR0603-FX-1001ELF?qs=K5ddiUFZPT4YQXF75Ui8dQ%3D%3D"
+			(at 114.3 95.25 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "652-CR0603FX-1001ELF "
+			(at 114.3 95.25 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "0364f3ee-092f-4d07-9869-3d6cde634653")
 		)
@@ -18400,6 +18877,24 @@
 			)
 		)
 		(property "Sim.Pins" ""
+			(at 80.01 101.6 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Link" "https://www.mouser.pl/ProductDetail/KYOCERA-AVX/06035A101KAT2A?qs=I5rfTV0A4wHSVYt8pWypSg%3D%3D"
+			(at 80.01 101.6 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "581-06035A101K "
 			(at 80.01 101.6 0)
 			(effects
 				(font
@@ -18504,6 +18999,24 @@
 				(hide yes)
 			)
 		)
+		(property "Link" "https://www.mouser.pl/ProductDetail/Bourns/CR0603-FX-1002ELF?qs=K5ddiUFZPT6XHG0dQH96QA%3D%3D"
+			(at 120.65 88.9 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "652-CR0603FX-1002ELF "
+			(at 120.65 88.9 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "1b39505e-1893-410f-bab3-9ae7714c8f05")
 		)
@@ -18599,6 +19112,24 @@
 				(hide yes)
 			)
 		)
+		(property "Link" "https://www.mouser.pl/ProductDetail/Bourns/CR0603-FX-1001ELF?qs=K5ddiUFZPT4YQXF75Ui8dQ%3D%3D"
+			(at 73.66 63.5 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "652-CR0603FX-1001ELF "
+			(at 73.66 63.5 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "51873acf-dec7-49a1-8184-16e801f38f39")
 		)
@@ -18686,6 +19217,24 @@
 			)
 		)
 		(property "Sim.Pins" ""
+			(at 73.66 95.25 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Link" "https://www.mouser.pl/ProductDetail/Bourns/CR0603-FX-1001ELF?qs=K5ddiUFZPT4YQXF75Ui8dQ%3D%3D"
+			(at 73.66 95.25 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "652-CR0603FX-1001ELF "
 			(at 73.66 95.25 90)
 			(effects
 				(font
@@ -18791,6 +19340,24 @@
 				(hide yes)
 			)
 		)
+		(property "Link" "https://www.mouser.pl/ProductDetail/KYOCERA-AVX/06035A101KAT2A?qs=I5rfTV0A4wHSVYt8pWypSg%3D%3D"
+			(at 80.01 133.35 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "581-06035A101K "
+			(at 80.01 133.35 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "ab9531bd-8b07-4af0-9a48-6a29c9c5b711")
 		)
@@ -18888,6 +19455,24 @@
 				(hide yes)
 			)
 		)
+		(property "Link" "https://www.mouser.pl/ProductDetail/KYOCERA-AVX/06035A101KAT2A?qs=I5rfTV0A4wHSVYt8pWypSg%3D%3D"
+			(at 120.65 69.85 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "581-06035A101K "
+			(at 120.65 69.85 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "d9691155-d502-402a-bd13-92fa7a7d2b7a")
 		)
@@ -18976,6 +19561,24 @@
 			)
 		)
 		(property "Sim.Pins" ""
+			(at 80.01 25.4 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Link" "https://www.mouser.pl/ProductDetail/Bourns/CR0603-FX-1002ELF?qs=K5ddiUFZPT6XHG0dQH96QA%3D%3D"
+			(at 80.01 25.4 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "652-CR0603FX-1002ELF "
 			(at 80.01 25.4 0)
 			(effects
 				(font
@@ -19209,6 +19812,15 @@
 				(hide yes)
 			)
 		)
+		(property "Link" ""
+			(at 165.1 146.05 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "1"
 			(uuid "7874dcfa-d123-4389-955c-549f94437ed9")
 		)
@@ -19295,6 +19907,24 @@
 			)
 		)
 		(property "Sim.Pins" ""
+			(at 120.65 133.35 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Link" "https://www.mouser.pl/ProductDetail/KYOCERA-AVX/06035A101KAT2A?qs=I5rfTV0A4wHSVYt8pWypSg%3D%3D"
+			(at 120.65 133.35 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "581-06035A101K "
 			(at 120.65 133.35 0)
 			(effects
 				(font
@@ -19395,6 +20025,15 @@
 			)
 		)
 		(property "Sim.Pins" ""
+			(at 30.48 26.67 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Link" "https://www.wago.com/pl/z%C5%82%C4%85czki-do-p%C5%82ytek-drukowanych/z%C5%82%C4%85cze-do%C2%A0pcb/p/2601-3109#downloads"
 			(at 30.48 26.67 0)
 			(effects
 				(font
@@ -19539,6 +20178,24 @@
 			)
 		)
 		(property "Sim.Pins" ""
+			(at 44.45 69.85 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Link" "https://www.mouser.pl/ProductDetail/Bourns/CR0603-FX-3300ELF?qs=I4suiNu8FYB0EfszDEV%252BGw%3D%3D"
+			(at 44.45 69.85 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "652-CR0603FX-3300ELF "
 			(at 44.45 69.85 90)
 			(effects
 				(font
@@ -19776,6 +20433,24 @@
 				(hide yes)
 			)
 		)
+		(property "Link" "https://www.mouser.pl/ProductDetail/KYOCERA-AVX/06035A101KAT2A?qs=I5rfTV0A4wHSVYt8pWypSg%3D%3D"
+			(at 189.23 69.85 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "581-06035A101K "
+			(at 189.23 69.85 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "dba4f58e-489b-4c63-999e-8041f4257963")
 		)
@@ -19864,6 +20539,24 @@
 			)
 		)
 		(property "Sim.Pins" ""
+			(at 120.65 120.65 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Link" "https://www.mouser.pl/ProductDetail/Bourns/CR0603-FX-1002ELF?qs=K5ddiUFZPT6XHG0dQH96QA%3D%3D"
+			(at 120.65 120.65 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "652-CR0603FX-1002ELF "
 			(at 120.65 120.65 0)
 			(effects
 				(font
@@ -20010,6 +20703,15 @@
 			)
 		)
 		(property "Sim.Pins" ""
+			(at 165.1 76.2 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Link" "https://eu.mouser.com/ProductDetail/Diodes-Incorporated/DESD3V3L2BTQ-7?qs=QNEnbhJQKvaDjKgdozA%2FQw%3D%3D"
 			(at 165.1 76.2 0)
 			(effects
 				(font

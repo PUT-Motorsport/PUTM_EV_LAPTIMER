@@ -30,3 +30,4 @@
 /hardware/**.lck
 /hardware/_autosave**
 todo.md
+/hardware/putm_laptimer.csv
