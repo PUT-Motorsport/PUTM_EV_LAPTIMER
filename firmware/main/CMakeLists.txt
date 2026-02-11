@@ -5,14 +5,13 @@ idf_component_register(
         "sdcard_task.cpp"
         "lcd_task.cpp"
         "wifi_task.cpp"
+        "lvgl_ui.c"
         "drivers/gpio.c"
+        "drivers/lcd.c"
         "drivers/timer.c"
         "drivers/sdcard.c"
         "drivers/wifi.c"
-        "fonts/font9x15-ISO8859-1.c"
-        "fonts/font10x20-ISO8859-1.c"
     INCLUDE_DIRS 
         "include"
         "drivers/include"
-        "fonts"
 )

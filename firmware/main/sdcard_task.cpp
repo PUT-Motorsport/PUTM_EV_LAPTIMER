@@ -37,6 +37,7 @@ esp_err_t sdcard_get_config(sdmmc_card_t **card_pointer)
         cJSON *config_json = cJSON_Parse(sd_buffer);
         if (config_json == NULL)
         {
+            ESP_LOGE(TAG, "NO JSON");
             return ESP_FAIL;
         }
 
@@ -46,8 +47,8 @@ esp_err_t sdcard_get_config(sdmmc_card_t **card_pointer)
 
         if (gates_json)
         {
-            config_temp.two_gate_mode = (bool)cJSON_GetNumberValue(gates_json);
-            ESP_LOGI(TAG, "Gates number: %u\n", (uint8_t)config_temp.two_gate_mode);
+            config_temp.two_gate_mode = cJSON_IsTrue(gates_json);
+            ESP_LOGI(TAG, "2 Gates mode: %u\n", (uint8_t)config_temp.two_gate_mode);
         }
 
         if (wifi_json)

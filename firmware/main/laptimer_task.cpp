@@ -232,7 +232,6 @@ void IRAM_ATTR gate1_pin_isr()
             stop_flag = false;
             timer_reset(laptime_timer);
         }
-        return;
     }
     else
     {
@@ -253,7 +252,8 @@ void IRAM_ATTR gate1_pin_isr()
 void IRAM_ATTR gate2_pin_isr()
 {
     if (config_main.two_gate_mode == false)
-        return;
+    {
+    }
     else
     {
         if (stop_flag == false && laptime_current.time > LAPTIME_MIN)
