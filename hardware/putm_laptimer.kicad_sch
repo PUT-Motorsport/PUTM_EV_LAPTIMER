@@ -15528,7 +15528,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_2x05_P2.54mm_Vertical_SMD"
+		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_2x05_P2.54mm_Vertical"
 			(at 170.18 33.02 0)
 			(effects
 				(font
@@ -15582,7 +15582,7 @@
 				(hide yes)
 			)
 		)
-		(property "Link" "https://www.tme.eu/pl/details/mx-70246-1004/zlacza-pozostale-molex/molex/70246-1004/?brutto=1&currency=PLN&utm_content=&campaign_id=20675111424&gad_campaignid=20675111424"
+		(property "Link" "https://www.tme.eu/pl/details/zl231-10pg/zlacza-idc/connfly/ds1013-10ssib1-b-0/"
 			(at 170.18 33.02 0)
 			(effects
 				(font
@@ -15591,7 +15591,7 @@
 				(hide yes)
 			)
 		)
-		(property "Mouser Part Number" "MX-70246-1004"
+		(property "Mouser Part Number" "ZL231-10PG"
 			(at 170.18 33.02 0)
 			(effects
 				(font
