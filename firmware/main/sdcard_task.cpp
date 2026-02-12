@@ -235,9 +235,6 @@ void sdcard_task(void *args)
     if (sdcard_spi_init() == ESP_FAIL)
         vTaskDelete(NULL);
 
-    if ((sd_detect_flag = !gpio_get_level((gpio_num_t)SD_CD)) == true)
-        sd_active_flag = !sdcard_init(&card_handle);
-
     for (;;)
     {
         if (xSemaphoreTake(config_mutex, 0) == pdTRUE) // Update driver list from config
@@ -264,8 +261,11 @@ void sdcard_task(void *args)
         }
         if (sd_detect_flag == true && sd_active_flag == false) // SD inserted
         {
-            sd_active_flag = !sdcard_init(&card_handle);
+            if (sdcard_init(&card_handle) == ESP_OK)
+                sd_active_flag = true;
+            else
+                sd_active_flag = false;
         }
-        vTaskDelay(50 / portTICK_PERIOD_MS);
+        vTaskDelay(100 / portTICK_PERIOD_MS);
     }
 }
