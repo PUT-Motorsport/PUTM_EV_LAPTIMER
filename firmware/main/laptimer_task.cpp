@@ -10,8 +10,6 @@
 
 static const char *TAG = "LAPTIMER_TASK";
 
-volatile bool stop_flag = true;
-
 /**
  * @brief Global variable used to store current laptime that is readed from timer in main loop and saved in ISR
  */
@@ -326,14 +324,10 @@ esp_err_t isr_init()
  * 2. Checks buttons ISRs
  * 3. Updates current laptime from timer if stop_flag is false
  * 4. Sends current laptime to other tasks
- * 5. Sends status flags to other tasks if changed
- * 6. When laptime is saved, stores it locally and sends through UART, sd card, shows it on LCD and WIFI page
+ * 5. When laptime is saved, stores it locally and sends through UART, sd card, shows it on LCD and WIFI page
  */
 void laptimer_task(void *args)
 {
-    bool stop_flag_old = stop_flag;
-    bool sd_active_flag_old = sd_active_flag;
-
     Driver_list driver_list_local;
 
     xQueueSend(laptime_current_queue_lcd, &laptime_current, 0);
@@ -382,16 +376,6 @@ void laptimer_task(void *args)
             laptime_save_driver(laptime_saved_local, laptime_list_driver);
             xQueueSend(laptime_saved_queue_sd, &laptime_saved_local, 0);
             xSemaphoreGive(laptime_lists_mutex);
-        }
-
-        // Send status flags to other tasks
-        if (stop_flag != stop_flag_old || sd_active_flag_old != sd_active_flag)
-        {
-            stop_flag_old = stop_flag;
-            sd_active_flag_old = sd_active_flag;
-            bool status_list[3] = {config_main.two_gate_mode, stop_flag, sd_active_flag};
-            xQueueSend(laptime_status_queue_lcd, status_list, 0);
-            xQueueSend(laptime_status_queue_wifi, status_list, 0);
         }
 
         vTaskDelay(10 / portTICK_PERIOD_MS);

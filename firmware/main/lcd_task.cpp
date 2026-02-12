@@ -102,7 +102,6 @@ void print_ui()
 /// @brief Prints status flag values received from queue on LCD
 void print_status()
 {
-    bool status_list[3] = {0};
     static char ip_str[52];
     static char gate_str[8];
     static char stop_str[5];
@@ -110,35 +109,31 @@ void print_status()
     static char wifi_str[9];
     wifi_mode_t wifi_mode = WIFI_MODE_NULL;
     uint16_t color = WHITE;
+    if (!config_main.two_gate_mode)
+        snprintf(gate_str, sizeof(gate_str), "1 GATE");
+    else
+        snprintf(gate_str, sizeof(gate_str), "2 GATE");
+    lcd_print_str(LCD_WIDTH - UI_LETTER_WIDTH * 6 - PADDING, PADDING, gate_str, UI_FONT, GRAY);
 
-    if (xQueueReceive(laptime_status_queue_lcd, status_list, 0) == pdTRUE)
+    if (stop_flag)
+        snprintf(stop_str, sizeof(stop_str), "STOP");
+
+    else
+        snprintf(stop_str, sizeof(stop_str), "    ");
+    color = RED;
+    lcd_print_str(PADDING, PADDING, stop_str, UI_FONT, color);
+
+    if (sd_active_flag == true)
     {
-        if (!status_list[0])
-            snprintf(gate_str, sizeof(gate_str), "1 GATE");
-        else
-            snprintf(gate_str, sizeof(gate_str), "2 GATE");
-        lcd_print_str(LCD_WIDTH - UI_LETTER_WIDTH * 6 - PADDING, PADDING, gate_str, UI_FONT, GRAY);
-
-        if (status_list[1])
-            snprintf(stop_str, sizeof(stop_str), "STOP");
-
-        else
-            snprintf(stop_str, sizeof(stop_str), "    ");
-        color = RED;
-        lcd_print_str(PADDING, PADDING, stop_str, UI_FONT, color);
-
-        if (sd_active_flag == true)
-        {
-            snprintf(sd_str, sizeof(sd_str), "SD ON ");
-            color = GREEN;
-        }
-        else
-        {
-            snprintf(sd_str, sizeof(sd_str), "SD OFF");
-            color = RED;
-        }
-        lcd_print_str(PADDING + 18 * UI_LETTER_WIDTH, PADDING, sd_str, UI_FONT, color);
+        snprintf(sd_str, sizeof(sd_str), "SD ON ");
+        color = GREEN;
     }
+    else
+    {
+        snprintf(sd_str, sizeof(sd_str), "SD OFF");
+        color = RED;
+    }
+    lcd_print_str(PADDING + 18 * UI_LETTER_WIDTH, PADDING, sd_str, UI_FONT, color);
 
     if (xQueueReceive(ip_queue, ip_str, 0) == pdTRUE)
     {

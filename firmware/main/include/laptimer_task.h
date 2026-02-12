@@ -26,11 +26,6 @@ struct Button_press
     volatile button_state state = BTN_STANDBY;
 };
 
-/**
- * @brief Global variable indicates stopped laptime, set true by LAP_RESET_PIN and set false by LAP_GATE1_PIN
- */
-extern volatile bool stop_flag;
-
 void laptimer_task(void *args);
 
 esp_err_t isr_init();

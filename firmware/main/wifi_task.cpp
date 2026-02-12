@@ -17,11 +17,6 @@ static Laptime current_laptime_data;
 static Driver_list driver_list_local;
 
 /**
- * @brief Status flags used to display on website
- */
-static bool status_flags[3] = {false, true, false};
-
-/**
  * @brief Mutex used by data_get_handler to ensure that it can read local data safely
  */
 static SemaphoreHandle_t data_mutex = NULL;
@@ -66,9 +61,9 @@ static esp_err_t data_get_handler(httpd_req_t *req)
         cJSON_AddStringToObject(root, "penalty_doo", penalty_count_str);
 
         cJSON *status = cJSON_CreateObject();
-        cJSON_AddBoolToObject(status, "mode", status_flags[0]);
-        cJSON_AddBoolToObject(status, "stop", status_flags[1]);
-        cJSON_AddBoolToObject(status, "sd", status_flags[2]);
+        cJSON_AddBoolToObject(status, "mode", config_main.two_gate_mode);
+        cJSON_AddBoolToObject(status, "stop", stop_flag);
+        cJSON_AddBoolToObject(status, "sd", sd_active_flag);
         cJSON_AddItemToObject(root, "status", status);
 
         // Take global mutex for lists
@@ -491,7 +486,6 @@ void wifi_task(void *args)
     int driver_update_counter = 0;
     Wifi_reset wifi_reset_flag = WIFI_RESET_DEFAULTS;
     Laptime temp_lap;
-    bool temp_status[3];
 
     for (;;)
     {
@@ -546,16 +540,6 @@ void wifi_task(void *args)
             if (xSemaphoreTake(data_mutex, portMAX_DELAY))
             {
                 current_laptime_data = temp_lap;
-                xSemaphoreGive(data_mutex);
-            }
-        }
-
-        // Read status flags to display
-        if (xQueueReceive(laptime_status_queue_wifi, &temp_status, 0) == pdTRUE)
-        {
-            if (xSemaphoreTake(data_mutex, portMAX_DELAY))
-            {
-                memcpy(status_flags, temp_status, sizeof(status_flags));
                 xSemaphoreGive(data_mutex);
             }
         }

@@ -152,4 +152,12 @@ extern Laptime laptime_list_last[LAPTIME_LIST_SIZE_LOCAL];
 extern Laptime laptime_list_driver[DRIVER_MAX_COUNT];
 #endif
 
+/**
+ * @brief Indicates if sdcard is active (inserted and initialized)
+ */
 extern bool sd_active_flag;
+
+/**
+ * @brief Indicates stopped laptime, set true by LAP_RESET_PIN and set false by LAP_GATE1_PIN
+ */
+extern bool stop_flag;

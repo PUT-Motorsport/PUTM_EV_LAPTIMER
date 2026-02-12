@@ -229,15 +229,14 @@ esp_err_t sdcard_check_integrity(char laptime_check_str[LAPTIME_STR_LENGTH])
 void sdcard_task(void *args)
 {
     sdmmc_card_t *card_handle = NULL;
+    Laptime laptime_saved;
+    Driver_list driver_list_local;
 
     if (sdcard_spi_init() == ESP_FAIL)
         vTaskDelete(NULL);
 
     if ((sd_detect_flag = !gpio_get_level((gpio_num_t)SD_CD)) == true)
         sd_active_flag = !sdcard_init(&card_handle);
-
-    Laptime laptime_saved;
-    Driver_list driver_list_local;
 
     for (;;)
     {
