@@ -25,13 +25,31 @@ bool sd_detect_flag = false;
 
 esp_err_t sdcard_get_config(sdmmc_card_t **card_pointer)
 {
+    esp_err_t ret = ESP_OK;
     unsigned int br;
     char sd_buffer[SD_BUFFER_SIZE] = "\0";
 
     Config config_temp;
 
-    if (sdcard_read(config_file_name, sd_buffer, sizeof(sd_buffer), &br) ==
+    if (sdcard_read(config_file_name, sd_buffer, sizeof(sd_buffer), &br) !=
         ESP_OK)
+    {
+        ret = sdcard_write(config_file_name,
+                           "{\n"
+                           "    \"two_gate_mode\" : 0,\n"
+                           "    \"wifi_config\" : {\n"
+                           "        \"mode\" : 0,\n"
+                           "        \"ssid\" : \"PUTM_LAPTIMER\",\n"
+                           "        \"password\" : \"\"\n"
+                           "    },\n"
+                           "    \"driver_list\" : [ \"aaa\", \"bbb\", \"ccc\" ]\n"
+                           "}\n");
+        if (ret)
+        {
+            return ret;
+        }
+    }
+    else
     {
         sd_buffer[br] = '\0';
         cJSON *config_json = cJSON_Parse(sd_buffer);
@@ -132,7 +150,7 @@ esp_err_t sdcard_init(sdmmc_card_t **card_pointer)
     if (sdcard_read(laptimes_file_name, sd_buffer, sizeof(sd_buffer), &br) !=
         ESP_OK)
     {
-        ESP_LOGI(TAG, "CREATING NEW FILE");
+        ESP_LOGI(TAG, "CREATING NEW FILE: %s", laptimes_file_name);
         ret = sdcard_write(laptimes_file_name, "SESSION, LAP, TIME, PENALTY, OC, DOO, DRIVER, DATE, HOUR\n");
         if (ret)
         {
