@@ -1,3 +1,4 @@
+set(COMPONENT_REQUIRES "RV3028C7")
 idf_component_register(
     SRCS 
         "main.cpp"
@@ -6,9 +7,9 @@ idf_component_register(
         "lcd_task.cpp"
         "wifi_task.cpp"
         "drivers/gpio.c"
-        "drivers/timer.c"
+        "drivers/timer.cpp"
         "drivers/sdcard.c"
-        "drivers/wifi.c"
+        "drivers/wifi_driver.c"
         "fonts/font9x15-ISO8859-1.c"
         "fonts/font10x20-ISO8859-1.c"
     INCLUDE_DIRS 

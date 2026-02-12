@@ -16,3 +16,4 @@ dependencies:
   #   public: true
   espressif/mdns: '*'
   espressif/cjson: ^1.7.19
+  espressif/arduino-esp32: ^3.3.5

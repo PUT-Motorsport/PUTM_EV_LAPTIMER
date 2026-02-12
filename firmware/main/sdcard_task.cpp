@@ -47,7 +47,7 @@ esp_err_t sdcard_get_config(sdmmc_card_t **card_pointer)
         if (gates_json)
         {
             config_temp.two_gate_mode = (bool)cJSON_GetNumberValue(gates_json);
-            ESP_LOGI(TAG, "Gates number: %u\n", (uint8_t)config_temp.two_gate_mode);
+            ESP_LOGI(TAG, "Gates number: %u\n", (uint8_t)config_temp.two_gate_mode + 1);
         }
 
         if (wifi_json)
@@ -241,7 +241,7 @@ void sdcard_task(void *args)
 
     for (;;)
     {
-        if (xSemaphoreTake(config_mutex, 0) == pdTRUE)
+        if (xSemaphoreTake(config_mutex, 0) == pdTRUE) // Update driver list from config
         {
             memcpy(driver_list_local.list, config_main.driver_list.list, sizeof(driver_list_local));
             driver_list_local.driver_count = config_main.driver_list.driver_count;
@@ -250,13 +250,13 @@ void sdcard_task(void *args)
 
         sd_detect_flag = !gpio_get_level((gpio_num_t)SD_CD);
 
-        if (sd_detect_flag == false && sd_active_flag == true)
+        if (sd_detect_flag == false && sd_active_flag == true) // SD removed
         {
             sdcard_deinit(&card_handle);
             sd_active_flag = false;
         }
 
-        if (sd_detect_flag == true && sd_active_flag == true)
+        if (sd_detect_flag == true && sd_active_flag == true) // SD ok
         {
             if (xQueueReceive(laptime_saved_queue_sd, &laptime_saved, 0) == pdTRUE)
             {
@@ -264,7 +264,7 @@ void sdcard_task(void *args)
                 // sdcard_check_integrity(laptime_saved_str);
             }
         }
-        if (sd_detect_flag == true && sd_active_flag == false)
+        if (sd_detect_flag == true && sd_active_flag == false) // SD inserted
         {
             sd_active_flag = !sdcard_init(&card_handle);
         }

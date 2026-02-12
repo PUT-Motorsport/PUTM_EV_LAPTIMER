@@ -217,11 +217,11 @@ void IRAM_ATTR button_isr(Button_press *button_press)
  */
 void IRAM_ATTR gate1_pin_isr()
 {
+    laptime_current.time = timer_get_time(laptime_timer);
     if (config_main.two_gate_mode == false)
     {
         if (stop_flag == false && laptime_current.time > LAPTIME_MIN)
         {
-            laptime_current.time = timer_get_time(laptime_timer);
             laptime_saved = laptime_current;
             laptime_saved.time += laptime_current.penalty_time;
             timer_reset(laptime_timer);
@@ -252,13 +252,13 @@ void IRAM_ATTR gate1_pin_isr()
  */
 void IRAM_ATTR gate2_pin_isr()
 {
+    laptime_current.time = timer_get_time(laptime_timer);
     if (config_main.two_gate_mode == false)
         return;
     else
     {
         if (stop_flag == false && laptime_current.time > LAPTIME_MIN)
         {
-            laptime_current.time = timer_get_time(laptime_timer);
             laptime_saved = laptime_current;
             laptime_saved.time += laptime_current.penalty_time;
             stop_flag = true;
@@ -333,7 +333,6 @@ void laptimer_task(void *args)
 {
     bool stop_flag_old = stop_flag;
     bool sd_active_flag_old = sd_active_flag;
-    bool status_update_flag = true;
     Driver_list driver_list_local;
 
     xQueueSend(laptime_current_queue_lcd, &laptime_current, 0);
@@ -343,6 +342,7 @@ void laptimer_task(void *args)
 
     for (;;)
     {
+        // Update driver list from config
         if (driver_list_local.driver_count != config_main.driver_list.driver_count)
         {
             if (xSemaphoreTake(config_mutex, 0) == pdTRUE)
@@ -356,28 +356,25 @@ void laptimer_task(void *args)
         driver_select(&driver_list_local);
         wifi_reset_check();
 
+        // Read laptime and check penalties
         if (stop_flag == false)
         {
             laptime_current.time = timer_get_time(laptime_timer);
             penalty_check(&laptime_current);
         }
 
+        // Send laptime to lcd and wifi webpage
         xQueueSend(laptime_current_queue_lcd, &laptime_current, 0);
         xQueueSend(laptime_current_queue_wifi, &laptime_current, 0);
 
-        if (stop_flag != stop_flag_old || sd_active_flag_old != sd_active_flag)
-        {
-            stop_flag_old = stop_flag;
-            sd_active_flag_old = sd_active_flag;
-            status_update_flag = true;
-        }
-
+        // Save laptime to lists and sd card, send with uart, reset laptime
         if (laptime_saved.time > 0 && xSemaphoreTake(laptime_lists_mutex, 0) == pdTRUE)
         {
             Laptime laptime_saved_local = laptime_saved;
             laptime_saved.reset();
 
             ESP_ERROR_CHECK(system_get_time(laptime_saved_local.timeofday, laptime_saved_local.date));
+            // ESP_ERROR_CHECK(rtc_set_time(laptime_saved_local.timeofday, laptime_saved_local.date));
             ESP_LOGI(TAG, "TIMEOFDAY: %s, DATE: %s", laptime_saved_local.timeofday, laptime_saved_local.date);
             laptime_save_uart(laptime_saved_local);
             laptime_save_top(laptime_saved_local, laptime_list_top);
@@ -387,12 +384,14 @@ void laptimer_task(void *args)
             xSemaphoreGive(laptime_lists_mutex);
         }
 
-        if (status_update_flag == true)
+        // Send status flags to other tasks
+        if (stop_flag != stop_flag_old || sd_active_flag_old != sd_active_flag)
         {
+            stop_flag_old = stop_flag;
+            sd_active_flag_old = sd_active_flag;
             bool status_list[3] = {config_main.two_gate_mode, stop_flag, sd_active_flag};
             xQueueSend(laptime_status_queue_lcd, status_list, 0);
             xQueueSend(laptime_status_queue_wifi, status_list, 0);
-            status_update_flag = false;
         }
 
         vTaskDelay(10 / portTICK_PERIOD_MS);

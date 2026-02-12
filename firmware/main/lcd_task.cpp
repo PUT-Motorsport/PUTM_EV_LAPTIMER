@@ -232,6 +232,7 @@ void lcd_task(void *args)
 
     for (;;)
     {
+
         if (xSemaphoreTake(config_mutex, 0) == pdTRUE)
         {
             memcpy(driver_list_local.list, config_main.driver_list.list, sizeof(driver_list_local));
@@ -242,6 +243,6 @@ void lcd_task(void *args)
         print_current_laptime(&driver_list_local);
         print_laptime_lists();
         print_status();
-        vTaskDelay(20 / portTICK_PERIOD_MS);
+        vTaskDelay(10 / portTICK_PERIOD_MS);
     }
 }

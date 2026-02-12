@@ -41,7 +41,7 @@
 #define WIFI_CHANNEL_DEFAULT 1
 #define WIFI_MAX_CONN_DEFAULT 3
 #define TIMEOFDAY_STR_DEFAULT "21:37:00"
-#define DATE_STR_DEFAULT "01/01/2026"
+#define DATE_STR_DEFAULT "2026-01-01"
 
 #ifdef __cplusplus
 

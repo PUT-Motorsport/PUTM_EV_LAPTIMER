@@ -1,6 +1,6 @@
 #include "wifi_task.h"
 
-#include "wifi.h"
+#include "wifi_driver.h"
 #include "webpage.h"
 #include "esp_http_server.h"
 #include "cJSON.h"
@@ -490,10 +490,13 @@ void wifi_task(void *args)
 
     int driver_update_counter = 0;
     Wifi_reset wifi_reset_flag = WIFI_RESET_DEFAULTS;
+    Laptime temp_lap;
+    bool temp_status[3];
 
     for (;;)
     {
 
+        // Update driver list from config
         driver_update_counter++;
         if (driver_update_counter >= 100)
         {
@@ -510,10 +513,10 @@ void wifi_task(void *args)
             }
         }
 
-        /// Wifi reinitialization
+        // Wifi reinitialization
         if (xQueueReceive(wifi_reset_queue, &wifi_reset_flag, 0) == pdTRUE)
         {
-            /// Reinit with config values
+            // Reinit with config values
             if (wifi_reset_flag == WIFI_RESET_CONFIG)
             {
                 if (xSemaphoreTake(config_mutex, portMAX_DELAY) == pdTRUE)
@@ -526,7 +529,7 @@ void wifi_task(void *args)
                 if (wifi_reinit(wifi_mode_local, wifi_ssid, wifi_password) == ESP_OK)
                     start_webserver();
             }
-            /// Reinit with safe values
+            // Reinit with safe values
             else if (wifi_reset_flag == WIFI_RESET_DEFAULTS)
             {
                 if (wifi_reinit(WIFI_MODE_AP, WIFI_SSID_DEFAULT, WIFI_PASSWORD_DEFAULT) == ESP_OK)
@@ -538,7 +541,7 @@ void wifi_task(void *args)
             xQueueSend(wifi_mode_queue, &wifi_mode_local, 0);
         }
 
-        Laptime temp_lap;
+        // Read current laptime to display
         if (xQueueReceive(laptime_current_queue_wifi, &temp_lap, 0) == pdTRUE)
         {
             if (xSemaphoreTake(data_mutex, portMAX_DELAY))
@@ -548,7 +551,7 @@ void wifi_task(void *args)
             }
         }
 
-        bool temp_status[3];
+        // Read status flags to display
         if (xQueueReceive(laptime_status_queue_wifi, &temp_status, 0) == pdTRUE)
         {
             if (xSemaphoreTake(data_mutex, portMAX_DELAY))
@@ -557,6 +560,8 @@ void wifi_task(void *args)
                 xSemaphoreGive(data_mutex);
             }
         }
+
+        // Get ip and send to lcd task to display on screen
         wifi_get_ip(ip_str);
         xQueueSend(ip_queue, ip_str, 0);
 
