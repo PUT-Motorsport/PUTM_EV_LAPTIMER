@@ -15528,7 +15528,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_2x05_P2.54mm_Vertical"
+		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_2x05_P2.54mm_Vertical_SMD"
 			(at 170.18 33.02 0)
 			(effects
 				(font
@@ -15582,7 +15582,7 @@
 				(hide yes)
 			)
 		)
-		(property "Link" "https://www.tme.eu/pl/details/zl231-10pg/zlacza-idc/connfly/ds1013-10ssib1-b-0/"
+		(property "Link" "https://www.tme.eu/pl/details/mx-70246-1004/zlacza-pozostale-molex/molex/70246-1004/?brutto=1&currency=PLN&utm_content=&campaign_id=20675111424&gad_campaignid=20675111424"
 			(at 170.18 33.02 0)
 			(effects
 				(font
@@ -15591,7 +15591,7 @@
 				(hide yes)
 			)
 		)
-		(property "Mouser Part Number" "ZL231-10PG"
+		(property "Mouser Part Number" "MX-70246-1004"
 			(at 170.18 33.02 0)
 			(effects
 				(font
@@ -16339,7 +16339,7 @@
 				(hide yes)
 			)
 		)
-		(property "Link" "https://www.mouser.pl/ProductDetail/KYOCERA-AVX/06035A101KAT2A?qs=I5rfTV0A4wHSVYt8pWypSg%3D%3D"
+		(property "Link" "https://www.mouser.pl/ProductDetail/Murata-Electronics/GRM033R6YA104ME14D?qs=P%2FC4Eoq9CDwjSVlAMBrT%252Bw%3D%3D"
 			(at 80.01 69.85 0)
 			(effects
 				(font
@@ -16348,7 +16348,7 @@
 				(hide yes)
 			)
 		)
-		(property "Mouser Part Number" "581-06035A101K "
+		(property "Mouser Part Number" "81-GRM33R6YA104ME14D "
 			(at 80.01 69.85 0)
 			(effects
 				(font
@@ -16674,7 +16674,7 @@
 				(hide yes)
 			)
 		)
-		(property "Link" "https://www.mouser.pl/ProductDetail/KYOCERA-AVX/06035A101KAT2A?qs=I5rfTV0A4wHSVYt8pWypSg%3D%3D"
+		(property "Link" "https://www.mouser.pl/ProductDetail/Murata-Electronics/GRM033R6YA104ME14D?qs=P%2FC4Eoq9CDwjSVlAMBrT%252Bw%3D%3D"
 			(at 80.01 38.1 0)
 			(effects
 				(font
@@ -16683,7 +16683,7 @@
 				(hide yes)
 			)
 		)
-		(property "Mouser Part Number" "581-06035A101K "
+		(property "Mouser Part Number" "81-GRM33R6YA104ME14D "
 			(at 80.01 38.1 0)
 			(effects
 				(font
@@ -19483,7 +19483,7 @@
 				(hide yes)
 			)
 		)
-		(property "Link" "https://www.mouser.pl/ProductDetail/KYOCERA-AVX/06035A101KAT2A?qs=I5rfTV0A4wHSVYt8pWypSg%3D%3D"
+		(property "Link" "https://www.mouser.pl/ProductDetail/Murata-Electronics/GRM033R6YA104ME14D?qs=P%2FC4Eoq9CDwjSVlAMBrT%252Bw%3D%3D"
 			(at 120.65 101.6 0)
 			(effects
 				(font
@@ -19492,7 +19492,7 @@
 				(hide yes)
 			)
 		)
-		(property "Mouser Part Number" "581-06035A101K "
+		(property "Mouser Part Number" "81-GRM33R6YA104ME14D "
 			(at 120.65 101.6 0)
 			(effects
 				(font
@@ -19877,7 +19877,7 @@
 				(hide yes)
 			)
 		)
-		(property "Link" "https://www.mouser.pl/ProductDetail/KYOCERA-AVX/06035A101KAT2A?qs=I5rfTV0A4wHSVYt8pWypSg%3D%3D"
+		(property "Link" "https://www.mouser.pl/ProductDetail/Murata-Electronics/GRM033R6YA104ME14D?qs=P%2FC4Eoq9CDwjSVlAMBrT%252Bw%3D%3D"
 			(at 120.65 38.1 0)
 			(effects
 				(font
@@ -19886,7 +19886,7 @@
 				(hide yes)
 			)
 		)
-		(property "Mouser Part Number" "581-06035A101K "
+		(property "Mouser Part Number" "81-GRM33R6YA104ME14D "
 			(at 120.65 38.1 0)
 			(effects
 				(font
@@ -21750,7 +21750,7 @@
 				(hide yes)
 			)
 		)
-		(property "Link" "https://www.mouser.pl/ProductDetail/KYOCERA-AVX/06035A101KAT2A?qs=I5rfTV0A4wHSVYt8pWypSg%3D%3D"
+		(property "Link" "https://www.mouser.pl/ProductDetail/Murata-Electronics/GRM033R6YA104ME14D?qs=P%2FC4Eoq9CDwjSVlAMBrT%252Bw%3D%3D"
 			(at 80.01 101.6 0)
 			(effects
 				(font
@@ -21759,7 +21759,7 @@
 				(hide yes)
 			)
 		)
-		(property "Mouser Part Number" "581-06035A101K "
+		(property "Mouser Part Number" "81-GRM33R6YA104ME14D "
 			(at 80.01 101.6 0)
 			(effects
 				(font
@@ -22270,7 +22270,7 @@
 				(hide yes)
 			)
 		)
-		(property "Link" "https://www.mouser.pl/ProductDetail/KYOCERA-AVX/06035A101KAT2A?qs=I5rfTV0A4wHSVYt8pWypSg%3D%3D"
+		(property "Link" "https://www.mouser.pl/ProductDetail/Murata-Electronics/GRM033R6YA104ME14D?qs=P%2FC4Eoq9CDwjSVlAMBrT%252Bw%3D%3D"
 			(at 80.01 133.35 0)
 			(effects
 				(font
@@ -22279,7 +22279,7 @@
 				(hide yes)
 			)
 		)
-		(property "Mouser Part Number" "581-06035A101K "
+		(property "Mouser Part Number" "81-GRM33R6YA104ME14D "
 			(at 80.01 133.35 0)
 			(effects
 				(font
@@ -22385,7 +22385,7 @@
 				(hide yes)
 			)
 		)
-		(property "Link" "https://www.mouser.pl/ProductDetail/KYOCERA-AVX/06035A101KAT2A?qs=I5rfTV0A4wHSVYt8pWypSg%3D%3D"
+		(property "Link" "https://www.mouser.pl/ProductDetail/Murata-Electronics/GRM033R6YA104ME14D?qs=P%2FC4Eoq9CDwjSVlAMBrT%252Bw%3D%3D"
 			(at 120.65 69.85 0)
 			(effects
 				(font
@@ -22394,7 +22394,7 @@
 				(hide yes)
 			)
 		)
-		(property "Mouser Part Number" "581-06035A101K "
+		(property "Mouser Part Number" "81-GRM33R6YA104ME14D "
 			(at 120.65 69.85 0)
 			(effects
 				(font
@@ -22780,7 +22780,7 @@
 				(hide yes)
 			)
 		)
-		(property "Link" "https://www.mouser.pl/ProductDetail/KYOCERA-AVX/06035A101KAT2A?qs=I5rfTV0A4wHSVYt8pWypSg%3D%3D"
+		(property "Link" "https://www.mouser.pl/ProductDetail/Murata-Electronics/GRM033R6YA104ME14D?qs=P%2FC4Eoq9CDwjSVlAMBrT%252Bw%3D%3D"
 			(at 120.65 133.35 0)
 			(effects
 				(font
@@ -22789,7 +22789,7 @@
 				(hide yes)
 			)
 		)
-		(property "Mouser Part Number" "581-06035A101K "
+		(property "Mouser Part Number" "81-GRM33R6YA104ME14D "
 			(at 120.65 133.35 0)
 			(effects
 				(font
@@ -23230,7 +23230,7 @@
 				(hide yes)
 			)
 		)
-		(property "Link" "https://www.mouser.pl/ProductDetail/KYOCERA-AVX/06035A101KAT2A?qs=I5rfTV0A4wHSVYt8pWypSg%3D%3D"
+		(property "Link" "https://www.mouser.pl/ProductDetail/Murata-Electronics/GRM033R6YA104ME14D?qs=P%2FC4Eoq9CDwjSVlAMBrT%252Bw%3D%3D"
 			(at 189.23 69.85 0)
 			(effects
 				(font
@@ -23239,7 +23239,7 @@
 				(hide yes)
 			)
 		)
-		(property "Mouser Part Number" "581-06035A101K "
+		(property "Mouser Part Number" "81-GRM33R6YA104ME14D "
 			(at 189.23 69.85 0)
 			(effects
 				(font
@@ -23508,7 +23508,7 @@
 				(hide yes)
 			)
 		)
-		(property "Link" "https://eu.mouser.com/ProductDetail/Diodes-Incorporated/DESD3V3L2BTQ-7?qs=QNEnbhJQKvaDjKgdozA%2FQw%3D%3D"
+		(property "Link" "https://www.mouser.pl/ProductDetail/Diodes-Incorporated/DESD3V3L2BTQ-7?qs=QNEnbhJQKvaDjKgdozA%2FQw%3D%3D&_gl=1*1bh7tjn*_ga*dW5kZWZpbmVk*_ga_15W4STQT4T*dW5kZWZpbmVk*_ga_1KQLCYKRX3*dW5kZWZpbmVk"
 			(at 165.1 76.2 0)
 			(effects
 				(font
