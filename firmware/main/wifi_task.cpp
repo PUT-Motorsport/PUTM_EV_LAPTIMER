@@ -505,8 +505,7 @@ void wifi_task(void *args)
             {
                 if (xSemaphoreTake(data_mutex, portMAX_DELAY) == pdTRUE)
                 {
-                    memcpy(driver_list_local.list, config_main.driver_list.list, sizeof(driver_list_local));
-                    driver_list_local.driver_count = config_main.driver_list.driver_count;
+                    memcpy(&driver_list_local, &config_main.driver_list, sizeof(driver_list_local));
                     xSemaphoreGive(data_mutex);
                 }
                 xSemaphoreGive(config_mutex);

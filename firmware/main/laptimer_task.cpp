@@ -333,6 +333,7 @@ void laptimer_task(void *args)
 {
     bool stop_flag_old = stop_flag;
     bool sd_active_flag_old = sd_active_flag;
+
     Driver_list driver_list_local;
 
     xQueueSend(laptime_current_queue_lcd, &laptime_current, 0);
@@ -347,8 +348,7 @@ void laptimer_task(void *args)
         {
             if (xSemaphoreTake(config_mutex, 0) == pdTRUE)
             {
-                memcpy(driver_list_local.list, config_main.driver_list.list, sizeof(driver_list_local));
-                driver_list_local.driver_count = config_main.driver_list.driver_count;
+                memcpy(&driver_list_local, &config_main.driver_list, sizeof(driver_list_local));
                 xSemaphoreGive(config_mutex);
             }
         }

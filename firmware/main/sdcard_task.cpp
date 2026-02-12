@@ -243,8 +243,7 @@ void sdcard_task(void *args)
     {
         if (xSemaphoreTake(config_mutex, 0) == pdTRUE) // Update driver list from config
         {
-            memcpy(driver_list_local.list, config_main.driver_list.list, sizeof(driver_list_local));
-            driver_list_local.driver_count = config_main.driver_list.driver_count;
+            memcpy(&driver_list_local, &config_main.driver_list, sizeof(driver_list_local));
             xSemaphoreGive(config_mutex);
         }
 
