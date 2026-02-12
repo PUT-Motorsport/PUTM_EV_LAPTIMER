@@ -13,7 +13,7 @@
 
 #include <cJSON.h>
 
-const char *config_file_name = "config.txt";
+const char *config_file_name = "config.json";
 const char *laptimes_file_name = "laptimer.csv";
 
 static const char *TAG = "SDCARD_TASK";
@@ -34,6 +34,7 @@ esp_err_t sdcard_get_config(sdmmc_card_t **card_pointer)
     if (sdcard_read(config_file_name, sd_buffer, sizeof(sd_buffer), &br) !=
         ESP_OK)
     {
+        ESP_LOGI(TAG, "CREATING NEW FILE: %s", config_file_name);
         ret = sdcard_write(config_file_name,
                            "{\n"
                            "    \"two_gate_mode\" : 0,\n"
