@@ -161,19 +161,19 @@ void penalty_check(Laptime *laptime)
     return;
 }
 
-bool driver_select(Driver_list *driver_list)
+bool driver_select(Laptime *laptime, Driver_list *driver_list)
 {
     switch (driver_select_press.state = button_hold(gpio_get_level(DRIVER_SELECT_PIN), driver_select_press))
     {
     case BTN_HOLD_ACTION:
-        laptime_current.driver_id--;
-        if (laptime_current.driver_id < 1)
-            laptime_current.driver_id = driver_list->driver_count;
+        laptime->driver_id--;
+        if (laptime->driver_id < 1)
+            laptime->driver_id = driver_list->driver_count;
         return true;
     case BTN_RELEASED_ACTION:
-        laptime_current.driver_id++;
-        if (laptime_current.driver_id > driver_list->driver_count)
-            laptime_current.driver_id = 1;
+        laptime->driver_id++;
+        if (laptime->driver_id > driver_list->driver_count)
+            laptime->driver_id = 1;
         return true;
     default:
         return false;
@@ -181,21 +181,17 @@ bool driver_select(Driver_list *driver_list)
     return false;
 }
 
-void wifi_reset_check()
+Wifi_reset wifi_reset_check()
 {
-    Wifi_reset wifi_reset_flag = WIFI_RESET_DEFAULTS;
     switch (wifi_press.state = button_hold(gpio_get_level(WIFI_PIN), wifi_press))
     {
     case BTN_HOLD_ACTION:
-        wifi_reset_flag = WIFI_RESET_DEFAULTS;
-        break;
+        return WIFI_RESET_DEFAULTS;
     case BTN_RELEASED_ACTION:
-        wifi_reset_flag = WIFI_RESET_CONFIG;
-        break;
+        return WIFI_RESET_CONFIG;
     default:
-        return;
+        return WIFI_NO_RESET;
     }
-    xQueueSend(wifi_reset_queue, &wifi_reset_flag, 0);
 }
 
 void IRAM_ATTR button_isr(Button_press *button_press)
@@ -347,14 +343,16 @@ void laptimer_task(void *args)
             }
         }
 
-        driver_select(&driver_list_local);
-        wifi_reset_check();
+        driver_select(&laptime_current, &driver_list_local);
+        penalty_check(&laptime_current);
+
+        if (wifi_reset_flag == WIFI_NO_RESET)
+            wifi_reset_flag = wifi_reset_check();
 
         // Read laptime and check penalties
         if (stop_flag == false)
         {
             laptime_current.time = timer_get_time(laptime_timer);
-            penalty_check(&laptime_current);
         }
 
         // Send laptime to lcd and wifi webpage

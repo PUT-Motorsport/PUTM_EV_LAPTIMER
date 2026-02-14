@@ -11,8 +11,6 @@
 // Access to config structure
 SemaphoreHandle_t config_mutex = xSemaphoreCreateMutex();
 
-QueueHandle_t wifi_reset_queue = xQueueCreate(1, sizeof(Wifi_reset));
-
 // List of laptimes to save on sd card
 QueueHandle_t laptime_saved_queue_sd = xQueueCreate(LAPTIME_LIST_SIZE_LOCAL, sizeof(Laptime));
 
@@ -33,6 +31,7 @@ Laptime laptime_list_driver[DRIVER_MAX_COUNT];
 
 bool sd_active_flag = false;
 bool stop_flag = true;
+Wifi_reset wifi_reset_flag = WIFI_NO_RESET;
 
 void Laptime::reset()
 {

@@ -464,27 +464,14 @@ static httpd_handle_t start_webserver(void)
  */
 void wifi_task(void *args)
 {
-    char wifi_ssid[WIFI_SSID_STR_LENGTH] = WIFI_SSID_DEFAULT;
-    char wifi_password[WIFI_PASSWORD_STR_LENGTH] = WIFI_PASSWORD_DEFAULT;
-    wifi_mode_t wifi_mode_local = WIFI_MODE_NULL;
-    char ip_str[52] = {0};
-
-    if (xSemaphoreTake(config_mutex, portMAX_DELAY) == pdTRUE)
-    {
-        snprintf(wifi_ssid, sizeof(wifi_ssid), config_main.wifi_ssid);
-        snprintf(wifi_password, sizeof(wifi_password), config_main.wifi_password);
-        wifi_mode_local = config_main.wifi_mode;
-        xSemaphoreGive(config_mutex);
-    }
-
-    if (wifi_init(wifi_mode_local, wifi_ssid, wifi_password) == ESP_OK)
-        start_webserver();
-    xQueueSend(wifi_mode_queue, &wifi_mode_local, 0);
-
     data_mutex = xSemaphoreCreateMutex();
 
+    char wifi_ssid_local[WIFI_SSID_STR_LENGTH] = WIFI_SSID_DEFAULT;
+    char wifi_password_local[WIFI_PASSWORD_STR_LENGTH] = WIFI_PASSWORD_DEFAULT;
+    char ip_str[52] = {0};
+    wifi_mode_t wifi_mode_local = WIFI_MODE_NULL;
+    xQueueSend(wifi_mode_queue, &wifi_mode_local, 0);
     int driver_update_counter = 0;
-    Wifi_reset wifi_reset_flag = WIFI_RESET_DEFAULTS;
     Laptime temp_lap;
 
     for (;;)
@@ -507,47 +494,51 @@ void wifi_task(void *args)
         }
 
         // Wifi reinitialization
-        if (xQueueReceive(wifi_reset_queue, &wifi_reset_flag, 0) == pdTRUE)
+        if (wifi_reset_flag != WIFI_NO_RESET)
         {
             // Reinit with config values
             if (wifi_reset_flag == WIFI_RESET_CONFIG)
             {
                 if (xSemaphoreTake(config_mutex, portMAX_DELAY) == pdTRUE)
                 {
-                    snprintf(wifi_ssid, sizeof(wifi_ssid), config_main.wifi_ssid);
-                    snprintf(wifi_password, sizeof(wifi_password), config_main.wifi_password);
+                    snprintf(wifi_ssid_local, sizeof(wifi_ssid_local), config_main.wifi_ssid);
+                    snprintf(wifi_password_local, sizeof(wifi_password_local), config_main.wifi_password);
                     wifi_mode_local = config_main.wifi_mode;
                     xSemaphoreGive(config_mutex);
                 }
-                if (wifi_reinit(wifi_mode_local, wifi_ssid, wifi_password) == ESP_OK)
-                    start_webserver();
             }
             // Reinit with safe values
             else if (wifi_reset_flag == WIFI_RESET_DEFAULTS)
             {
-                if (wifi_reinit(WIFI_MODE_AP, WIFI_SSID_DEFAULT, WIFI_PASSWORD_DEFAULT) == ESP_OK)
-                {
-                    wifi_get_mode(&wifi_mode_local);
-                    start_webserver();
-                }
+                snprintf(wifi_ssid_local, sizeof(wifi_ssid_local), "%s", WIFI_SSID_DEFAULT);
+                snprintf(wifi_password_local, sizeof(wifi_password_local), "%s", WIFI_PASSWORD_DEFAULT);
+                wifi_mode_local = WIFI_MODE_DEFAULT;
             }
+
+            if (wifi_reinit(wifi_mode_local, wifi_ssid_local, wifi_password_local) == ESP_OK)
+                start_webserver();
+            else
+                wifi_mode_local = WIFI_MODE_NULL;
+
+            wifi_reset_flag = WIFI_NO_RESET;
             xQueueSend(wifi_mode_queue, &wifi_mode_local, 0);
         }
-
-        // Read current laptime to display
-        if (xQueueReceive(laptime_current_queue_wifi, &temp_lap, 0) == pdTRUE)
+        else
         {
-            if (xSemaphoreTake(data_mutex, portMAX_DELAY))
+            // Read current laptime to display
+            if (xQueueReceive(laptime_current_queue_wifi, &temp_lap, 0) == pdTRUE)
             {
-                current_laptime_data = temp_lap;
-                xSemaphoreGive(data_mutex);
+                if (xSemaphoreTake(data_mutex, portMAX_DELAY))
+                {
+                    current_laptime_data = temp_lap;
+                    xSemaphoreGive(data_mutex);
+                }
             }
+
+            // Get ip and send to lcd task to display on screen
+            wifi_get_ip(ip_str);
+            xQueueSend(ip_queue, ip_str, 0);
         }
-
-        // Get ip and send to lcd task to display on screen
-        wifi_get_ip(ip_str);
-        xQueueSend(ip_queue, ip_str, 0);
-
         vTaskDelay(pdMS_TO_TICKS(20));
     }
 }

@@ -35,7 +35,8 @@
 #define PENALTY_STR_DEFAULT "+00:00"
 #define COUNT_STR_DEFAULT "0"
 
-#define WIFI_IP_DEFAULT
+#define WIFI_MODE_DEFAULT WIFI_MODE_AP
+#define WIFI_IP_DEFAULT "192.168.4.1"
 #define WIFI_SSID_DEFAULT "PUTM_LAPTIMER"
 #define WIFI_PASSWORD_DEFAULT "\0"
 #define WIFI_CHANNEL_DEFAULT 1
@@ -85,7 +86,7 @@ struct Config
 {
     bool two_gate_mode = false;
     Driver_list driver_list;
-    wifi_mode_t wifi_mode = WIFI_MODE_STA;
+    wifi_mode_t wifi_mode = WIFI_MODE_DEFAULT;
     char wifi_ssid[WIFI_SSID_STR_LENGTH] = WIFI_SSID_DEFAULT;
     char wifi_password[WIFI_PASSWORD_STR_LENGTH] = WIFI_PASSWORD_DEFAULT;
     char time_set[TIMEOFDAY_STR_LENGTH] = TIMEOFDAY_STR_DEFAULT;
@@ -96,6 +97,7 @@ struct Config
 
 enum Wifi_reset
 {
+    WIFI_NO_RESET,
     WIFI_RESET_CONFIG,
     WIFI_RESET_DEFAULTS,
 };
@@ -150,7 +152,6 @@ extern Config config_main;
 extern Laptime laptime_list_top[LAPTIME_LIST_SIZE_LOCAL];
 extern Laptime laptime_list_last[LAPTIME_LIST_SIZE_LOCAL];
 extern Laptime laptime_list_driver[DRIVER_MAX_COUNT];
-#endif
 
 /**
  * @brief Indicates if sdcard is active (inserted and initialized)
@@ -161,3 +162,11 @@ extern bool sd_active_flag;
  * @brief Indicates stopped laptime, set true by LAP_RESET_PIN and set false by LAP_GATE1_PIN
  */
 extern bool stop_flag;
+
+/**
+ * @brief Indicates state of flag that resets wifi
+ */
+
+extern Wifi_reset wifi_reset_flag;
+
+#endif
