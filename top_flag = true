@@ -1,0 +1,421 @@
+[1mdiff --git a/firmware/main/wifi_task.cpp b/firmware/main/wifi_task.cpp[m
+[1mindex 89b2f34..fe65e4d 100644[m
+[1m--- a/firmware/main/wifi_task.cpp[m
+[1m+++ b/firmware/main/wifi_task.cpp[m
+[36m@@ -1,11 +1,11 @@[m
+ #include "wifi_task.h"[m
+ [m
+[31m-#include "wifi.h"[m
+[31m-#include "webpage.h"[m
+[31m-#include "esp_http_server.h"[m
+ #include "cJSON.h"[m
+[31m-#include <string.h>[m
+[32m+[m[32m#include "esp_http_server.h"[m
+ #include "timer.h"[m
+[32m+[m[32m#include "webpage.h"[m
+[32m+[m[32m#include "wifi.h"[m
+[32m+[m[32m#include <string.h>[m
+ [m
+ static const char *TAG = "WIFI_TASK";[m
+ [m
+[36m@@ -22,7 +22,8 @@[m [mstatic Driver_list driver_list_local;[m
+ static bool status_flags[3] = {false, true, false};[m
+ [m
+ /**[m
+[31m- * @brief Mutex used by data_get_handler to ensure that it can read local data safely[m
+[32m+[m[32m * @brief Mutex used by data_get_handler to ensure that it can read local data[m
+[32m+[m[32m * safely[m
+  */[m
+ static SemaphoreHandle_t data_mutex = NULL;[m
+ [m
+[36m@@ -47,7 +48,8 @@[m [mstatic esp_err_t data_get_handler(httpd_req_t *req)[m
+ [m
+     if (xSemaphoreTake(data_mutex, portMAX_DELAY))[m
+     {[m
+[31m-        current_laptime_data.convert_string_full(laptime_current_str, sizeof(laptime_current_str));[m
+[32m+[m[32m        current_laptime_data.convert_string_full(laptime_current_str,[m
+[32m+[m[32m                                                 sizeof(laptime_current_str));[m
+         cJSON_AddStringToObject(root, "current", laptime_current_str);[m
+ [m
+         int id = current_laptime_data.driver_id;[m
+[36m@@ -56,13 +58,16 @@[m [mstatic esp_err_t data_get_handler(httpd_req_t *req)[m
+         cJSON_AddStringToObject(root, "current_driver_tag", driver_list_local.list[id]);[m
+         cJSON_AddNumberToObject(root, "current_driver_id", id);[m
+ [m
+[31m-        current_laptime_data.convert_string_penalty(penalty_time_str, sizeof(penalty_time_str));[m
+[32m+[m[32m        current_laptime_data.convert_string_penalty(penalty_time_str,[m
+[32m+[m[32m                                                    sizeof(penalty_time_str));[m
+         cJSON_AddStringToObject(root, "penalty_time", penalty_time_str);[m
+ [m
+[31m-        snprintf(penalty_count_str, sizeof(penalty_count_str), "%u", current_laptime_data.oc_count);[m
+[32m+[m[32m        snprintf(penalty_count_str, sizeof(penalty_count_str), "%u",[m
+[32m+[m[32m                 current_laptime_data.oc_count);[m
+         cJSON_AddStringToObject(root, "penalty_oc", penalty_count_str);[m
+ [m
+[31m-        snprintf(penalty_count_str, sizeof(penalty_count_str), "%u", current_laptime_data.doo_count);[m
+[32m+[m[32m        snprintf(penalty_count_str, sizeof(penalty_count_str), "%u",[m
+[32m+[m[32m                 current_laptime_data.doo_count);[m
+         cJSON_AddStringToObject(root, "penalty_doo", penalty_count_str);[m
+ [m
+         cJSON *status = cJSON_CreateObject();[m
+[36m@@ -83,21 +88,32 @@[m [mstatic esp_err_t data_get_handler(httpd_req_t *req)[m
+ [m
+             for (int i = 0; i <= driver_list_local.driver_count; i++)[m
+             {[m
+[31m-                cJSON_AddItemToArray(drivers_arr, cJSON_CreateString(driver_list_local.list[i]));[m
+[31m-[m
+[31m-                laptime_list_driver[i].convert_string_time(laptime_current_str, sizeof(laptime_current_str));[m
+[31m-                cJSON_AddItemToArray(driver_best_arr, cJSON_CreateString(laptime_current_str));[m
+[31m-[m
+[31m-                cJSON_AddItemToArray(driver_lap_count_arr, cJSON_CreateNumber(laptime_list_driver[i].count - 1));[m
+[31m-[m
+[31m-                laptime_list_driver[i].convert_string_penalty(penalty_time_str, sizeof(penalty_time_str));[m
+[31m-                cJSON_AddItemToArray(driver_pen_time_arr, cJSON_CreateString(penalty_time_str));[m
+[31m-[m
+[31m-                snprintf(penalty_count_str, sizeof(penalty_count_str), "%u", laptime_list_driver[i].oc_count);[m
+[31m-                cJSON_AddItemToArray(driver_pen_oc_arr, cJSON_CreateString(penalty_count_str));[m
+[31m-[m
+[31m-                snprintf(penalty_count_str, sizeof(penalty_count_str), "%u", laptime_list_driver[i].doo_count);[m
+[31m-                cJSON_AddItemToArray(driver_pen_doo_arr, cJSON_CreateString(penalty_count_str));[m
+[32m+[m[32m                cJSON_AddItemToArray(drivers_arr,[m
+[32m+[m[32m                                     cJSON_CreateString(driver_list_local.list[i]));[m
+[32m+[m
+[32m+[m[32m                laptime_list_driver[i].convert_string_time(laptime_current_str,[m
+[32m+[m[32m                                                           sizeof(laptime_current_str));[m
+[32m+[m[32m                cJSON_AddItemToArray(driver_best_arr,[m
+[32m+[m[32m                                     cJSON_CreateString(laptime_current_str));[m
+[32m+[m
+[32m+[m[32m                cJSON_AddItemToArray([m
+[32m+[m[32m                    driver_lap_count_arr,[m
+[32m+[m[32m                    cJSON_CreateNumber(laptime_list_driver[i].count - 1));[m
+[32m+[m
+[32m+[m[32m                laptime_list_driver[i].convert_string_penalty(penalty_time_str,[m
+[32m+[m[32m                                                              sizeof(penalty_time_str));[m
+[32m+[m[32m                cJSON_AddItemToArray(driver_pen_time_arr,[m
+[32m+[m[32m                                     cJSON_CreateString(penalty_time_str));[m
+[32m+[m
+[32m+[m[32m                snprintf(penalty_count_str, sizeof(penalty_count_str), "%u",[m
+[32m+[m[32m                         laptime_list_driver[i].oc_count);[m
+[32m+[m[32m                cJSON_AddItemToArray(driver_pen_oc_arr,[m
+[32m+[m[32m                                     cJSON_CreateString(penalty_count_str));[m
+[32m+[m
+[32m+[m[32m                snprintf(penalty_count_str, sizeof(penalty_count_str), "%u",[m
+[32m+[m[32m                         laptime_list_driver[i].doo_count);[m
+[32m+[m[32m                cJSON_AddItemToArray(driver_pen_doo_arr,[m
+[32m+[m[32m                                     cJSON_CreateString(penalty_count_str));[m
+             }[m
+             cJSON_AddItemToObject(root, "all_drivers", drivers_arr);[m
+             cJSON_AddItemToObject(root, "driver_best", driver_best_arr);[m
+[36m@@ -121,32 +137,44 @@[m [mstatic esp_err_t data_get_handler(httpd_req_t *req)[m
+             for (int i = 0; i < LAPTIME_LIST_SIZE_WIFI; i++)[m
+             {[m
+                 // Last[m
+[31m-                laptime_list_last[i].convert_string_full(laptime_current_str, sizeof(laptime_current_str));[m
+[32m+[m[32m                laptime_list_last[i].convert_string_full(laptime_current_str,[m
+[32m+[m[32m                                                         sizeof(laptime_current_str));[m
+                 cJSON_AddItemToArray(last_arr, cJSON_CreateString(laptime_current_str));[m
+ [m
+                 int drv_id = laptime_list_last[i].driver_id;[m
+                 if (drv_id < 0 || drv_id >= DRIVER_MAX_COUNT)[m
+                     drv_id = 0;[m
+[31m-                cJSON_AddItemToArray(last_driver_tag_arr, cJSON_CreateString(driver_list_local.list[drv_id]));[m
+[32m+[m[32m                cJSON_AddItemToArray([m
+[32m+[m[32m                    last_driver_tag_arr,[m
+[32m+[m[32m                    cJSON_CreateString(driver_list_local.list[drv_id]));[m
+                 cJSON_AddItemToArray(last_driver_id_arr, cJSON_CreateNumber(drv_id));[m
+ [m
+[31m-                laptime_list_last[i].convert_string_penalty(penalty_time_str, sizeof(penalty_time_str));[m
+[31m-                cJSON_AddItemToArray(last_pen_time_arr, cJSON_CreateString(penalty_time_str));[m
+[32m+[m[32m                laptime_list_last[i].convert_string_penalty(penalty_time_str,[m
+[32m+[m[32m                                                            sizeof(penalty_time_str));[m
+[32m+[m[32m                cJSON_AddItemToArray(last_pen_time_arr,[m
+[32m+[m[32m                                     cJSON_CreateString(penalty_time_str));[m
+ [m
+[31m-                snprintf(penalty_count_str, sizeof(penalty_count_str), "%u", laptime_list_last[i].oc_count);[m
+[31m-                cJSON_AddItemToArray(last_pen_oc_arr, cJSON_CreateString(penalty_count_str));[m
+[32m+[m[32m                snprintf(penalty_count_str, sizeof(penalty_count_str), "%u",[m
+[32m+[m[32m                         laptime_list_last[i].oc_count);[m
+[32m+[m[32m                cJSON_AddItemToArray(last_pen_oc_arr,[m
+[32m+[m[32m                                     cJSON_CreateString(penalty_count_str));[m
+ [m
+[31m-                snprintf(penalty_count_str, sizeof(penalty_count_str), "%u", laptime_list_last[i].doo_count);[m
+[31m-                cJSON_AddItemToArray(last_pen_doo_arr, cJSON_CreateString(penalty_count_str));[m
+[32m+[m[32m                snprintf(penalty_count_str, sizeof(penalty_count_str), "%u",[m
+[32m+[m[32m                         laptime_list_last[i].doo_count);[m
+[32m+[m[32m                cJSON_AddItemToArray(last_pen_doo_arr,[m
+[32m+[m[32m                                     cJSON_CreateString(penalty_count_str));[m
+ [m
+                 // Top[m
+[31m-                laptime_list_top[i].convert_string_full(laptime_current_str, sizeof(laptime_current_str));[m
+[32m+[m[32m                laptime_list_top[i].convert_string_full(laptime_current_str,[m
+[32m+[m[32m                                                        sizeof(laptime_current_str));[m
+                 cJSON_AddItemToArray(top_arr, cJSON_CreateString(laptime_current_str));[m
+ [m
+                 drv_id = laptime_list_top[i].driver_id;[m
+                 if (drv_id < 0 || drv_id >= DRIVER_MAX_COUNT)[m
+                     drv_id = 0;[m
+[31m-                cJSON_AddItemToArray(top_driver_tag_arr, cJSON_CreateString(driver_list_local.list[drv_id]));[m
+[32m+[m[32m                cJSON_AddItemToArray([m
+[32m+[m[32m                    top_driver_tag_arr,[m
+[32m+[m[32m                    cJSON_CreateString(driver_list_local.list[drv_id]));[m
+                 cJSON_AddItemToArray(top_driver_id_arr, cJSON_CreateNumber(drv_id));[m
+             }[m
+ [m
+[36m@@ -184,10 +212,12 @@[m [mstatic esp_err_t data_get_handler(httpd_req_t *req)[m
+ static esp_err_t laptimes_csv_get_handler(httpd_req_t *req)[m
+ {[m
+     httpd_resp_set_type(req, "text/csv");[m
+[31m-    httpd_resp_set_hdr(req, "Content-Disposition", "attachment; filename=\"laptimes.csv\"");[m
+[32m+[m[32m    httpd_resp_set_hdr(req, "Content-Disposition",[m
+[32m+[m[32m                       "attachment; filename=\"laptimes.csv\"");[m
+ [m
+     // Header[m
+[31m-    httpd_resp_sendstr_chunk(req, "Number,Laptime [mm:ss:ms], Driver, Penalty Time [mm:ss],OC,DOO,Date,Hour\n");[m
+[32m+[m[32m    httpd_resp_sendstr_chunk(req, "Number,Laptime [mm:ss:ms], Driver, Penalty "[m
+[32m+[m[32m                                  "Time [mm:ss],OC,DOO,Date,Hour\n");[m
+ [m
+     if (xSemaphoreTake(laptime_lists_mutex, portMAX_DELAY))[m
+     {[m
+[36m@@ -204,14 +234,10 @@[m [mstatic esp_err_t laptimes_csv_get_handler(httpd_req_t *req)[m
+             if (drv_id < 0 || drv_id >= DRIVER_MAX_COUNT)[m
+                 drv_id = 0;[m
+ [m
+[31m-            snprintf(line, sizeof(line), "%s,%s,%s,%u,%u,%s,%s\n",[m
+[31m-                     time_str,[m
+[31m-                     driver_list_local.list[drv_id],[m
+[31m-                     pen_str,[m
+[31m-                     laptime_list_last[i].oc_count,[m
+[31m-                     laptime_list_last[i].doo_count,[m
+[31m-                     laptime_list_last[i].date,[m
+[31m-                     laptime_list_last[i].timeofday);[m
+[32m+[m[32m            snprintf(line, sizeof(line), "%s,%s,%s,%u,%u,%s,%s\n", time_str,[m
+[32m+[m[32m                     driver_list_local.list[drv_id], pen_str,[m
+[32m+[m[32m                     laptime_list_last[i].oc_count, laptime_list_last[i].doo_count,[m
+[32m+[m[32m                     laptime_list_last[i].date, laptime_list_last[i].timeofday);[m
+             httpd_resp_sendstr_chunk(req, line);[m
+         }[m
+         xSemaphoreGive(laptime_lists_mutex);[m
+[36m@@ -229,10 +255,12 @@[m [mstatic esp_err_t laptimes_csv_get_handler(httpd_req_t *req)[m
+ static esp_err_t drivers_csv_get_handler(httpd_req_t *req)[m
+ {[m
+     httpd_resp_set_type(req, "text/csv");[m
+[31m-    httpd_resp_set_hdr(req, "Content-Disposition", "attachment; filename=\"drivers.csv\"");[m
+[32m+[m[32m    httpd_resp_set_hdr(req, "Content-Disposition",[m
+[32m+[m[32m                       "attachment; filename=\"drivers.csv\"");[m
+ [m
+     // Header[m
+[31m-    httpd_resp_sendstr_chunk(req, "Driver,Best laptime,Lap count,Penalty time sum,OC sum,DOO sum\n");[m
+[32m+[m[32m    httpd_resp_sendstr_chunk([m
+[32m+[m[32m        req, "Driver,Best laptime,Lap count,Penalty time sum,OC sum,DOO sum\n");[m
+ [m
+     if (xSemaphoreTake(laptime_lists_mutex, portMAX_DELAY))[m
+     {[m
+[36m@@ -245,13 +273,10 @@[m [mstatic esp_err_t drivers_csv_get_handler(httpd_req_t *req)[m
+             laptime_list_driver[i].convert_string_time(time_str, sizeof(time_str));[m
+             laptime_list_driver[i].convert_string_penalty(pen_str, sizeof(pen_str));[m
+ [m
+[31m-            snprintf(line, sizeof(line), "%s,%s,%u,%s,%u,%u\n",[m
+[31m-                     driver_list_local.list[i],[m
+[31m-                     time_str,[m
+[31m-                     laptime_list_driver[i].count,[m
+[31m-                     pen_str,[m
+[31m-                     laptime_list_driver[i].oc_count,[m
+[31m-                     laptime_list_driver[i].doo_count);[m
+[32m+[m[32m            snprintf([m
+[32m+[m[32m                line, sizeof(line), "%s,%s,%u,%s,%u,%u\n", driver_list_local.list[i],[m
+[32m+[m[32m                time_str, laptime_list_driver[i].count, pen_str,[m
+[32m+[m[32m                laptime_list_driver[i].oc_count, laptime_list_driver[i].doo_count);[m
+             httpd_resp_sendstr_chunk(req, line);[m
+         }[m
+         xSemaphoreGive(laptime_lists_mutex);[m
+[36m@@ -283,7 +308,8 @@[m [mstatic esp_err_t config_get_handler(httpd_req_t *req)[m
+         // Driver list starts from 1, index 0 is placeholder[m
+         for (int i = 1; i <= config_main.driver_list.driver_count; i++)[m
+         {[m
+[31m-            cJSON_AddItemToArray(drivers, cJSON_CreateString(config_main.driver_list.list[i]));[m
+[32m+[m[32m            cJSON_AddItemToArray(drivers,[m
+[32m+[m[32m                                 cJSON_CreateString(config_main.driver_list.list[i]));[m
+         }[m
+         cJSON_AddItemToObject(root, "driver_list", drivers);[m
+ [m
+[36m@@ -334,39 +360,45 @@[m [mstatic esp_err_t config_post_handler(httpd_req_t *req)[m
+         {[m
+             if (cJSON_IsNumber(wifi_mode_json))[m
+             {[m
+[31m-                config_main.wifi_mode = (wifi_mode_json->valueint == 1) ? WIFI_MODE_STA : WIFI_MODE_AP;[m
+[32m+[m[32m                config_main.wifi_mode =[m
+[32m+[m[32m                    (wifi_mode_json->valueint == 1) ? WIFI_MODE_STA : WIFI_MODE_AP;[m
+             }[m
+             else if (cJSON_IsBool(wifi_mode_json))[m
+             {[m
+[31m-                config_main.wifi_mode = cJSON_IsTrue(wifi_mode_json) ? WIFI_MODE_STA : WIFI_MODE_AP;[m
+[32m+[m[32m                config_main.wifi_mode =[m
+[32m+[m[32m                    cJSON_IsTrue(wifi_mode_json) ? WIFI_MODE_STA : WIFI_MODE_AP;[m
+             }[m
+         }[m
+ [m
+         cJSON *ssid = cJSON_GetObjectItem(root, "wifi_ssid");[m
+         if (ssid && ssid->valuestring)[m
+         {[m
+[31m-            strncpy(config_main.wifi_ssid, ssid->valuestring, sizeof(config_main.wifi_ssid) - 1);[m
+[32m+[m[32m            strncpy(config_main.wifi_ssid, ssid->valuestring,[m
+[32m+[m[32m                    sizeof(config_main.wifi_ssid) - 1);[m
+             config_main.wifi_ssid[sizeof(config_main.wifi_ssid) - 1] = '\0';[m
+         }[m
+ [m
+         cJSON *pass = cJSON_GetObjectItem(root, "wifi_password");[m
+         if (pass && pass->valuestring)[m
+         {[m
+[31m-            strncpy(config_main.wifi_password, pass->valuestring, sizeof(config_main.wifi_password) - 1);[m
+[32m+[m[32m            strncpy(config_main.wifi_password, pass->valuestring,[m
+[32m+[m[32m                    sizeof(config_main.wifi_password) - 1);[m
+             config_main.wifi_password[sizeof(config_main.wifi_password) - 1] = '\0';[m
+         }[m
+ [m
+         cJSON *time_set_json = cJSON_GetObjectItem(root, "time_set");[m
+         if (time_set_json && time_set_json->valuestring)[m
+         {[m
+[31m-            strncpy(config_main.time_set, time_set_json->valuestring, sizeof(config_main.time_set) - 1);[m
+[32m+[m[32m            strncpy(config_main.time_set, time_set_json->valuestring,[m
+[32m+[m[32m                    sizeof(config_main.time_set) - 1);[m
+             config_main.time_set[sizeof(config_main.time_set) - 1] = '\0';[m
+         }[m
+ [m
+         cJSON *date_set_json = cJSON_GetObjectItem(root, "date_set");[m
+         if (date_set_json && date_set_json->valuestring)[m
+         {[m
+[31m-            strncpy(config_main.date_set, date_set_json->valuestring, sizeof(config_main.date_set) - 1);[m
+[32m+[m[32m            strncpy(config_main.date_set, date_set_json->valuestring,[m
+[32m+[m[32m                    sizeof(config_main.date_set) - 1);[m
+             config_main.date_set[sizeof(config_main.date_set) - 1] = '\0';[m
+         }[m
+ [m
+[36m@@ -389,7 +421,8 @@[m [mstatic esp_err_t config_post_handler(httpd_req_t *req)[m
+                 cJSON *item = cJSON_GetArrayItem(drivers, i);[m
+                 if (item && item->valuestring)[m
+                 {[m
+[31m-                    strncpy(config_main.driver_list.list[i + 1], item->valuestring, DRIVER_TAG_LENGTH - 1);[m
+[32m+[m[32m                    strncpy(config_main.driver_list.list[i + 1], item->valuestring,[m
+[32m+[m[32m                            DRIVER_TAG_LENGTH - 1);[m
+                     config_main.driver_list.list[i + 1][DRIVER_TAG_LENGTH - 1] = '\0';[m
+                 }[m
+             }[m
+[36m@@ -414,46 +447,40 @@[m [mstatic httpd_handle_t start_webserver(void)[m
+     ESP_LOGI(TAG, "Starting server on port: \'%d\'", config.server_port);[m
+     if (httpd_start(&server, &config) == ESP_OK)[m
+     {[m
+[31m-        httpd_uri_t root = {[m
+[31m-            .uri = "/",[m
+[31m-            .method = HTTP_GET,[m
+[31m-            .handler = root_get_handler,[m
+[31m-            .user_ctx = NULL};[m
+[32m+[m[32m        httpd_uri_t root = {.uri = "/",[m
+[32m+[m[32m                            .method = HTTP_GET,[m
+[32m+[m[32m                            .handler = root_get_handler,[m
+[32m+[m[32m                            .user_ctx = NULL};[m
+         httpd_register_uri_handler(server, &root);[m
+ [m
+[31m-        httpd_uri_t data = {[m
+[31m-            .uri = "/api/data",[m
+[31m-            .method = HTTP_GET,[m
+[31m-            .handler = data_get_handler,[m
+[31m-            .user_ctx = NULL};[m
+[32m+[m[32m        httpd_uri_t data = {.uri = "/api/data",[m
+[32m+[m[32m                            .method = HTTP_GET,[m
+[32m+[m[32m                            .handler = data_get_handler,[m
+[32m+[m[32m                            .user_ctx = NULL};[m
+         httpd_register_uri_handler(server, &data);[m
+ [m
+[31m-        httpd_uri_t csv = {[m
+[31m-            .uri = "/api/csv",[m
+[31m-            .method = HTTP_GET,[m
+[31m-            .handler = laptimes_csv_get_handler,[m
+[31m-            .user_ctx = NULL};[m
+[32m+[m[32m        httpd_uri_t csv = {.uri = "/api/csv",[m
+[32m+[m[32m                           .method = HTTP_GET,[m
+[32m+[m[32m                           .handler = laptimes_csv_get_handler,[m
+[32m+[m[32m                           .user_ctx = NULL};[m
+         httpd_register_uri_handler(server, &csv);[m
+ [m
+[31m-        httpd_uri_t drivers_csv = {[m
+[31m-            .uri = "/api/drivers_csv",[m
+[31m-            .method = HTTP_GET,[m
+[31m-            .handler = drivers_csv_get_handler,[m
+[31m-            .user_ctx = NULL};[m
+[32m+[m[32m        httpd_uri_t drivers_csv = {.uri = "/api/drivers_csv",[m
+[32m+[m[32m                                   .method = HTTP_GET,[m
+[32m+[m[32m                                   .handler = drivers_csv_get_handler,[m
+[32m+[m[32m                                   .user_ctx = NULL};[m
+         httpd_register_uri_handler(server, &drivers_csv);[m
+ [m
+[31m-        httpd_uri_t config_get = {[m
+[31m-            .uri = "/api/config",[m
+[31m-            .method = HTTP_GET,[m
+[31m-            .handler = config_get_handler,[m
+[31m-            .user_ctx = NULL};[m
+[32m+[m[32m        httpd_uri_t config_get = {.uri = "/api/config",[m
+[32m+[m[32m                                  .method = HTTP_GET,[m
+[32m+[m[32m                                  .handler = config_get_handler,[m
+[32m+[m[32m                                  .user_ctx = NULL};[m
+         httpd_register_uri_handler(server, &config_get);[m
+ [m
+[31m-        httpd_uri_t config_post = {[m
+[31m-            .uri = "/api/config",[m
+[31m-            .method = HTTP_POST,[m
+[31m-            .handler = config_post_handler,[m
+[31m-            .user_ctx = NULL};[m
+[32m+[m[32m        httpd_uri_t config_post = {.uri = "/api/config",[m
+[32m+[m[32m                                   .method = HTTP_POST,[m
+[32m+[m[32m                                   .handler = config_post_handler,[m
+[32m+[m[32m                                   .user_ctx = NULL};[m
+         httpd_register_uri_handler(server, &config_post);[m
+ [m
+         return server;[m
+[36m@@ -465,7 +492,8 @@[m [mstatic httpd_handle_t start_webserver(void)[m
+ [m
+ /**[m
+  * @brief WIFI task initializes access point and web server,[m
+[31m- *  then in loop updates values displayed on http website with values received from laptimer_task[m
+[32m+[m[32m *  then in loop updates values displayed on http website with values received[m
+[32m+[m[32m * from laptimer_task[m
+  */[m
+ void wifi_task(void *args)[m
+ {[m
+[36m@@ -493,7 +521,6 @@[m [mvoid wifi_task(void *args)[m
+ [m
+     for (;;)[m
+     {[m
+[31m-[m
+         driver_update_counter++;[m
+         if (driver_update_counter >= 100)[m
+         {[m
+[36m@@ -502,7 +529,8 @@[m [mvoid wifi_task(void *args)[m
+             {[m
+                 if (xSemaphoreTake(data_mutex, portMAX_DELAY) == pdTRUE)[m
+                 {[m
+[31m-                    memcpy(driver_list_local.list, config_main.driver_list.list, sizeof(driver_list_local));[m
+[32m+[m[32m                    memcpy(driver_list_local.list, config_main.driver_list.list,[m
+[32m+[m[32m                           sizeof(driver_list_local));[m
+                     driver_list_local.driver_count = config_main.driver_list.driver_count;[m
+                     xSemaphoreGive(data_mutex);[m
+                 }[m
+[36m@@ -519,7 +547,8 @@[m [mvoid wifi_task(void *args)[m
+                 if (xSemaphoreTake(config_mutex, portMAX_DELAY) == pdTRUE)[m
+                 {[m
+                     snprintf(wifi_ssid, sizeof(wifi_ssid), config_main.wifi_ssid);[m
+[31m-                    snprintf(wifi_password, sizeof(wifi_password), config_main.wifi_password);[m
+[32m+[m[32m                    snprintf(wifi_password, sizeof(wifi_password),[m
+[32m+[m[32m                             config_main.wifi_password);[m
+                     wifi_mode_local = config_main.wifi_mode;[m
+                     xSemaphoreGive(config_mutex);[m
+                 }[m
+[36m@@ -529,7 +558,8 @@[m [mvoid wifi_task(void *args)[m
+             /// Reinit with safe values[m
+             else if (wifi_reset_flag == WIFI_RESET_DEFAULTS)[m
+             {[m
+[31m-                if (wifi_reinit(WIFI_MODE_AP, WIFI_SSID_DEFAULT, WIFI_PASSWORD_DEFAULT) == ESP_OK)[m
+[32m+[m[32m                if (wifi_reinit(WIFI_MODE_AP, WIFI_SSID_DEFAULT,[m
+[32m+[m[32m                                WIFI_PASSWORD_DEFAULT) == ESP_OK)[m
+                 {[m
+                     wifi_get_mode(&wifi_mode_local);[m
+                     start_webserver();[m

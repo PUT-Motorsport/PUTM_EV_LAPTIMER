@@ -12,7 +12,7 @@ static const char *TAG = "WIFI_TASK";
 /**
  * @brief Current laptime data used to display on website
  */
-static Laptime current_laptime_data;
+static Laptime laptime_current;
 
 static Driver_list driver_list_local;
 
@@ -42,22 +42,22 @@ static esp_err_t data_get_handler(httpd_req_t *req)
 
     if (xSemaphoreTake(data_mutex, portMAX_DELAY))
     {
-        current_laptime_data.convert_string_full(laptime_current_str, sizeof(laptime_current_str));
+        laptime_current.convert_string_full(laptime_current_str, sizeof(laptime_current_str));
         cJSON_AddStringToObject(root, "current", laptime_current_str);
 
-        int id = current_laptime_data.driver_id;
+        int id = laptime_current.driver_id;
         if (id < 0 || id >= DRIVER_MAX_COUNT)
             id = 0;
         cJSON_AddStringToObject(root, "current_driver_tag", driver_list_local.list[id]);
         cJSON_AddNumberToObject(root, "current_driver_id", id);
 
-        current_laptime_data.convert_string_penalty(penalty_time_str, sizeof(penalty_time_str));
+        laptime_current.convert_string_penalty(penalty_time_str, sizeof(penalty_time_str));
         cJSON_AddStringToObject(root, "penalty_time", penalty_time_str);
 
-        snprintf(penalty_count_str, sizeof(penalty_count_str), "%u", current_laptime_data.oc_count);
+        snprintf(penalty_count_str, sizeof(penalty_count_str), "%u", laptime_current.oc_count);
         cJSON_AddStringToObject(root, "penalty_oc", penalty_count_str);
 
-        snprintf(penalty_count_str, sizeof(penalty_count_str), "%u", current_laptime_data.doo_count);
+        snprintf(penalty_count_str, sizeof(penalty_count_str), "%u", laptime_current.doo_count);
         cJSON_AddStringToObject(root, "penalty_doo", penalty_count_str);
 
         cJSON *status = cJSON_CreateObject();
@@ -472,7 +472,6 @@ void wifi_task(void *args)
     wifi_mode_t wifi_mode_local = WIFI_MODE_NULL;
     xQueueSend(wifi_mode_queue, &wifi_mode_local, 0);
     int driver_update_counter = 0;
-    Laptime temp_lap;
 
     for (;;)
     {
@@ -526,11 +525,12 @@ void wifi_task(void *args)
         else
         {
             // Read current laptime to display
-            if (xQueueReceive(laptime_current_queue_wifi, &temp_lap, 0) == pdTRUE)
+            Laptime laptime_current_temp;
+            if (xQueueReceive(laptime_current_queue_wifi, &laptime_current_temp, 0) == pdTRUE)
             {
                 if (xSemaphoreTake(data_mutex, portMAX_DELAY))
                 {
-                    current_laptime_data = temp_lap;
+                    laptime_current = laptime_current_temp;
                     xSemaphoreGive(data_mutex);
                 }
             }

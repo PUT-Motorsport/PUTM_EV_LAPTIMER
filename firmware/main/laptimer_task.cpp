@@ -11,29 +11,31 @@
 static const char *TAG = "LAPTIMER_TASK";
 
 /**
- * @brief Global variable used to store current laptime that is readed from timer in main loop and saved in ISR
+ * @brief Used to store current laptime that is readed from timer in main loop and saved in ISR
  */
 Laptime laptime_current;
 
 /**
- * @brief Global variable used to store saved laptime after current laptime is saved in ISR,
+ * @brief Used to store saved laptime after current laptime is saved in ISR,
 laptime is then saved on lists and sent to other tasks
  */
 Laptime laptime_saved;
 
+/**
+ * @brief State of all buttons
+ */
 Button_press doo_press;
 Button_press oc_press;
 Button_press driver_select_press;
 Button_press wifi_press;
 
 /**
- * @brief Saves received laptime on local best/last lists sorted
+ * @brief Saves received laptime on local best/last/driver lists sorted
  * @param laptime Laptime to save
- * @param list Structure that stores local laptimes
+ * @param list that stores local laptimes
  * @return
  */
-
-esp_err_t laptime_save_top(Laptime laptime, Laptime list_top[LAPTIME_LIST_SIZE_LOCAL])
+static esp_err_t laptime_save_top(Laptime laptime, Laptime list_top[LAPTIME_LIST_SIZE_LOCAL])
 {
     if (list_top == NULL)
         return ESP_FAIL;
@@ -53,7 +55,7 @@ esp_err_t laptime_save_top(Laptime laptime, Laptime list_top[LAPTIME_LIST_SIZE_L
     return ESP_OK;
 }
 
-esp_err_t laptime_save_last(Laptime laptime, Laptime list_last[LAPTIME_LIST_SIZE_LOCAL])
+static esp_err_t laptime_save_last(Laptime laptime, Laptime list_last[LAPTIME_LIST_SIZE_LOCAL])
 {
     if (list_last == NULL)
         return ESP_FAIL;
@@ -66,7 +68,7 @@ esp_err_t laptime_save_last(Laptime laptime, Laptime list_last[LAPTIME_LIST_SIZE
     return ESP_OK;
 }
 
-esp_err_t laptime_save_driver(Laptime laptime, Laptime list_driver[DRIVER_MAX_COUNT])
+static esp_err_t laptime_save_driver(Laptime laptime, Laptime list_driver[DRIVER_MAX_COUNT])
 {
     if (list_driver == NULL)
         return ESP_FAIL;
@@ -82,15 +84,26 @@ esp_err_t laptime_save_driver(Laptime laptime, Laptime list_driver[DRIVER_MAX_CO
     return ESP_OK;
 }
 
+/**
+ * @brief Sends received laptime to UART (temporary sends it to esp-idf log)
+ * @param laptime Laptime to save
+ * @param list that stores local laptimes
+ * @return
+ */
 static void laptime_save_uart(Laptime laptime)
 {
     char laptime_saved_str[LAPTIME_STR_LENGTH] = LAPTIME_STR_DEFAULT;
     laptime.convert_string_full(laptime_saved_str,
                                 sizeof(laptime_saved_str));
-    printf("%s", laptime_saved_str);
-    printf("\n");
+    printf("%s\n", laptime_saved_str);
 }
 
+/**
+ * @brief Changes button state depending on button level and press time
+ * @param btn_level Current logic level of button
+ * @param button_press Struct containing button press state and press time
+ * @return Changed button state
+ */
 button_state button_hold(bool btn_level, Button_press button_press)
 {
     TickType_t tick = xTaskGetTickCount();
@@ -109,6 +122,7 @@ button_state button_hold(bool btn_level, Button_press button_press)
 
     case BTN_HOLD_ACTION:
         return BTN_AFTER_HOLD;
+
     case BTN_RELEASED_ACTION:
         return BTN_STANDBY;
 
@@ -122,6 +136,10 @@ button_state button_hold(bool btn_level, Button_press button_press)
     }
 }
 
+/**
+ * @brief Adding or removing penalty to laptime based on button state
+ * @param laptime Laptime that receives penalty
+ */
 void penalty_check(Laptime *laptime)
 {
 
@@ -161,6 +179,11 @@ void penalty_check(Laptime *laptime)
     return;
 }
 
+/**
+ * @brief Changing driver assigned to laptime
+ * @param laptime Laptime that will have driver changed
+ * @param driver_list structure with list of drivers and driver count
+ */
 bool driver_select(Laptime *laptime, Driver_list *driver_list)
 {
     switch (driver_select_press.state = button_hold(gpio_get_level(DRIVER_SELECT_PIN), driver_select_press))
@@ -181,6 +204,10 @@ bool driver_select(Laptime *laptime, Driver_list *driver_list)
     return false;
 }
 
+/**
+ * @brief Returns wifi reset state based on button press state
+ * @return Wifi reset state
+ */
 Wifi_reset wifi_reset_check()
 {
     switch (wifi_press.state = button_hold(gpio_get_level(WIFI_PIN), wifi_press))
@@ -194,6 +221,10 @@ Wifi_reset wifi_reset_check()
     }
 }
 
+/**
+ * @brief Generic ISR for button that can be short pressed or long pressed
+ * @param button_press Structure with button state and press time
+ */
 void IRAM_ATTR button_isr(Button_press *button_press)
 {
     TickType_t tick = xTaskGetTickCountFromISR();
@@ -326,11 +357,6 @@ void laptimer_task(void *args)
 {
     Driver_list driver_list_local;
 
-    xQueueSend(laptime_current_queue_lcd, &laptime_current, 0);
-    xQueueSend(laptime_current_queue_wifi, &laptime_current, 0);
-
-    penalty_check(&laptime_current);
-
     for (;;)
     {
         // Update driver list from config
@@ -349,7 +375,7 @@ void laptimer_task(void *args)
         if (wifi_reset_flag == WIFI_NO_RESET)
             wifi_reset_flag = wifi_reset_check();
 
-        // Read laptime and check penalties
+        // Read laptime
         if (stop_flag == false)
         {
             laptime_current.time = timer_get_time(laptime_timer);

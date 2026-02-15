@@ -13,12 +13,14 @@
 
 #include <cJSON.h>
 
+#define SESSION_STR_LEN 14
+
 const char *config_file_name = "config.json";
 const char *laptimes_file_name = "laptimer.csv";
 
 static const char *TAG = "SDCARD_TASK";
 
-char session_str[14] = {"#00"};
+char session_str[SESSION_STR_LEN]{"#00"};
 int session_num = 0;
 
 bool sd_detect_flag = false;
@@ -248,7 +250,6 @@ esp_err_t sdcard_check_integrity(char laptime_check_str[LAPTIME_STR_LENGTH])
 void sdcard_task(void *args)
 {
     sdmmc_card_t *card_handle = NULL;
-    Laptime laptime_saved;
     Driver_list driver_list_local;
 
     if (sdcard_spi_init() == ESP_FAIL)
@@ -272,6 +273,7 @@ void sdcard_task(void *args)
 
         if (sd_detect_flag == true && sd_active_flag == true) // SD ok
         {
+            Laptime laptime_saved;
             if (xQueueReceive(laptime_saved_queue_sd, &laptime_saved, 0) == pdTRUE)
             {
                 sd_active_flag = !sdcard_save_laptime(laptime_saved, &driver_list_local);
