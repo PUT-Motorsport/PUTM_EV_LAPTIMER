@@ -76,7 +76,7 @@
         "duplicate_footprints": "warning",
         "extra_footprint": "warning",
         "footprint": "error",
-        "footprint_filters_mismatch": "ignore",
+        "footprint_filters_mismatch": "warning",
         "footprint_symbol_mismatch": "warning",
         "footprint_type_mismatch": "warning",
         "hole_clearance": "error",
@@ -661,8 +661,8 @@
         },
         {
           "group_by": false,
-          "label": "Mouser Part Number",
-          "name": "Mouser Part Number",
+          "label": "Mouser/TME part number",
+          "name": "Mouser/TME part number",
           "show": true
         },
         {
@@ -697,22 +697,22 @@
         },
         {
           "group_by": false,
-          "label": "Mouser/TME part number",
-          "name": "Mouser/TME part number",
+          "label": "Link",
+          "name": "Link",
           "show": true
         },
         {
           "group_by": false,
-          "label": "Link",
-          "name": "Link",
-          "show": true
+          "label": "Mouser Part Number",
+          "name": "Mouser Part Number",
+          "show": false
         }
       ],
       "filter_string": "",
       "group_symbols": true,
       "include_excluded_from_bom": true,
       "name": "",
-      "sort_asc": false,
+      "sort_asc": true,
       "sort_field": "Mouser/TME part number"
     },
     "connection_grid_size": 50.0,
@@ -748,7 +748,7 @@
       "meta": {
         "version": 0
       },
-      "model_mode": 4,
+      "model_mode": 0,
       "workbook_filename": ""
     },
     "page_layout_descr_file": "putm_frame.kicad_wks",
