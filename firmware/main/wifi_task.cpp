@@ -1,6 +1,6 @@
 #include "wifi_task.h"
 
-#include "wifi.h"
+#include "wifi_driver.h"
 #include "webpage.h"
 #include "esp_http_server.h"
 #include "cJSON.h"
@@ -12,14 +12,9 @@ static const char *TAG = "WIFI_TASK";
 /**
  * @brief Current laptime data used to display on website
  */
-static Laptime current_laptime_data;
+static Laptime laptime_current;
 
 static Driver_list driver_list_local;
-
-/**
- * @brief Status flags used to display on website
- */
-static bool status_flags[3] = {false, true, false};
 
 /**
  * @brief Mutex used by data_get_handler to ensure that it can read local data safely
@@ -47,28 +42,28 @@ static esp_err_t data_get_handler(httpd_req_t *req)
 
     if (xSemaphoreTake(data_mutex, portMAX_DELAY))
     {
-        current_laptime_data.convert_string_full(laptime_current_str, sizeof(laptime_current_str));
+        laptime_current.convert_string_full(laptime_current_str, sizeof(laptime_current_str));
         cJSON_AddStringToObject(root, "current", laptime_current_str);
 
-        int id = current_laptime_data.driver_id;
+        int id = laptime_current.driver_id;
         if (id < 0 || id >= DRIVER_MAX_COUNT)
             id = 0;
         cJSON_AddStringToObject(root, "current_driver_tag", driver_list_local.list[id]);
         cJSON_AddNumberToObject(root, "current_driver_id", id);
 
-        current_laptime_data.convert_string_penalty(penalty_time_str, sizeof(penalty_time_str));
+        laptime_current.convert_string_penalty(penalty_time_str, sizeof(penalty_time_str));
         cJSON_AddStringToObject(root, "penalty_time", penalty_time_str);
 
-        snprintf(penalty_count_str, sizeof(penalty_count_str), "%u", current_laptime_data.oc_count);
+        snprintf(penalty_count_str, sizeof(penalty_count_str), "%u", laptime_current.oc_count);
         cJSON_AddStringToObject(root, "penalty_oc", penalty_count_str);
 
-        snprintf(penalty_count_str, sizeof(penalty_count_str), "%u", current_laptime_data.doo_count);
+        snprintf(penalty_count_str, sizeof(penalty_count_str), "%u", laptime_current.doo_count);
         cJSON_AddStringToObject(root, "penalty_doo", penalty_count_str);
 
         cJSON *status = cJSON_CreateObject();
-        cJSON_AddBoolToObject(status, "mode", status_flags[0]);
-        cJSON_AddBoolToObject(status, "stop", status_flags[1]);
-        cJSON_AddBoolToObject(status, "sd", status_flags[2]);
+        cJSON_AddBoolToObject(status, "mode", config_main.two_gate_mode);
+        cJSON_AddBoolToObject(status, "stop", stop_flag);
+        cJSON_AddBoolToObject(status, "sd", sd_active_flag);
         cJSON_AddItemToObject(root, "status", status);
 
         // Take global mutex for lists
@@ -405,8 +400,9 @@ static esp_err_t config_post_handler(httpd_req_t *req)
  * @brief Initialization of web server
  * @return Handle to http instance
  */
-static httpd_handle_t start_webserver(httpd_handle_t server)
+static httpd_handle_t start_webserver(void)
 {
+    httpd_handle_t server = NULL;
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.lru_purge_enable = true;
 
@@ -462,11 +458,6 @@ static httpd_handle_t start_webserver(httpd_handle_t server)
     return NULL;
 }
 
-static httpd_handle_t stop_webserver(httpd_handle_t server)
-{
-    return server;
-}
-
 /**
  * @brief WIFI task initializes access point and web server,
  *  then in loop updates values displayed on http website with values received from laptimer_task
@@ -474,97 +465,80 @@ static httpd_handle_t stop_webserver(httpd_handle_t server)
 void wifi_task(void *args)
 {
     data_mutex = xSemaphoreCreateMutex();
-    Wifi_reset wifi_reset_flag = WIFI_RESET_DEFAULTS;
 
-    httpd_handle_t server = NULL;
-
-    char wifi_ssid[WIFI_SSID_STR_LENGTH] = WIFI_SSID_DEFAULT;
-    char wifi_password[WIFI_PASSWORD_STR_LENGTH] = WIFI_PASSWORD_DEFAULT;
-    wifi_mode_t wifi_mode = WIFI_MODE_NULL;
-    char ip_str[52] = "000.000.000.000";
-
-    /// Refresh config
-    if (xSemaphoreTake(config_mutex, portMAX_DELAY) == pdTRUE)
-    {
-        snprintf(wifi_ssid, sizeof(wifi_ssid), config_main.wifi_ssid);
-        snprintf(wifi_password, sizeof(wifi_password), config_main.wifi_password);
-        wifi_mode = config_main.wifi_mode;
-        xSemaphoreGive(config_mutex);
-    }
-
-    /// Initialize wifi and web server
-    if (wifi_init(wifi_mode, wifi_ssid, wifi_password) == ESP_OK)
-        server = start_webserver(server);
-    xQueueSend(wifi_mode_queue, &wifi_mode, 0);
+    char wifi_ssid_local[WIFI_SSID_STR_LENGTH] = WIFI_SSID_DEFAULT;
+    char wifi_password_local[WIFI_PASSWORD_STR_LENGTH] = WIFI_PASSWORD_DEFAULT;
+    char ip_str[52] = {0};
+    wifi_mode_t wifi_mode_local = WIFI_MODE_NULL;
+    xQueueSend(wifi_mode_queue, &wifi_mode_local, 0);
+    int driver_update_counter = 0;
 
     for (;;)
     {
-        /// Refresh driver list
-        if (xSemaphoreTake(config_mutex, 0) == pdTRUE)
+
+        // Update driver list from config
+        driver_update_counter++;
+        if (driver_update_counter >= 100)
         {
-            if (xSemaphoreTake(data_mutex, portMAX_DELAY) == pdTRUE)
+            driver_update_counter = 0;
+            if (xSemaphoreTake(config_mutex, 0) == pdTRUE)
             {
-                memcpy(driver_list_local.list, config_main.driver_list.list, sizeof(driver_list_local));
-                driver_list_local.driver_count = config_main.driver_list.driver_count;
-                xSemaphoreGive(data_mutex);
+                if (xSemaphoreTake(data_mutex, portMAX_DELAY) == pdTRUE)
+                {
+                    memcpy(&driver_list_local, &config_main.driver_list, sizeof(driver_list_local));
+                    xSemaphoreGive(data_mutex);
+                }
+                xSemaphoreGive(config_mutex);
             }
-            xSemaphoreGive(config_mutex);
         }
 
-        /// Wifi reinitialization
-        if (xQueueReceive(wifi_reset_queue, &wifi_reset_flag, 0) == pdTRUE)
+        // Wifi reinitialization
+        if (wifi_reset_flag != WIFI_NO_RESET)
         {
-            /// Reinit with config values
+            // Reinit with config values
             if (wifi_reset_flag == WIFI_RESET_CONFIG)
             {
                 if (xSemaphoreTake(config_mutex, portMAX_DELAY) == pdTRUE)
                 {
-                    snprintf(wifi_ssid, sizeof(wifi_ssid), config_main.wifi_ssid);
-                    snprintf(wifi_password, sizeof(wifi_password), config_main.wifi_password);
-                    wifi_mode = config_main.wifi_mode;
+                    snprintf(wifi_ssid_local, sizeof(wifi_ssid_local), config_main.wifi_ssid);
+                    snprintf(wifi_password_local, sizeof(wifi_password_local), config_main.wifi_password);
+                    wifi_mode_local = config_main.wifi_mode;
                     xSemaphoreGive(config_mutex);
-                    if (wifi_reinit(wifi_mode, wifi_ssid, wifi_password) == ESP_OK)
-                        server = start_webserver(server);
                 }
             }
-            /// Reinit with safe values
+            // Reinit with safe values
             else if (wifi_reset_flag == WIFI_RESET_DEFAULTS)
             {
-                if (wifi_reinit(WIFI_MODE_AP, WIFI_SSID_DEFAULT, WIFI_PASSWORD_DEFAULT) == ESP_OK)
+                snprintf(wifi_ssid_local, sizeof(wifi_ssid_local), "%s", WIFI_SSID_DEFAULT);
+                snprintf(wifi_password_local, sizeof(wifi_password_local), "%s", WIFI_PASSWORD_DEFAULT);
+                wifi_mode_local = WIFI_MODE_DEFAULT;
+            }
+
+            if (wifi_reinit(wifi_mode_local, wifi_ssid_local, wifi_password_local) == ESP_OK)
+                start_webserver();
+            else
+                wifi_mode_local = WIFI_MODE_NULL;
+
+            wifi_reset_flag = WIFI_NO_RESET;
+            xQueueSend(wifi_mode_queue, &wifi_mode_local, 0);
+        }
+        else
+        {
+            // Read current laptime to display
+            Laptime laptime_current_temp;
+            if (xQueueReceive(laptime_current_queue_wifi, &laptime_current_temp, 0) == pdTRUE)
+            {
+                if (xSemaphoreTake(data_mutex, portMAX_DELAY))
                 {
-                    server = start_webserver(server);
+                    laptime_current = laptime_current_temp;
+                    xSemaphoreGive(data_mutex);
                 }
             }
+
+            // Get ip and send to lcd task to display on screen
+            wifi_get_ip(ip_str);
+            xQueueSend(ip_queue, ip_str, 0);
         }
-
-        /// Refresh current laptime
-        Laptime temp_lap;
-        if (xQueueReceive(laptime_current_queue_wifi, &temp_lap, 0) == pdTRUE)
-        {
-            if (xSemaphoreTake(data_mutex, portMAX_DELAY))
-            {
-                current_laptime_data = temp_lap;
-                xSemaphoreGive(data_mutex);
-            }
-        }
-
-        /// Refresh status (gates, stop, sd)
-        bool temp_status[3];
-        if (xQueueReceive(laptime_status_queue_wifi, &temp_status, 0) == pdTRUE)
-        {
-            if (xSemaphoreTake(data_mutex, portMAX_DELAY))
-            {
-                memcpy(status_flags, temp_status, sizeof(status_flags));
-                xSemaphoreGive(data_mutex);
-            }
-        }
-
-        /// Send ip and mode to other tasks
-        wifi_get_ip(ip_str);
-        wifi_get_mode(&wifi_mode);
-        xQueueSend(ip_queue, ip_str, 0);
-        xQueueSend(wifi_mode_queue, &wifi_mode, 0);
-
         vTaskDelay(pdMS_TO_TICKS(20));
     }
 }

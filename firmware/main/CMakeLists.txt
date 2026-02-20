@@ -8,9 +8,9 @@ idf_component_register(
         "lvgl_ui.c"
         "drivers/gpio.c"
         "drivers/lcd.c"
-        "drivers/timer.c"
+        "drivers/timer.cpp"
         "drivers/sdcard.c"
-        "drivers/wifi.c"
+        "drivers/wifi_driver.c"
     INCLUDE_DIRS 
         "include"
         "drivers/include"

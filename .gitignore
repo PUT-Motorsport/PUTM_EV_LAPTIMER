@@ -27,7 +27,4 @@
 /firmware/TODO
 /firmware/sdkconfig.old
 /firmware/managed_components/**
-/hardware/**.lck
-/hardware/_autosave**
 todo.md
-/hardware/putm_laptimer.csv

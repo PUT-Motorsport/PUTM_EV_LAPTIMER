@@ -8,19 +8,17 @@
 #include "gpio.h"
 #include "timer.h"
 
+// Access to config structure
 SemaphoreHandle_t config_mutex = xSemaphoreCreateMutex();
 
-QueueHandle_t wifi_reset_queue = xQueueCreate(1, sizeof(Wifi_reset));
-
+// List of laptimes to save on sd card
 QueueHandle_t laptime_saved_queue_sd = xQueueCreate(LAPTIME_LIST_SIZE_LOCAL, sizeof(Laptime));
 
+// Current laptime to display
 QueueHandle_t laptime_current_queue_lcd = xQueueCreate(1, sizeof(Laptime));
 QueueHandle_t laptime_current_queue_wifi = xQueueCreate(1, sizeof(Laptime));
 
 SemaphoreHandle_t laptime_lists_mutex = xSemaphoreCreateMutex();
-
-QueueHandle_t laptime_status_queue_lcd = xQueueCreate(1, sizeof(bool[3]));
-QueueHandle_t laptime_status_queue_wifi = xQueueCreate(1, sizeof(bool[3]));
 
 QueueHandle_t ip_queue = xQueueCreate(1, sizeof(char[52]));
 QueueHandle_t wifi_mode_queue = xQueueCreate(1, sizeof(wifi_mode_t));
@@ -32,6 +30,8 @@ Laptime laptime_list_last[LAPTIME_LIST_SIZE_LOCAL];
 Laptime laptime_list_driver[DRIVER_MAX_COUNT];
 
 bool sd_active_flag = false;
+bool stop_flag = true;
+Wifi_reset wifi_reset_flag = WIFI_NO_RESET;
 
 void Laptime::reset()
 {
@@ -110,6 +110,7 @@ extern "C" void app_main(void)
     ESP_ERROR_CHECK(gpio_init());
     ESP_ERROR_CHECK(timer_init());
     ESP_ERROR_CHECK(isr_init());
+    // ESP_ERROR_CHECK(rtc_init());
 
     if (xSemaphoreTake(config_mutex, portMAX_DELAY))
     {

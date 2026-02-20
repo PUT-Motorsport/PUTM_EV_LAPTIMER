@@ -1,4 +1,4 @@
-#include "wifi.h"
+#include "wifi_driver.h"
 #include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -69,7 +69,7 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
     }
     // else if (event_base == IP_EVENT && event_id == IP_EVENT_ASSIGNED_IP_TO_CLIENT)
     // {
-    //     const ip_event_assigned_ip_to_client_t *e = (const ip_event_assigned_ip_to_client_t *)event_data;
+    //     const ip_event_ap_staipassigned_t *e = (const ip_event_ap_staipassigned_t *)event_data;
     //     ESP_LOGI(TAG, "Assigned IP to client: " IPSTR ", MAC=" MACSTR ", hostname='%s'",
     //              IP2STR(&e->ip), MAC2STR(e->mac));
     // }

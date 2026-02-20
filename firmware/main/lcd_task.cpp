@@ -4,6 +4,8 @@
 #include "lvgl_ui.h"
 #include "esp_lvgl_port.h"
 
+const char *TAG = "LCD_TASK";
+
 /**
  * @brief LCD task initializes screen and graphics library,
  * then prints values received from laptimer_task on screen
@@ -17,7 +19,6 @@ void lcd_task(void *args)
     ui_init();
     lvgl_port_unlock();
 
-    bool status_list[3] = {0};
     static char ip_str[52] = "0.0.0.0";
     static char gate_str[8];
     static char stop_str[5];
@@ -27,34 +28,30 @@ void lcd_task(void *args)
 
     for (;;)
     {
-        if (xSemaphoreTake(config_mutex, 0) == pdTRUE)
-        {
-            memcpy(driver_list_local.list, config_main.driver_list.list, sizeof(driver_list_local));
-            driver_list_local.driver_count = config_main.driver_list.driver_count;
-            xSemaphoreGive(config_mutex);
-        }
+        // if (xSemaphoreTake(config_mutex, 0) == pdTRUE)
+        // {
+        //     memcpy(driver_list_local.list, config_main.driver_list.list, sizeof(driver_list_local));
+        //     driver_list_local.driver_count = config_main.driver_list.driver_count;
+        //     xSemaphoreGive(config_mutex);
+        // }
 
-        // Update Status
-        bool update_status = false;
-        if (xQueueReceive(laptime_status_queue_lcd, status_list, 0) == pdTRUE)
-        {
-            update_status = true;
-        }
-        if (xQueueReceive(ip_queue, ip_str, 0) == pdTRUE)
-        {
-            update_status = true;
-        }
-        if (xQueueReceive(wifi_mode_queue, &wifi_mode, 0) == pdTRUE)
-        {
-            update_status = true;
-        }
+        // // Update Status
+        // bool update_status = true;
+        // if (xQueueReceive(ip_queue, ip_str, 0) == pdTRUE)
+        // {
+        //     update_status = true;
+        // }
+        // if (xQueueReceive(wifi_mode_queue, &wifi_mode, 0) == pdTRUE)
+        // {
+        //     update_status = true;
+        // }
 
-        if (update_status)
-        {
-            lvgl_port_lock(0);
-            ui_update_status(sd_active_flag, (int)wifi_mode, ip_str, status_list[0], status_list[1]);
-            lvgl_port_unlock();
-        }
+        // if (update_status)
+        // {
+        //     lvgl_port_lock(0);
+        //     ui_update_status(sd_active_flag, config_main.wifi_mode, ip_str, config_main.two_gate_mode, stop_flag);
+        //     lvgl_port_unlock();
+        // }
 
         // Update Current Laptime
         static Laptime laptime_current;
