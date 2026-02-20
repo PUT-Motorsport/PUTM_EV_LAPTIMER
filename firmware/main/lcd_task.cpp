@@ -28,12 +28,15 @@ void lcd_task(void *args)
 
     for (;;)
     {
-        // if (xSemaphoreTake(config_mutex, 0) == pdTRUE)
-        // {
-        //     memcpy(driver_list_local.list, config_main.driver_list.list, sizeof(driver_list_local));
-        //     driver_list_local.driver_count = config_main.driver_list.driver_count;
-        //     xSemaphoreGive(config_mutex);
-        // }
+        // Update driver list from config
+        if (driver_list_local.driver_count != config_main.driver_list.driver_count)
+        {
+            if (xSemaphoreTake(config_mutex, 0) == pdTRUE)
+            {
+                memcpy(&driver_list_local, &config_main.driver_list, sizeof(driver_list_local));
+                xSemaphoreGive(config_mutex);
+            }
+        }
 
         // // Update Status
         // bool update_status = true;

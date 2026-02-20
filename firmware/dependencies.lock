@@ -510,12 +510,12 @@ dependencies:
       type: service
     version: 1.20.4
   lvgl/lvgl:
-    component_hash: 184e532558c1c45fefed631f3e235423d22582aafb4630f3e8885c35281a49ae
+    component_hash: 17e68bfd21f0edf4c3ee838e2273da840bf3930e5dbc3bfa6c1190c3aed41f9f
     dependencies: []
     source:
       registry_url: https://components.espressif.com/
       type: service
-    version: 9.5.0
+    version: 9.4.0
 direct_dependencies:
 - espressif/arduino-esp32
 - espressif/cjson
@@ -524,6 +524,6 @@ direct_dependencies:
 - espressif/mdns
 - idf
 - lvgl/lvgl
-manifest_hash: aa003c230c5bc585f90d7209b312070c0821472a44f2c4b64184e334148a3b3c
+manifest_hash: dd58ee16e1cf74aff3ecaa40afab1841d572fe6816fc224eec555cbb428dae88
 target: esp32s3
 version: 2.0.0
