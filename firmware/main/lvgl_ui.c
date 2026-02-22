@@ -20,20 +20,20 @@ static lv_obj_t *doo_label;
 static lv_obj_t *top_laps_labels[UI_LIST_SIZE];
 static lv_obj_t *last_laps_labels[UI_LIST_SIZE];
 
-static lv_obj_t *status_bar_add_separator(lv_obj_t *parent)
-{
-    lv_obj_t *sep = lv_obj_create(parent);
-    lv_obj_set_size(sep, 2, lv_pct(60));
-    lv_obj_set_style_bg_color(
-        sep,
-        lv_palette_darken(LV_PALETTE_GREY, 3),
-        LV_PART_MAIN);
-    lv_obj_set_style_bg_opa(sep, LV_OPA_COVER, LV_PART_MAIN);
-    lv_obj_set_style_border_width(sep, 0, LV_PART_MAIN);
-    lv_obj_set_style_radius(sep, 1, LV_PART_MAIN);
-    lv_obj_remove_flag(sep, LV_OBJ_FLAG_SCROLLABLE);
-    return sep;
-}
+// static lv_obj_t *status_bar_add_separator(lv_obj_t *parent)
+// {
+//     lv_obj_t *sep = lv_obj_create(parent);
+//     lv_obj_set_size(sep, 2, lv_pct(60));
+//     lv_obj_set_style_bg_color(
+//         sep,
+//         lv_palette_darken(LV_PALETTE_GREY, 3),
+//         LV_PART_MAIN);
+//     lv_obj_set_style_bg_opa(sep, LV_OPA_COVER, LV_PART_MAIN);
+//     lv_obj_set_style_border_width(sep, 0, LV_PART_MAIN);
+//     lv_obj_set_style_radius(sep, 1, LV_PART_MAIN);
+//     lv_obj_remove_flag(sep, LV_OBJ_FLAG_SCROLLABLE);
+//     return sep;
+// }
 
 void ui_init(void)
 {
@@ -84,35 +84,35 @@ void ui_init(void)
 
     lv_obj_set_layout(status_bar_div, LV_LAYOUT_FLEX);
     lv_obj_set_flex_flow(status_bar_div, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(status_bar_div, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_flex_align(status_bar_div, LV_FLEX_ALIGN_SPACE_AROUND, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
     sd_status_label = lv_label_create(status_bar_div);
     lv_obj_set_width(sd_status_label, lv_pct(10));
     lv_label_set_long_mode(sd_status_label, LV_LABEL_LONG_CLIP);
-    lv_obj_set_style_text_align(sd_status_label, LV_TEXT_ALIGN_CENTER, 0);
-    lv_label_set_text(sd_status_label, "SD");
+    lv_obj_set_style_text_align(sd_status_label, LV_TEXT_ALIGN_LEFT, 0);
+    lv_label_set_text(sd_status_label, LV_SYMBOL_SD_CARD);
     lv_obj_set_style_text_color(sd_status_label, lv_palette_main(LV_PALETTE_RED), LV_PART_MAIN);
-    status_bar_add_separator(status_bar_div);
+    // status_bar_add_separator(status_bar_div);
 
     wifi_status_label = lv_label_create(status_bar_div);
-    lv_obj_set_width(wifi_status_label, lv_pct(20));
+    lv_obj_set_width(wifi_status_label, lv_pct(60));
     lv_label_set_long_mode(wifi_status_label, LV_LABEL_LONG_CLIP);
-    lv_obj_set_style_text_align(wifi_status_label, LV_TEXT_ALIGN_CENTER, 0);
-    lv_label_set_text(wifi_status_label, "OFF");
+    lv_obj_set_style_text_align(wifi_status_label, LV_TEXT_ALIGN_LEFT, 0);
+    lv_label_set_text(wifi_status_label, "WIFI OFF 000.000.000.000");
     lv_obj_set_style_text_color(wifi_status_label, lv_palette_main(LV_PALETTE_GREEN), LV_PART_MAIN);
 
-    wifi_ip_label = lv_label_create(status_bar_div);
-    lv_obj_set_width(wifi_ip_label, lv_pct(35));
-    lv_label_set_long_mode(wifi_ip_label, LV_LABEL_LONG_CLIP);
-    lv_obj_set_style_text_align(wifi_ip_label, LV_TEXT_ALIGN_CENTER, 0);
-    lv_label_set_text(wifi_ip_label, "000.000.000.000");
-    lv_obj_set_style_text_color(wifi_ip_label, lv_color_white(), LV_PART_MAIN);
-    status_bar_add_separator(status_bar_div);
+    // wifi_ip_label = lv_label_create(status_bar_div);
+    // lv_obj_set_width(wifi_ip_label, lv_pct(35));
+    // lv_label_set_long_mode(wifi_ip_label, LV_LABEL_LONG_CLIP);
+    // lv_obj_set_style_text_align(wifi_ip_label, LV_TEXT_ALIGN_CENTER, 0);
+    // lv_label_set_text(wifi_ip_label, "000.000.000.000");
+    // lv_obj_set_style_text_color(wifi_ip_label, lv_color_white(), LV_PART_MAIN);
+    // // status_bar_add_separator(status_bar_div);
 
     gates_status_label = lv_label_create(status_bar_div);
     lv_obj_set_width(gates_status_label, lv_pct(5));
     lv_label_set_long_mode(gates_status_label, LV_LABEL_LONG_CLIP);
-    lv_obj_set_style_text_align(gates_status_label, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_set_style_text_align(gates_status_label, LV_TEXT_ALIGN_LEFT, 0);
     lv_label_set_text(gates_status_label, "1G");
     lv_obj_set_style_text_color(gates_status_label, lv_color_white(), LV_PART_MAIN);
 
@@ -125,7 +125,7 @@ void ui_init(void)
     lv_obj_set_style_text_color(run_stop_btn, lv_color_white(), LV_PART_MAIN);
 
     run_stop_label = lv_label_create(run_stop_btn);
-    lv_label_set_text(run_stop_label, "STOP");
+    lv_label_set_text(run_stop_label, LV_SYMBOL_STOP);
     lv_obj_center(run_stop_label);
 
     /// CURRENT LAP
@@ -275,29 +275,24 @@ void ui_update_status(bool sd_on, int wifi_mode, const char *ip_str, bool two_ga
         lv_obj_set_style_text_color(sd_status_label, lv_palette_main(LV_PALETTE_RED), LV_PART_MAIN);
     }
 
+    static char wifi_str[62] = "WIFI OFF 000.000.000.000";
     if (wifi_mode == 1)
     {
-        lv_label_set_text(wifi_status_label, "WIFI STA");
+        snprintf(wifi_str, sizeof(wifi_str), LV_SYMBOL_WIFI "STA: %s", ip_str);
+        lv_label_set_text(wifi_status_label, wifi_str);
         lv_obj_set_style_text_color(wifi_status_label, lv_palette_main(LV_PALETTE_GREEN), LV_PART_MAIN);
     }
     else if (wifi_mode == 2)
     {
-        lv_label_set_text(wifi_status_label, "WIFI AP");
+        snprintf(wifi_str, sizeof(wifi_str), LV_SYMBOL_WIFI "AP: %s", ip_str);
+        lv_label_set_text(wifi_status_label, wifi_str);
         lv_obj_set_style_text_color(wifi_status_label, lv_palette_main(LV_PALETTE_GREEN), LV_PART_MAIN);
     }
     else
     {
-        lv_label_set_text(wifi_status_label, "WIFI OFF");
+        snprintf(wifi_str, sizeof(wifi_str), LV_SYMBOL_WIFI);
+        lv_label_set_text(wifi_status_label, wifi_str);
         lv_obj_set_style_text_color(wifi_status_label, lv_palette_main(LV_PALETTE_RED), LV_PART_MAIN);
-    }
-
-    if (ip_str)
-    {
-        lv_label_set_text(wifi_ip_label, ip_str);
-    }
-    else
-    {
-        lv_label_set_text(wifi_ip_label, "NO IP");
     }
 
     if (two_gates)
@@ -312,12 +307,12 @@ void ui_update_status(bool sd_on, int wifi_mode, const char *ip_str, bool two_ga
     if (stop_flag)
     {
         lv_obj_set_style_bg_color(run_stop_btn, lv_palette_main(LV_PALETTE_RED), LV_PART_MAIN);
-        lv_label_set_text(run_stop_label, "STOP");
+        lv_label_set_text(run_stop_label, LV_SYMBOL_STOP);
     }
     else
     {
         lv_obj_set_style_bg_color(run_stop_btn, lv_palette_main(LV_PALETTE_GREEN), LV_PART_MAIN);
-        lv_label_set_text(run_stop_label, "RUN");
+        lv_label_set_text(run_stop_label, LV_SYMBOL_PLAY);
     }
 }
 

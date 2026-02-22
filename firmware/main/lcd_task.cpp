@@ -19,11 +19,10 @@ void lcd_task(void *args)
     ui_init();
     lvgl_port_unlock();
 
-    static char ip_str[52] = "0.0.0.0";
-    static char gate_str[8];
-    static char stop_str[5];
-    static char sd_str[7];
-    static char wifi_str[9];
+    static char ip_str[52] = "000.000.000.000";
+    // static char gate_str[8];
+    // static char stop_str[5];
+    // static char sd_str[7];
 
     static bool sd_active_old = sd_active_flag;
     static wifi_mode_t wifi_mode_old = wifi_mode_flag;
