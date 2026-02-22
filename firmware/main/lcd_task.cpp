@@ -24,7 +24,13 @@ void lcd_task(void *args)
     static char stop_str[5];
     static char sd_str[7];
     static char wifi_str[9];
-    wifi_mode_t wifi_mode = WIFI_MODE_NULL;
+
+    static bool sd_active_old = sd_active_flag;
+    static wifi_mode_t wifi_mode_old = wifi_mode_flag;
+    static bool two_gate_old = config_main.two_gate_mode;
+    static bool stop_old = stop_flag;
+
+    bool update_status = true;
 
     for (;;)
     {
@@ -38,23 +44,39 @@ void lcd_task(void *args)
             }
         }
 
-        // // Update Status
-        // bool update_status = true;
-        // if (xQueueReceive(ip_queue, ip_str, 0) == pdTRUE)
-        // {
-        //     update_status = true;
-        // }
-        // if (xQueueReceive(wifi_mode_queue, &wifi_mode, 0) == pdTRUE)
-        // {
-        //     update_status = true;
-        // }
+        // Update Status
+        if (sd_active_flag != sd_active_old)
+        {
+            sd_active_old = sd_active_flag;
+            update_status = true;
+        }
+        if (wifi_mode_flag != wifi_mode_old)
+        {
+            wifi_mode_old = wifi_mode_flag;
+            update_status = true;
+        }
+        if (config_main.two_gate_mode != two_gate_old)
+        {
+            two_gate_old = config_main.two_gate_mode;
+            update_status = true;
+        }
+        if (stop_flag != stop_old)
+        {
+            stop_old = stop_flag;
+            update_status = true;
+        }
+        if (xQueueReceive(ip_queue, ip_str, 0) == pdTRUE)
+        {
+            update_status = true;
+        }
 
-        // if (update_status)
-        // {
-        //     lvgl_port_lock(0);
-        //     ui_update_status(sd_active_flag, config_main.wifi_mode, ip_str, config_main.two_gate_mode, stop_flag);
-        //     lvgl_port_unlock();
-        // }
+        if (update_status)
+        {
+            lvgl_port_lock(0);
+            ui_update_status(sd_active_old, wifi_mode_old, ip_str, two_gate_old, stop_old);
+            lvgl_port_unlock();
+            update_status = false;
+        }
 
         // Update Current Laptime
         static Laptime laptime_current;

@@ -33,7 +33,7 @@ lv_disp_t *lcd_init(void)
     esp_lcd_panel_io_spi_config_t io_config = {
         .dc_gpio_num = CONFIG_LCD_DC,
         .cs_gpio_num = CONFIG_LCD_SPI_CS,
-        .pclk_hz = 10000000,
+        .pclk_hz = 10 * 1000 * 1000,
         .lcd_cmd_bits = 8,
         .lcd_param_bits = 8,
         .spi_mode = 0,
@@ -57,14 +57,17 @@ lv_disp_t *lcd_init(void)
     ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(panel_handle, true));
 
     ESP_LOGI(TAG, "Initialize LVGL");
-    const lvgl_port_cfg_t lvgl_cfg = ESP_LVGL_PORT_INIT_CONFIG();
+    lvgl_port_cfg_t lvgl_cfg = ESP_LVGL_PORT_INIT_CONFIG();
+    lvgl_cfg.task_affinity = 1;
+    lvgl_cfg.task_stack_caps = MALLOC_CAP_SPIRAM;
+
     lvgl_port_init(&lvgl_cfg);
 
     const lvgl_port_display_cfg_t disp_cfg = {
         .io_handle = io_handle,
         .panel_handle = panel_handle,
         .buffer_size = LCD_RES_H * LCD_RES_V,
-        .trans_size = LCD_RES_H * LCD_RES_V / 10,
+        .trans_size = LCD_RES_H * LCD_RES_V,
         .double_buffer = true,
         .hres = LCD_RES_H,
         .vres = LCD_RES_V,
@@ -77,7 +80,7 @@ lv_disp_t *lcd_init(void)
         },
         .flags = {
             .buff_spiram = true,
-            .buff_dma = false,
+            .buff_dma = true,
             .swap_bytes = true,
             .sw_rotate = false,
         }};

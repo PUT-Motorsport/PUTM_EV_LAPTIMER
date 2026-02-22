@@ -469,8 +469,6 @@ void wifi_task(void *args)
     char wifi_ssid_local[WIFI_SSID_STR_LENGTH] = WIFI_SSID_DEFAULT;
     char wifi_password_local[WIFI_PASSWORD_STR_LENGTH] = WIFI_PASSWORD_DEFAULT;
     char ip_str[52] = {0};
-    wifi_mode_t wifi_mode_local = WIFI_MODE_NULL;
-    xQueueSend(wifi_mode_queue, &wifi_mode_local, 0);
     int driver_update_counter = 0;
 
     for (;;)
@@ -502,7 +500,7 @@ void wifi_task(void *args)
                 {
                     snprintf(wifi_ssid_local, sizeof(wifi_ssid_local), config_main.wifi_ssid);
                     snprintf(wifi_password_local, sizeof(wifi_password_local), config_main.wifi_password);
-                    wifi_mode_local = config_main.wifi_mode;
+                    wifi_mode_flag = config_main.wifi_mode;
                     xSemaphoreGive(config_mutex);
                 }
             }
@@ -511,16 +509,15 @@ void wifi_task(void *args)
             {
                 snprintf(wifi_ssid_local, sizeof(wifi_ssid_local), "%s", WIFI_SSID_DEFAULT);
                 snprintf(wifi_password_local, sizeof(wifi_password_local), "%s", WIFI_PASSWORD_DEFAULT);
-                wifi_mode_local = WIFI_MODE_DEFAULT;
+                wifi_mode_flag = WIFI_MODE_DEFAULT;
             }
 
-            if (wifi_reinit(wifi_mode_local, wifi_ssid_local, wifi_password_local) == ESP_OK)
+            if (wifi_reinit(wifi_mode_flag, wifi_ssid_local, wifi_password_local) == ESP_OK)
                 start_webserver();
             else
-                wifi_mode_local = WIFI_MODE_NULL;
+                wifi_mode_flag = WIFI_MODE_NULL;
 
             wifi_reset_flag = WIFI_NO_RESET;
-            xQueueSend(wifi_mode_queue, &wifi_mode_local, 0);
         }
         else
         {

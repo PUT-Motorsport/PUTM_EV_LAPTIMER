@@ -21,7 +21,6 @@ QueueHandle_t laptime_current_queue_wifi = xQueueCreate(1, sizeof(Laptime));
 SemaphoreHandle_t laptime_lists_mutex = xSemaphoreCreateMutex();
 
 QueueHandle_t ip_queue = xQueueCreate(1, sizeof(char[52]));
-QueueHandle_t wifi_mode_queue = xQueueCreate(1, sizeof(wifi_mode_t));
 
 Config config_main;
 
@@ -29,9 +28,10 @@ Laptime laptime_list_top[LAPTIME_LIST_SIZE_LOCAL];
 Laptime laptime_list_last[LAPTIME_LIST_SIZE_LOCAL];
 Laptime laptime_list_driver[DRIVER_MAX_COUNT];
 
-bool sd_active_flag = false;
-bool stop_flag = true;
-Wifi_reset wifi_reset_flag = WIFI_NO_RESET;
+volatile bool sd_active_flag = false;
+volatile bool stop_flag = true;
+volatile Wifi_reset wifi_reset_flag = WIFI_NO_RESET;
+volatile wifi_mode_t wifi_mode_flag = WIFI_MODE_NULL;
 
 void Laptime::reset()
 {
@@ -119,8 +119,8 @@ extern "C" void app_main(void)
     }
 
     xTaskCreatePinnedToCore(sdcard_task, "SD_TASK", 4096, NULL, 0, NULL, 0);
-    xTaskCreatePinnedToCore(laptimer_task, "LAPTIMER_TASK", 8192, NULL, 2, NULL, 1);
-    xTaskCreatePinnedToCore(lcd_task, "LCD_TASK", 8192, NULL, 1, NULL, 1);
+    xTaskCreatePinnedToCore(laptimer_task, "LAPTIMER_TASK", 8192, NULL, 3, NULL, 0);
+    xTaskCreatePinnedToCore(lcd_task, "LCD_TASK", 8192, NULL, 2, NULL, 1);
     xTaskCreatePinnedToCore(wifi_task, "WIFI_TASK", 4096, NULL, 1, NULL, 0);
 
     vTaskDelete(NULL);

@@ -137,13 +137,12 @@ extern SemaphoreHandle_t laptime_lists_mutex;
  * @brief Queue passes active status flags from main logic laptimer_task to lcd_task and wifi_task
  * bool[0] - two_gates_mode
  * bool[1] - stop_flag
- * bool[2] - sdcard_flag
- */
-extern QueueHandle_t laptime_status_queue_lcd;
-extern QueueHandle_t laptime_status_queue_wifi;
+//  * bool[2] - sdcard_flag
+//  */
+// extern QueueHandle_t laptime_status_queue_lcd;
+// extern QueueHandle_t laptime_status_queue_wifi;
 
 extern QueueHandle_t ip_queue;
-extern QueueHandle_t wifi_mode_queue;
 
 #ifdef __cplusplus
 
@@ -156,17 +155,19 @@ extern Laptime laptime_list_driver[DRIVER_MAX_COUNT];
 /**
  * @brief Indicates if sdcard is active (inserted and initialized)
  */
-extern bool sd_active_flag;
+extern volatile bool sd_active_flag;
 
 /**
  * @brief Indicates stopped laptime, set true by LAP_RESET_PIN and set false by LAP_GATE1_PIN
  */
-extern bool stop_flag;
+extern volatile bool stop_flag;
 
 /**
  * @brief Indicates state of flag that resets wifi
  */
 
-extern Wifi_reset wifi_reset_flag;
+extern volatile Wifi_reset wifi_reset_flag;
+
+extern volatile wifi_mode_t wifi_mode_flag;
 
 #endif
