@@ -6,80 +6,76 @@
 
 static lv_obj_t *sd_status_label;
 static lv_obj_t *wifi_status_label;
-static lv_obj_t *wifi_ip_label;
 static lv_obj_t *gates_status_label;
 static lv_obj_t *run_stop_btn;
 static lv_obj_t *run_stop_label;
 
-static lv_obj_t *current_lap_label;
-static lv_obj_t *penalty_label;
+static lv_obj_t *penalty_count_label;
+static lv_obj_t *lap_time_label;
+static lv_obj_t *penalty_time_label;
 static lv_obj_t *driver_label;
-static lv_obj_t *oc_label;
-static lv_obj_t *doo_label;
+static lv_obj_t *oc_count_label;
+static lv_obj_t *doo_count_label;
+static lv_obj_t *lap_count_label;
 
-static lv_obj_t *top_laps_labels[UI_LIST_SIZE];
-static lv_obj_t *last_laps_labels[UI_LIST_SIZE];
-
-// static lv_obj_t *status_bar_add_separator(lv_obj_t *parent)
-// {
-//     lv_obj_t *sep = lv_obj_create(parent);
-//     lv_obj_set_size(sep, 2, lv_pct(60));
-//     lv_obj_set_style_bg_color(
-//         sep,
-//         lv_palette_darken(LV_PALETTE_GREY, 3),
-//         LV_PART_MAIN);
-//     lv_obj_set_style_bg_opa(sep, LV_OPA_COVER, LV_PART_MAIN);
-//     lv_obj_set_style_border_width(sep, 0, LV_PART_MAIN);
-//     lv_obj_set_style_radius(sep, 1, LV_PART_MAIN);
-//     lv_obj_remove_flag(sep, LV_OBJ_FLAG_SCROLLABLE);
-//     return sep;
-// }
+static lv_obj_t *top_table;
+static lv_obj_t *last_table;
 
 void ui_init(void)
 {
-    lv_obj_set_style_bg_color(
-        lv_screen_active(),
-        lv_color_black(),
-        LV_PART_MAIN);
+    static lv_style_t default_style;
+    lv_style_init(&default_style);
+    lv_style_set_bg_opa(&default_style, LV_OPA_TRANSP);
+    lv_style_set_radius(&default_style, 0);
+    lv_style_set_border_width(&default_style, 0);
+    lv_style_set_pad_all(&default_style, 2);
 
-    lv_obj_set_style_bg_opa(
-        lv_screen_active(),
-        LV_OPA_COVER,
-        LV_PART_MAIN);
+    static lv_style_t center_style;
+    lv_style_init(&center_style);
+    lv_style_set_radius(&center_style, 5);
+    lv_style_set_border_width(&center_style, 0);
+    lv_style_set_bg_color(&center_style, lv_palette_darken(LV_PALETTE_GREY, 4));
+    lv_style_set_pad_all(&center_style, 3);
+    lv_style_set_margin_all(&center_style, 0);
 
-    lv_obj_t *main_div = lv_obj_create(lv_screen_active());
-    lv_obj_set_size(main_div, lv_pct(100), lv_pct(100));
-    lv_obj_set_layout(main_div, LV_LAYOUT_FLEX);
-    lv_obj_set_flex_flow(main_div, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_flex_align(main_div, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_set_style_pad_all(main_div, 0, LV_PART_MAIN);
-    lv_obj_set_style_bg_opa(main_div, LV_OPA_TRANSP, LV_PART_MAIN);
-    lv_obj_set_style_border_width(main_div, 0, LV_PART_MAIN);
-    lv_obj_remove_flag(main_div, LV_OBJ_FLAG_SCROLLABLE);
+    static lv_style_t table_style;
+    lv_style_init(&table_style);
+    lv_style_set_radius(&table_style, 0);
+    lv_style_set_border_width(&table_style, 0);
+    lv_style_set_bg_color(&table_style, lv_color_black());
+    lv_style_set_pad_all(&table_style, 0);
+    lv_style_set_margin_all(&table_style, 0);
 
-    static lv_style_t main_style;
-    lv_style_init(&main_style);
-    lv_style_set_bg_opa(&main_style, LV_OPA_TRANSP);
-    lv_style_set_radius(&main_style, 0);
-    lv_style_set_border_width(&main_style, 0);
-    lv_style_set_pad_all(&main_style, 5);
+    static lv_style_t table_cell_style;
+    lv_style_init(&table_cell_style);
+    lv_style_set_radius(&table_cell_style, 0);
+    lv_style_set_border_width(&table_cell_style, 1);
+    lv_style_set_border_color(&table_cell_style, lv_palette_darken(LV_PALETTE_GREY, 4));
+    lv_style_set_bg_color(&table_cell_style, lv_color_black());
+    lv_style_set_pad_all(&table_cell_style, 1);
+    lv_style_set_margin_all(&table_cell_style, 0);
+    lv_style_set_text_font(&table_cell_style, &lv_font_montserrat_14);
+    lv_style_set_text_color(&table_cell_style, lv_color_white());
 
-    static lv_style_t status_text_style;
-    lv_style_init(&status_text_style);
-    lv_style_set_text_font(&status_text_style, &lv_font_montserrat_14);
+    // BACKGROUND
+    lv_obj_t *background_div = lv_obj_create(lv_screen_active());
+    lv_obj_set_size(background_div, lv_pct(100), lv_pct(100));
 
-    static lv_style_t current_lap_style;
-    lv_style_init(&current_lap_style);
-    lv_style_set_radius(&current_lap_style, 10);
-    lv_style_set_border_width(&current_lap_style, 0);
-    lv_style_set_bg_color(&current_lap_style, lv_palette_darken(LV_PALETTE_GREY, 4));
-    lv_style_set_pad_hor(&current_lap_style, 10);
+    lv_obj_set_style_pad_all(background_div, 0, LV_PART_MAIN);
+    lv_obj_set_style_bg_color(background_div, lv_color_black(), LV_PART_MAIN);
+    lv_obj_set_style_radius(background_div, 0, LV_PART_MAIN);
+    lv_obj_set_style_border_width(background_div, 0, LV_PART_MAIN);
+    lv_obj_remove_flag(background_div, LV_OBJ_FLAG_SCROLLABLE);
+
+    lv_obj_set_layout(background_div, LV_LAYOUT_FLEX);
+    lv_obj_set_flex_flow(background_div, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(background_div, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
     /// STATUS BAR
-    lv_obj_t *status_bar_div = lv_obj_create(main_div);
+    lv_obj_t *status_bar_div = lv_obj_create(background_div);
     lv_obj_set_size(status_bar_div, lv_pct(100), lv_pct(10));
-    lv_obj_add_style(status_bar_div, &main_style, LV_PART_MAIN);
-    lv_obj_add_style(status_bar_div, &status_text_style, LV_PART_MAIN);
+    lv_obj_add_style(status_bar_div, &default_style, LV_PART_MAIN);
+    lv_obj_set_style_bg_color(status_bar_div, lv_palette_main(LV_PALETTE_GREY), LV_PART_MAIN);
     lv_obj_remove_flag(status_bar_div, LV_OBJ_FLAG_SCROLLABLE);
 
     lv_obj_set_layout(status_bar_div, LV_LAYOUT_FLEX);
@@ -87,33 +83,24 @@ void ui_init(void)
     lv_obj_set_flex_align(status_bar_div, LV_FLEX_ALIGN_SPACE_AROUND, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
     sd_status_label = lv_label_create(status_bar_div);
-    lv_obj_set_width(sd_status_label, lv_pct(10));
+    // lv_obj_set_width(sd_status_label, lv_pct(5));
     lv_label_set_long_mode(sd_status_label, LV_LABEL_LONG_CLIP);
     lv_obj_set_style_text_align(sd_status_label, LV_TEXT_ALIGN_LEFT, 0);
     lv_label_set_text(sd_status_label, LV_SYMBOL_SD_CARD);
     lv_obj_set_style_text_color(sd_status_label, lv_palette_main(LV_PALETTE_RED), LV_PART_MAIN);
-    // status_bar_add_separator(status_bar_div);
 
     wifi_status_label = lv_label_create(status_bar_div);
-    lv_obj_set_width(wifi_status_label, lv_pct(60));
+    // lv_obj_set_width(wifi_status_label, lv_pct(60));
     lv_label_set_long_mode(wifi_status_label, LV_LABEL_LONG_CLIP);
     lv_obj_set_style_text_align(wifi_status_label, LV_TEXT_ALIGN_LEFT, 0);
-    lv_label_set_text(wifi_status_label, "WIFI OFF 000.000.000.000");
-    lv_obj_set_style_text_color(wifi_status_label, lv_palette_main(LV_PALETTE_GREEN), LV_PART_MAIN);
-
-    // wifi_ip_label = lv_label_create(status_bar_div);
-    // lv_obj_set_width(wifi_ip_label, lv_pct(35));
-    // lv_label_set_long_mode(wifi_ip_label, LV_LABEL_LONG_CLIP);
-    // lv_obj_set_style_text_align(wifi_ip_label, LV_TEXT_ALIGN_CENTER, 0);
-    // lv_label_set_text(wifi_ip_label, "000.000.000.000");
-    // lv_obj_set_style_text_color(wifi_ip_label, lv_color_white(), LV_PART_MAIN);
-    // // status_bar_add_separator(status_bar_div);
+    lv_label_set_text(wifi_status_label, LV_SYMBOL_WIFI "OFF: 000.000.000.000");
+    lv_obj_set_style_text_color(wifi_status_label, lv_palette_main(LV_PALETTE_RED), LV_PART_MAIN);
 
     gates_status_label = lv_label_create(status_bar_div);
-    lv_obj_set_width(gates_status_label, lv_pct(5));
+    // lv_obj_set_width(gates_status_label, lv_pct(20));
     lv_label_set_long_mode(gates_status_label, LV_LABEL_LONG_CLIP);
     lv_obj_set_style_text_align(gates_status_label, LV_TEXT_ALIGN_LEFT, 0);
-    lv_label_set_text(gates_status_label, "1G");
+    lv_label_set_text(gates_status_label, "2 GATES");
     lv_obj_set_style_text_color(gates_status_label, lv_color_white(), LV_PART_MAIN);
 
     run_stop_btn = lv_button_create(status_bar_div);
@@ -128,140 +115,222 @@ void ui_init(void)
     lv_label_set_text(run_stop_label, LV_SYMBOL_STOP);
     lv_obj_center(run_stop_label);
 
-    /// CURRENT LAP
-    lv_obj_t *current_lap_div = lv_obj_create(main_div);
-    lv_obj_set_size(current_lap_div, lv_pct(100), lv_pct(40));
-    lv_obj_add_style(current_lap_div, &main_style, LV_PART_MAIN);
-    lv_obj_remove_flag(current_lap_div, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_layout(current_lap_div, LV_LAYOUT_FLEX);
-    lv_obj_set_flex_flow(current_lap_div, LV_FLEX_FLOW_ROW_WRAP);
-    lv_obj_set_style_flex_main_place(current_lap_div, LV_FLEX_ALIGN_SPACE_EVENLY, LV_PART_MAIN);
+    /// LAP INFO
+    lv_obj_t *lap_info_div = lv_obj_create(background_div);
+    lv_obj_set_size(lap_info_div, lv_pct(100), lv_pct(20));
+    lv_obj_add_style(lap_info_div, &default_style, LV_PART_MAIN);
+    lv_obj_set_style_bg_color(lap_info_div, lv_palette_main(LV_PALETTE_BLUE), LV_PART_MAIN);
+    lv_obj_remove_flag(lap_info_div, LV_OBJ_FLAG_SCROLLABLE);
 
-    /// LAPTIME
-    lv_obj_t *laptime_div = lv_obj_create(current_lap_div);
-    lv_obj_set_size(laptime_div, lv_pct(100), lv_pct(65));
-    lv_obj_add_style(laptime_div, &current_lap_style, LV_PART_MAIN);
-    // lv_obj_set_style_pad_all(laptime_div, 5, LV_PART_MAIN);
-
-    current_lap_label = lv_label_create(laptime_div);
-    lv_label_set_text(current_lap_label, "--, --:--.--");
-    lv_label_set_long_mode(current_lap_label, LV_LABEL_LONG_CLIP);
-    lv_obj_align(current_lap_label, LV_ALIGN_LEFT_MID, 0, 0);
-    lv_obj_set_style_text_font(current_lap_label, &lv_font_montserrat_36, LV_PART_MAIN);
-    lv_obj_set_style_text_color(current_lap_label, lv_color_white(), LV_PART_MAIN);
-
-    penalty_label = lv_label_create(laptime_div);
-    lv_label_set_text(penalty_label, "+00:00");
-    lv_label_set_long_mode(penalty_label, LV_LABEL_LONG_CLIP);
-    lv_obj_align(penalty_label, LV_ALIGN_RIGHT_MID, 0, 0);
-    lv_obj_set_style_text_font(penalty_label, &lv_font_montserrat_20, LV_PART_MAIN);
-    lv_obj_set_style_text_color(penalty_label, lv_palette_main(LV_PALETTE_YELLOW), LV_PART_MAIN);
+    lv_obj_set_layout(lap_info_div, LV_LAYOUT_FLEX);
+    lv_obj_set_flex_flow(lap_info_div, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(lap_info_div, LV_FLEX_ALIGN_SPACE_AROUND, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
     /// DRIVER
-    lv_obj_t *driver_div = lv_obj_create(current_lap_div);
-    lv_obj_set_size(driver_div, lv_pct(45), lv_pct(30));
-    lv_obj_add_style(driver_div, &current_lap_style, LV_PART_MAIN);
+    lv_obj_t *driver_div = lv_obj_create(lap_info_div);
+    lv_obj_set_size(driver_div, lv_pct(25), lv_pct(100));
+    lv_obj_add_style(driver_div, &center_style, LV_PART_MAIN);
+
+    lv_obj_set_layout(driver_div, LV_LAYOUT_FLEX);
+    lv_obj_set_flex_flow(driver_div, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(driver_div, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+
+    lv_obj_t *driver_title = lv_label_create(driver_div);
+    lv_label_set_text(driver_title, "DRIVER");
+    lv_obj_set_style_text_font(driver_title, &lv_font_montserrat_10, LV_PART_MAIN);
+    lv_obj_set_style_text_color(driver_title, lv_color_white(), LV_PART_MAIN);
 
     driver_label = lv_label_create(driver_div);
-    lv_label_set_text(driver_label, "DRIVER: ---");
-    lv_obj_align(driver_label, LV_ALIGN_LEFT_MID, 0, 0);
-    lv_obj_set_style_text_font(driver_label, &lv_font_montserrat_14, LV_PART_MAIN);
+    lv_label_set_text(driver_label, "WWW");
+    lv_obj_set_style_text_font(driver_label, &lv_font_montserrat_18, LV_PART_MAIN);
     lv_obj_set_style_text_color(driver_label, lv_color_white(), LV_PART_MAIN);
 
-    /// OC COUNT
-    lv_obj_t *oc_div = lv_obj_create(current_lap_div);
-    lv_obj_set_size(oc_div, lv_pct(25), lv_pct(30));
-    lv_obj_add_style(oc_div, &current_lap_style, LV_PART_MAIN);
+    /// LAP COUNT
+    lv_obj_t *lap_count_div = lv_obj_create(lap_info_div);
+    lv_obj_set_size(lap_count_div, lv_pct(15), lv_pct(100));
+    lv_obj_add_style(lap_count_div, &center_style, LV_PART_MAIN);
 
-    oc_label = lv_label_create(oc_div);
-    lv_label_set_text(oc_label, "OC: 0");
-    lv_obj_align(oc_label, LV_ALIGN_LEFT_MID, 0, 0);
-    lv_obj_set_style_text_font(oc_label, &lv_font_montserrat_14, LV_PART_MAIN);
-    lv_obj_set_style_text_color(oc_label, lv_palette_main(LV_PALETTE_YELLOW), LV_PART_MAIN);
+    lv_obj_set_layout(lap_count_div, LV_LAYOUT_FLEX);
+    lv_obj_set_flex_flow(lap_count_div, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(lap_count_div, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+
+    lv_obj_t *lap_count_title = lv_label_create(lap_count_div);
+    lv_label_set_text(lap_count_title, "LAP");
+    lv_obj_set_style_text_font(lap_count_title, &lv_font_montserrat_10, LV_PART_MAIN);
+    lv_obj_set_style_text_color(lap_count_title, lv_color_white(), LV_PART_MAIN);
+
+    lap_count_label = lv_label_create(lap_count_div);
+    lv_label_set_text(lap_count_label, "00");
+    lv_obj_set_style_text_font(lap_count_label, &lv_font_montserrat_18, LV_PART_MAIN);
+    lv_obj_set_style_text_color(lap_count_label, lv_color_white(), LV_PART_MAIN);
+
+    /// OC COUNT
+    lv_obj_t *oc_count_div = lv_obj_create(lap_info_div);
+    lv_obj_set_size(oc_count_div, lv_pct(15), lv_pct(100));
+    lv_obj_add_style(oc_count_div, &center_style, LV_PART_MAIN);
+
+    lv_obj_set_layout(oc_count_div, LV_LAYOUT_FLEX);
+    lv_obj_set_flex_flow(oc_count_div, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(oc_count_div, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+
+    lv_obj_t *oc_count_title = lv_label_create(oc_count_div);
+    lv_label_set_text(oc_count_title, "OC");
+    lv_obj_set_style_text_font(oc_count_title, &lv_font_montserrat_10, LV_PART_MAIN);
+    lv_obj_set_style_text_color(oc_count_title, lv_palette_main(LV_PALETTE_AMBER), LV_PART_MAIN);
+
+    oc_count_label = lv_label_create(oc_count_div);
+    lv_label_set_text(oc_count_label, "00");
+    lv_obj_set_style_text_font(oc_count_label, &lv_font_montserrat_18, LV_PART_MAIN);
+    lv_obj_set_style_text_color(oc_count_label, lv_palette_main(LV_PALETTE_AMBER), LV_PART_MAIN);
 
     /// DOO COUNT
-    lv_obj_t *doo_div = lv_obj_create(current_lap_div);
-    lv_obj_set_size(doo_div, lv_pct(25), lv_pct(30));
-    lv_obj_add_style(doo_div, &current_lap_style, LV_PART_MAIN);
+    lv_obj_t *doo_count_div = lv_obj_create(lap_info_div);
+    lv_obj_set_size(doo_count_div, lv_pct(15), lv_pct(100));
+    lv_obj_add_style(doo_count_div, &center_style, LV_PART_MAIN);
 
-    doo_label = lv_label_create(doo_div);
-    lv_label_set_text(doo_label, "DOO: 0");
-    lv_obj_align(doo_label, LV_ALIGN_LEFT_MID, 0, 0);
-    lv_obj_set_style_text_font(doo_label, &lv_font_montserrat_14, LV_PART_MAIN);
-    lv_obj_set_style_text_color(doo_label, lv_palette_main(LV_PALETTE_YELLOW), LV_PART_MAIN);
+    lv_obj_set_layout(doo_count_div, LV_LAYOUT_FLEX);
+    lv_obj_set_flex_flow(doo_count_div, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(doo_count_div, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+
+    lv_obj_t *doo_count_title = lv_label_create(doo_count_div);
+    lv_label_set_text(doo_count_title, "DOO");
+    lv_obj_set_style_text_font(doo_count_title, &lv_font_montserrat_10, LV_PART_MAIN);
+    lv_obj_set_style_text_color(doo_count_title, lv_palette_main(LV_PALETTE_AMBER), LV_PART_MAIN);
+
+    doo_count_label = lv_label_create(doo_count_div);
+    lv_label_set_text(doo_count_label, "00");
+    lv_obj_set_style_text_font(doo_count_label, &lv_font_montserrat_18, LV_PART_MAIN);
+    lv_obj_set_style_text_color(doo_count_label, lv_palette_main(LV_PALETTE_AMBER), LV_PART_MAIN);
+
+    /// PENALTY TIME
+    lv_obj_t *penalty_time_div = lv_obj_create(lap_info_div);
+    lv_obj_set_size(penalty_time_div, lv_pct(25), lv_pct(100));
+    lv_obj_add_style(penalty_time_div, &center_style, LV_PART_MAIN);
+
+    lv_obj_set_layout(penalty_time_div, LV_LAYOUT_FLEX);
+    lv_obj_set_flex_flow(penalty_time_div, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(penalty_time_div, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+
+    lv_obj_t *penalty_time_title = lv_label_create(penalty_time_div);
+    lv_label_set_text(penalty_time_title, "PENALTY");
+    lv_obj_set_style_text_font(penalty_time_title, &lv_font_montserrat_10, LV_PART_MAIN);
+    lv_obj_set_style_text_color(penalty_time_title, lv_palette_main(LV_PALETTE_AMBER), LV_PART_MAIN);
+
+    penalty_time_label = lv_label_create(penalty_time_div);
+    lv_label_set_text(penalty_time_label, "+00:00");
+    lv_obj_set_style_text_font(penalty_time_label, &lv_font_montserrat_18, LV_PART_MAIN);
+    lv_obj_set_style_text_color(penalty_time_label, lv_palette_main(LV_PALETTE_AMBER), LV_PART_MAIN);
+
+    /// CURRENT LAP TIME
+    lv_obj_t *lap_current_div = lv_obj_create(background_div);
+    lv_obj_set_size(lap_current_div, lv_pct(100), lv_pct(25));
+    lv_obj_add_style(lap_current_div, &default_style, LV_PART_MAIN);
+    lv_obj_set_style_bg_color(lap_current_div, lv_palette_main(LV_PALETTE_YELLOW), LV_PART_MAIN);
+    lv_obj_remove_flag(lap_current_div, LV_OBJ_FLAG_SCROLLABLE);
+
+    lv_obj_set_layout(lap_current_div, LV_LAYOUT_FLEX);
+    lv_obj_set_flex_flow(lap_current_div, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(lap_current_div, LV_FLEX_ALIGN_SPACE_AROUND, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+
+    lv_obj_t *lap_time_div = lv_obj_create(lap_current_div);
+    lv_obj_set_size(lap_time_div, lv_pct(100), lv_pct(100));
+    lv_obj_add_style(lap_time_div, &center_style, LV_PART_MAIN);
+    lv_obj_remove_flag(lap_time_div, LV_OBJ_FLAG_SCROLLABLE);
+
+    lv_obj_set_layout(lap_time_div, LV_LAYOUT_FLEX);
+    lv_obj_set_flex_flow(lap_time_div, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(lap_time_div, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+
+    lv_obj_t *lap_time_title = lv_label_create(lap_time_div);
+    lv_label_set_text(lap_time_title, "TIME");
+    lv_obj_set_style_text_font(lap_time_title, &lv_font_montserrat_10, LV_PART_MAIN);
+    lv_obj_set_style_text_color(lap_time_title, lv_color_white(), LV_PART_MAIN);
+
+    lap_time_label = lv_label_create(lap_time_div);
+    lv_label_set_text(lap_time_label, "00:00.00");
+    lv_obj_set_style_text_font(lap_time_label, &lv_font_montserrat_40, LV_PART_MAIN);
+    lv_obj_set_style_text_color(lap_time_label, lv_color_white(), LV_PART_MAIN);
 
     /// LISTS
-    lv_obj_t *lists_div = lv_obj_create(main_div);
-    lv_obj_set_size(lists_div, lv_pct(100), lv_pct(50));
-    lv_obj_add_style(lists_div, &main_style, LV_PART_MAIN);
+    lv_obj_t *lists_div = lv_obj_create(background_div);
+    lv_obj_set_size(lists_div, lv_pct(100), lv_pct(45));
+    lv_obj_add_style(lists_div, &default_style, LV_PART_MAIN);
+    lv_obj_set_style_bg_opa(lists_div, 100, LV_PART_MAIN);
     lv_obj_set_style_pad_all(lists_div, 0, LV_PART_MAIN);
+    lv_obj_set_style_bg_color(lists_div, lv_palette_darken(LV_PALETTE_GREY, 4), LV_PART_MAIN);
     lv_obj_remove_flag(lists_div, LV_OBJ_FLAG_SCROLLABLE);
+
     lv_obj_set_layout(lists_div, LV_LAYOUT_FLEX);
     lv_obj_set_flex_flow(lists_div, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(lists_div, LV_FLEX_ALIGN_SPACE_AROUND, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
-    lv_obj_set_style_flex_main_place(lists_div, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_PART_MAIN);
-    lv_obj_set_style_flex_cross_place(lists_div, LV_FLEX_ALIGN_CENTER, LV_PART_MAIN);
-    lv_obj_set_style_flex_track_place(lists_div, LV_FLEX_ALIGN_CENTER, LV_PART_MAIN);
+    top_table = lv_table_create(lists_div);
+    lv_obj_set_size(top_table, lv_pct(50), lv_pct(100));
+    lv_table_set_column_count(top_table, 3);
+    lv_table_set_row_count(top_table, 6);
+    lv_table_set_column_width(top_table, 0, 30);
+    lv_table_set_column_width(top_table, 1, 75);
+    lv_table_set_column_width(top_table, 2, 55);
+    lv_table_set_cell_ctrl(top_table, 0, 0, LV_TABLE_CELL_CTRL_MERGE_RIGHT);
+    lv_table_set_cell_ctrl(top_table, 0, 1, LV_TABLE_CELL_CTRL_MERGE_RIGHT);
+    lv_obj_add_style(top_table, &table_style, LV_PART_MAIN);
+    lv_obj_add_style(top_table, &table_cell_style, LV_PART_ITEMS);
+    lv_obj_remove_flag(top_table, LV_OBJ_FLAG_SCROLLABLE);
+    lv_table_set_cell_value(top_table, 0, 0, "LAST LAPS");
 
-    lv_obj_t *top_div = lv_obj_create(lists_div);
-    lv_obj_set_size(top_div, lv_pct(50), lv_pct(100));
-    lv_obj_add_style(top_div, &main_style, LV_PART_MAIN);
-    lv_obj_remove_flag(top_div, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_text_font(top_div, &lv_font_montserrat_20, LV_PART_MAIN);
-    lv_obj_set_style_border_side(top_div, LV_BORDER_SIDE_RIGHT, LV_PART_MAIN);
-    lv_obj_set_style_border_width(top_div, 1, LV_PART_MAIN);
-    lv_obj_set_style_border_color(top_div, lv_palette_darken(LV_PALETTE_GREY, 4), LV_PART_MAIN);
-    lv_obj_set_layout(top_div, LV_LAYOUT_FLEX);
-    lv_obj_set_flex_flow(top_div, LV_FLEX_FLOW_COLUMN);
+    lv_table_set_cell_value(top_table, 1, 0, "00");
+    lv_table_set_cell_value(top_table, 1, 1, "24:55.98");
+    lv_table_set_cell_value(top_table, 1, 2, "WWW");
 
-    lv_obj_set_style_flex_main_place(top_div, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_PART_MAIN);
-    lv_obj_set_style_flex_cross_place(top_div, LV_FLEX_ALIGN_START, LV_PART_MAIN);
-    lv_obj_set_style_flex_track_place(top_div, LV_FLEX_ALIGN_START, LV_PART_MAIN);
+    lv_table_set_cell_value(top_table, 2, 0, "00");
+    lv_table_set_cell_value(top_table, 2, 1, "24:55.98");
+    lv_table_set_cell_value(top_table, 2, 2, "WWW");
 
-    lv_obj_t *top_text = lv_label_create(top_div);
-    lv_label_set_text(top_text, "TOP LAPS");
-    lv_obj_set_style_text_font(top_text, &lv_font_montserrat_14, LV_PART_MAIN);
-    lv_obj_set_style_text_color(top_text, lv_color_white(), LV_PART_MAIN);
-    lv_obj_set_style_border_side(top_text, LV_BORDER_SIDE_BOTTOM, LV_PART_MAIN);
-    lv_obj_set_style_border_width(top_text, 2, LV_PART_MAIN);
-    lv_obj_set_style_border_color(top_text, lv_palette_darken(LV_PALETTE_GREY, 4), LV_PART_MAIN);
+    lv_table_set_cell_value(top_table, 3, 0, "00");
+    lv_table_set_cell_value(top_table, 3, 1, "24:55.98");
+    lv_table_set_cell_value(top_table, 3, 2, "WWW");
 
-    for (int i = 0; i < UI_LIST_SIZE; i++)
-    {
-        top_laps_labels[i] = lv_label_create(top_div);
-        lv_label_set_text(top_laps_labels[i], "--, --:--.--");
-        lv_obj_set_style_text_color(top_laps_labels[i], lv_color_white(), LV_PART_MAIN);
-    }
+    lv_table_set_cell_value(top_table, 4, 0, "00");
+    lv_table_set_cell_value(top_table, 4, 1, "24:55.98");
+    lv_table_set_cell_value(top_table, 4, 2, "WWW");
 
-    lv_obj_t *last_div = lv_obj_create(lists_div);
-    lv_obj_set_size(last_div, lv_pct(50), lv_pct(100));
-    lv_obj_add_style(last_div, &main_style, LV_PART_MAIN);
-    lv_obj_remove_flag(last_div, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_text_font(last_div, &lv_font_montserrat_20, LV_PART_MAIN);
-    lv_obj_set_style_border_side(last_div, LV_BORDER_SIDE_LEFT, LV_PART_MAIN);
-    lv_obj_set_style_border_width(last_div, 1, LV_PART_MAIN);
-    lv_obj_set_style_border_color(last_div, lv_palette_darken(LV_PALETTE_GREY, 4), LV_PART_MAIN);
-    lv_obj_set_layout(last_div, LV_LAYOUT_FLEX);
-    lv_obj_set_flex_flow(last_div, LV_FLEX_FLOW_COLUMN);
+    lv_table_set_cell_value(top_table, 5, 0, "00");
+    lv_table_set_cell_value(top_table, 5, 1, "24:55.98");
+    lv_table_set_cell_value(top_table, 5, 2, "WWW");
 
-    lv_obj_set_style_flex_main_place(last_div, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_PART_MAIN);
-    lv_obj_set_style_flex_cross_place(last_div, LV_FLEX_ALIGN_START, LV_PART_MAIN);
-    lv_obj_set_style_flex_track_place(last_div, LV_FLEX_ALIGN_START, LV_PART_MAIN);
+    last_table = lv_table_create(lists_div);
+    lv_obj_set_size(last_table, lv_pct(50), lv_pct(100));
+    lv_table_set_column_count(top_table, 3);
+    lv_table_set_row_count(top_table, 6);
+    lv_table_set_column_width(last_table, 0, 30);
+    lv_table_set_column_width(last_table, 1, 75);
+    lv_table_set_column_width(last_table, 2, 55);
+    lv_table_set_cell_ctrl(last_table, 0, 0, LV_TABLE_CELL_CTRL_MERGE_RIGHT);
+    lv_table_set_cell_ctrl(last_table, 0, 1, LV_TABLE_CELL_CTRL_MERGE_RIGHT);
+    lv_obj_add_style(last_table, &table_style, LV_PART_MAIN);
+    lv_obj_add_style(last_table, &table_cell_style, LV_PART_ITEMS);
+    lv_obj_remove_flag(last_table, LV_OBJ_FLAG_SCROLLABLE);
+    lv_table_set_cell_value(last_table, 0, 0, "LAST LAPS");
 
-    lv_obj_t *last_text = lv_label_create(last_div);
-    lv_label_set_text(last_text, "LAST LAPS");
-    lv_obj_set_style_text_font(last_text, &lv_font_montserrat_14, LV_PART_MAIN);
-    lv_obj_set_style_text_color(last_text, lv_color_white(), LV_PART_MAIN);
-    lv_obj_set_style_border_side(last_text, LV_BORDER_SIDE_BOTTOM, LV_PART_MAIN);
-    lv_obj_set_style_border_width(last_text, 2, LV_PART_MAIN);
-    lv_obj_set_style_border_color(last_text, lv_palette_darken(LV_PALETTE_GREY, 4), LV_PART_MAIN);
+    lv_table_set_cell_value(last_table, 1, 0, "00");
+    lv_table_set_cell_value(last_table, 1, 1, "24:55.98");
+    lv_table_set_cell_value(last_table, 1, 2, "WWW");
 
-    for (int i = 0; i < UI_LIST_SIZE; i++)
-    {
-        last_laps_labels[i] = lv_label_create(last_div);
-        lv_label_set_text(last_laps_labels[i], "--, --:--.--");
-        lv_obj_set_style_text_color(last_laps_labels[i], lv_color_white(), LV_PART_MAIN);
-    }
+    lv_table_set_cell_value(last_table, 2, 0, "00");
+    lv_table_set_cell_value(last_table, 2, 1, "24:55.98");
+    lv_table_set_cell_value(last_table, 2, 2, "WWW");
+
+    lv_table_set_cell_value(last_table, 3, 0, "00");
+    lv_table_set_cell_value(last_table, 3, 1, "24:55.98");
+    lv_table_set_cell_value(last_table, 3, 2, "WWW");
+
+    lv_table_set_cell_value(last_table, 4, 0, "00");
+    lv_table_set_cell_value(last_table, 4, 1, "24:55.98");
+    lv_table_set_cell_value(last_table, 4, 2, "WWW");
+
+    lv_table_set_cell_value(last_table, 5, 0, "00");
+    lv_table_set_cell_value(last_table, 5, 1, "24:55.98");
+    lv_table_set_cell_value(last_table, 5, 2, "WWW");
 }
 
 void ui_update_status(bool sd_on, int wifi_mode, const char *ip_str, bool two_gates, bool stop_flag)
@@ -297,11 +366,11 @@ void ui_update_status(bool sd_on, int wifi_mode, const char *ip_str, bool two_ga
 
     if (two_gates)
     {
-        lv_label_set_text(gates_status_label, "2G");
+        lv_label_set_text(gates_status_label, "2 GATES");
     }
     else
     {
-        lv_label_set_text(gates_status_label, "1G");
+        lv_label_set_text(gates_status_label, "1 GATE");
     }
 
     if (stop_flag)
@@ -319,31 +388,39 @@ void ui_update_status(bool sd_on, int wifi_mode, const char *ip_str, bool two_ga
 void ui_update_current_lap(const char *time_str, const char *penalty_str, int oc_count, int doo_count, const char *driver_name)
 {
     if (time_str)
-        lv_label_set_text(current_lap_label, time_str);
+        lv_label_set_text(lap_time_label, time_str);
     if (penalty_str)
-        lv_label_set_text(penalty_label, penalty_str);
+        lv_label_set_text(penalty_time_label, penalty_str);
 
-    lv_label_set_text_fmt(oc_label, "OC: %d", oc_count);
-    lv_label_set_text_fmt(doo_label, "DOO: %d", doo_count);
+    lv_label_set_text_fmt(oc_count_label, "%d", oc_count);
+    lv_label_set_text_fmt(doo_count_label, "%d", doo_count);
 
     if (driver_name)
-        lv_label_set_text_fmt(driver_label, "DRIVER: %s", driver_name);
+        lv_label_set_text_fmt(driver_label, "%s", driver_name);
 }
 
-void ui_update_top_lap(int index, const char *time_str)
+void ui_update_top_lap(int index, const char *lap_str, const char *time_str, const char *driver_str)
 {
-    if (index >= 0 && index < UI_LIST_SIZE)
+    if (index >= 0 && index <= UI_LIST_SIZE)
     {
         if (time_str)
-            lv_label_set_text(top_laps_labels[index], time_str);
+        {
+            lv_table_set_cell_value(top_table, index, 0, lap_str);
+            lv_table_set_cell_value(top_table, index, 1, time_str);
+            lv_table_set_cell_value(top_table, index, 2, driver_str);
+        }
     }
 }
 
-void ui_update_last_lap(int index, const char *time_str)
+void ui_update_last_lap(int index, const char *lap_str, const char *time_str, const char *driver_str)
 {
-    if (index >= 0 && index < UI_LIST_SIZE)
+    if (index >= 0 && index <= UI_LIST_SIZE)
     {
         if (time_str)
-            lv_label_set_text(last_laps_labels[index], time_str);
+        {
+            lv_table_set_cell_value(last_table, index, 0, lap_str);
+            lv_table_set_cell_value(last_table, index, 1, time_str);
+            lv_table_set_cell_value(last_table, index, 2, driver_str);
+        }
     }
 }

@@ -12,6 +12,8 @@
 /// @brief Length of string needed to store converted laptime
 #define LAPTIME_STR_LENGTH 21
 
+#define COUNT_STR_LENGTH 3
+
 #define PENALTY_TIME_STR_LENGTH 11
 
 #define PENALTY_COUNT_STR_LENGTH 25
@@ -69,6 +71,9 @@ public:
      * @param laptime_str String for converted laptime
      * @param size Size of string
      */
+
+    void convert_string_count(char count_str[COUNT_STR_LENGTH], size_t size);
+
     void convert_string_full(char laptime_str[LAPTIME_STR_LENGTH], size_t size);
 
     void convert_string_time(char laptime_str[LAPTIME_STR_LENGTH], size_t size);

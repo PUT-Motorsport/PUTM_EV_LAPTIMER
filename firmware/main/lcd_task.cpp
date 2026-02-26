@@ -81,10 +81,12 @@ void lcd_task(void *args)
         static Laptime laptime_current;
         if (xQueueReceive(laptime_current_queue_lcd, &laptime_current, 0) == pdTRUE)
         {
+            char laptime_count_str[COUNT_STR_LENGTH] = {0};
             char laptime_current_str[LAPTIME_STR_LENGTH] = {0};
             char laptime_penalty_str[PENALTY_TIME_STR_LENGTH] = {0};
 
-            laptime_current.convert_string_full(laptime_current_str, sizeof(laptime_current_str));
+            laptime_current.convert_string_count(laptime_count_str, sizeof(laptime_count_str));
+            laptime_current.convert_string_time(laptime_current_str, sizeof(laptime_current_str));
             laptime_current.convert_string_penalty(laptime_penalty_str, sizeof(laptime_penalty_str));
 
             lvgl_port_lock(0);
@@ -99,17 +101,25 @@ void lcd_task(void *args)
         // Update Laptime Lists
         if (xSemaphoreTake(laptime_lists_mutex, 0) == pdTRUE)
         {
+            char lap_count_top_str[COUNT_STR_LENGTH] = {0};
             char laptime_top_str[LAPTIME_STR_LENGTH] = {0};
+            char driver_top_str[DRIVER_TAG_LENGTH] = {0};
+
+            char lap_count_last_str[COUNT_STR_LENGTH] = {0};
             char laptime_last_str[LAPTIME_STR_LENGTH] = {0};
+            char driver_last_str[DRIVER_TAG_LENGTH] = {0};
 
             lvgl_port_lock(0);
             for (int i = 0; i < LAPTIME_LIST_SIZE_LCD; i++)
             {
-                laptime_list_top[i].convert_string_full(laptime_top_str, sizeof(laptime_top_str));
-                laptime_list_last[i].convert_string_full(laptime_last_str, sizeof(laptime_last_str));
+                laptime_list_top[i].convert_string_count(lap_count_top_str, sizeof(lap_count_top_str));
+                laptime_list_top[i].convert_string_time(laptime_top_str, sizeof(laptime_top_str));
 
-                ui_update_top_lap(i, laptime_top_str);
-                ui_update_last_lap(i, laptime_last_str);
+                laptime_list_top[i].convert_string_count(lap_count_last_str, sizeof(lap_count_last_str));
+                laptime_list_last[i].convert_string_time(laptime_last_str, sizeof(laptime_last_str));
+
+                ui_update_top_lap(i + 1, lap_count_top_str, laptime_top_str, driver_list_local.list[laptime_list_top[i].driver_id]);
+                ui_update_last_lap(i + 1, lap_count_last_str, laptime_last_str, driver_list_local.list[laptime_list_last[i].driver_id]);
             }
             lvgl_port_unlock();
             xSemaphoreGive(laptime_lists_mutex);

@@ -65,7 +65,22 @@ void Laptime::convert_string_full(char laptime_str[LAPTIME_STR_LENGTH], size_t s
         snprintf(laptime_str, size, "%02u, %02u:%02u:%02u",
                  this->count, mm, ss, ms);
 }
-void Laptime::convert_string_time(char laptime_str[LAPTIME_STR_LENGTH], size_t size)
+void Laptime::convert_string_count(char count_str[COUNT_STR_LENGTH], size_t size)
+{
+    if (count_str == NULL)
+        return;
+
+    if (this->time == 0)
+    {
+        snprintf(count_str, size, "--");
+        return;
+    }
+
+    if (size >= COUNT_STR_LENGTH)
+        snprintf(count_str, size, "%02u",
+                 this->count);
+}
+void Laptime::convert_string_time(char laptime_str[COUNT_STR_LENGTH], size_t size)
 
 {
     if (laptime_str == NULL)
@@ -83,14 +98,14 @@ void Laptime::convert_string_time(char laptime_str[LAPTIME_STR_LENGTH], size_t s
     if (size == LAPTIME_STR_LENGTH)
         snprintf(laptime_str, size, "%02u:%02u:%02u", mm, ss, ms);
 }
-void Laptime::convert_string_penalty(char laptime_str[PENALTY_TIME_STR_LENGTH], size_t size)
+void Laptime::convert_string_penalty(char penalty_str[PENALTY_TIME_STR_LENGTH], size_t size)
 {
-    if (laptime_str == NULL)
+    if (penalty_str == NULL)
         return;
 
     if (this->time == 0)
     {
-        snprintf(laptime_str, size, PENALTY_STR_DEFAULT);
+        snprintf(penalty_str, size, PENALTY_STR_DEFAULT);
         return;
     }
 
@@ -98,7 +113,7 @@ void Laptime::convert_string_penalty(char laptime_str[PENALTY_TIME_STR_LENGTH], 
     unsigned int ss = (this->penalty_time / 100) % 60;
     if (size >= 11)
     {
-        snprintf(laptime_str, size, "+%02u:%02u", mm, ss);
+        snprintf(penalty_str, size, "+%02u:%02u", mm, ss);
     }
 }
 
