@@ -16,6 +16,8 @@ static Laptime laptime_current;
 
 static Driver_list driver_list_local;
 
+static bool ip_refresh_flag = false;
+
 /**
  * @brief Mutex used by data_get_handler to ensure that it can read local data safely
  */
@@ -468,7 +470,7 @@ void wifi_task(void *args)
 
     char wifi_ssid_local[WIFI_SSID_STR_LENGTH] = WIFI_SSID_DEFAULT;
     char wifi_password_local[WIFI_PASSWORD_STR_LENGTH] = WIFI_PASSWORD_DEFAULT;
-    char ip_str[52] = {0};
+    char ip_str[WIFI_IP_LENGTH] = {0};
     int driver_update_counter = 0;
 
     for (;;)
@@ -513,11 +515,15 @@ void wifi_task(void *args)
             }
 
             if (wifi_reinit(wifi_mode_flag, wifi_ssid_local, wifi_password_local) == ESP_OK)
+            {
                 start_webserver();
+                snprintf(ip_str, sizeof(ip_str), "WAIT FOR IP");
+                xQueueSend(ip_queue, ip_str, portMAX_DELAY);
+                ip_refresh_flag = true;
+                wifi_reset_flag = WIFI_NO_RESET;
+            }
             else
                 wifi_mode_flag = WIFI_MODE_NULL;
-
-            wifi_reset_flag = WIFI_NO_RESET;
         }
         else
         {
@@ -533,9 +539,16 @@ void wifi_task(void *args)
             }
 
             // Get ip and send to lcd task to display on screen
-            wifi_get_ip(ip_str);
-            xQueueSend(ip_queue, ip_str, 0);
+            if (ip_refresh_flag == true)
+            {
+                if (wifi_get_ip(ip_str) == ESP_OK)
+                {
+                    xQueueSend(ip_queue, ip_str, portMAX_DELAY);
+                    ip_refresh_flag = false;
+                }
+            }
         }
+
         vTaskDelay(pdMS_TO_TICKS(20));
     }
 }

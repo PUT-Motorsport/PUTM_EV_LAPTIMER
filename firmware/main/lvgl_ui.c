@@ -344,7 +344,7 @@ void ui_update_status(bool sd_on, int wifi_mode, const char *ip_str, bool two_ga
         lv_obj_set_style_text_color(sd_status_label, lv_palette_main(LV_PALETTE_RED), LV_PART_MAIN);
     }
 
-    static char wifi_str[62] = "WIFI OFF 000.000.000.000";
+    static char wifi_str[62] = "\0";
     if (wifi_mode == 1)
     {
         snprintf(wifi_str, sizeof(wifi_str), LV_SYMBOL_WIFI "STA: %s", ip_str);

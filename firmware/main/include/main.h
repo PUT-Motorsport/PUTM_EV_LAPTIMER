@@ -30,6 +30,7 @@
 
 #define WIFI_SSID_STR_LENGTH 32
 #define WIFI_PASSWORD_STR_LENGTH 64
+#define WIFI_IP_LENGTH 52
 
 #define DRIVER_LIST_DEFAULT {"---", "AAA", "BBB", "CCC"}
 
