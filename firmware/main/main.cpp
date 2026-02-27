@@ -28,18 +28,12 @@ Laptime laptime_list_top[LAPTIME_LIST_SIZE_LOCAL];
 Laptime laptime_list_last[LAPTIME_LIST_SIZE_LOCAL];
 Laptime laptime_list_driver[DRIVER_MAX_COUNT];
 
-<<<<<<< HEAD
-bool sd_active_flag = false;
-bool stop_flag = true;
-Wifi_reset wifi_reset_flag = WIFI_NO_RESET;
-=======
 volatile bool sd_active_flag = false;
 volatile bool stop_flag = true;
 volatile Wifi_reset wifi_reset_flag = WIFI_NO_RESET;
 volatile wifi_mode_t wifi_mode_flag = WIFI_MODE_NULL;
 
 bool lists_refresh_lcd_flag = true;
->>>>>>> dev-lvgl
 
 void Laptime::reset()
 {

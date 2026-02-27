@@ -161,33 +161,21 @@ extern Laptime laptime_list_driver[DRIVER_MAX_COUNT];
 /**
  * @brief Indicates if sdcard is active (inserted and initialized)
  */
-<<<<<<< HEAD
-extern bool sd_active_flag;
-=======
 extern volatile bool sd_active_flag;
->>>>>>> dev-lvgl
 
 /**
  * @brief Indicates stopped laptime, set true by LAP_RESET_PIN and set false by LAP_GATE1_PIN
  */
-<<<<<<< HEAD
-extern bool stop_flag;
-=======
 extern volatile bool stop_flag;
->>>>>>> dev-lvgl
 
 /**
  * @brief Indicates state of flag that resets wifi
  */
 
-<<<<<<< HEAD
-extern Wifi_reset wifi_reset_flag;
-=======
 extern volatile Wifi_reset wifi_reset_flag;
 
 extern volatile wifi_mode_t wifi_mode_flag;
 
 extern bool lists_refresh_lcd_flag;
->>>>>>> dev-lvgl
 
 #endif
