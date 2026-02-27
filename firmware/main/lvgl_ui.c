@@ -101,8 +101,6 @@ void ui_init(void)
     lv_obj_t *status_bar_div = lv_obj_create(background_div);
     lv_obj_set_size(status_bar_div, lv_pct(100), lv_pct(10));
     lv_obj_add_style(status_bar_div, &default_style, LV_PART_MAIN);
-    lv_obj_set_style_border_width(status_bar_div, 1, LV_BORDER_SIDE_BOTTOM);
-    lv_obj_set_style_border_color(status_bar_div, lv_palette_main(LV_PALETTE_GREY), LV_PART_MAIN);
     lv_obj_remove_flag(status_bar_div, LV_OBJ_FLAG_SCROLLABLE);
 
     lv_obj_set_layout(status_bar_div, LV_LAYOUT_FLEX);
