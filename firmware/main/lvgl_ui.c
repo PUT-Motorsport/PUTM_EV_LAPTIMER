@@ -4,6 +4,11 @@
 #define OUTLINE 5
 #define UI_LIST_SIZE 5
 
+extern const lv_font_t roboto_mono_10;
+extern const lv_font_t roboto_mono_14;
+extern const lv_font_t roboto_mono_18;
+extern const lv_font_t roboto_mono_38;
+
 static lv_obj_t *sd_status_label;
 static lv_obj_t *wifi_status_label;
 static lv_obj_t *gates_status_label;
@@ -23,12 +28,14 @@ static lv_obj_t *last_table;
 
 void ui_init(void)
 {
+
     static lv_style_t default_style;
     lv_style_init(&default_style);
     lv_style_set_bg_opa(&default_style, LV_OPA_TRANSP);
+    lv_style_set_text_font(&default_style, &roboto_mono_14);
     lv_style_set_radius(&default_style, 0);
     lv_style_set_border_width(&default_style, 0);
-    lv_style_set_pad_all(&default_style, 2);
+    lv_style_set_pad_all(&default_style, 3);
 
     static lv_style_t center_style;
     lv_style_init(&center_style);
@@ -54,7 +61,7 @@ void ui_init(void)
     lv_style_set_bg_color(&table_cell_style, lv_color_black());
     lv_style_set_pad_all(&table_cell_style, 1);
     lv_style_set_margin_all(&table_cell_style, 0);
-    lv_style_set_text_font(&table_cell_style, &lv_font_montserrat_14);
+    lv_style_set_text_font(&table_cell_style, &roboto_mono_14);
     lv_style_set_text_color(&table_cell_style, lv_color_white());
 
     // BACKGROUND
@@ -83,30 +90,30 @@ void ui_init(void)
     lv_obj_set_flex_align(status_bar_div, LV_FLEX_ALIGN_SPACE_AROUND, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
     sd_status_label = lv_label_create(status_bar_div);
-    // lv_obj_set_width(sd_status_label, lv_pct(5));
+    lv_obj_set_width(sd_status_label, lv_pct(5));
     lv_label_set_long_mode(sd_status_label, LV_LABEL_LONG_CLIP);
     lv_obj_set_style_text_align(sd_status_label, LV_TEXT_ALIGN_LEFT, 0);
     lv_label_set_text(sd_status_label, LV_SYMBOL_SD_CARD);
     lv_obj_set_style_text_color(sd_status_label, lv_palette_main(LV_PALETTE_RED), LV_PART_MAIN);
 
     wifi_status_label = lv_label_create(status_bar_div);
-    // lv_obj_set_width(wifi_status_label, lv_pct(60));
+    lv_obj_set_width(wifi_status_label, lv_pct(60));
     lv_label_set_long_mode(wifi_status_label, LV_LABEL_LONG_CLIP);
     lv_obj_set_style_text_align(wifi_status_label, LV_TEXT_ALIGN_LEFT, 0);
-    lv_label_set_text(wifi_status_label, LV_SYMBOL_WIFI "OFF: 000.000.000.000");
+    lv_label_set_text(wifi_status_label, LV_SYMBOL_WIFI);
     lv_obj_set_style_text_color(wifi_status_label, lv_palette_main(LV_PALETTE_RED), LV_PART_MAIN);
 
     gates_status_label = lv_label_create(status_bar_div);
-    // lv_obj_set_width(gates_status_label, lv_pct(20));
+    lv_obj_set_width(gates_status_label, lv_pct(20));
     lv_label_set_long_mode(gates_status_label, LV_LABEL_LONG_CLIP);
     lv_obj_set_style_text_align(gates_status_label, LV_TEXT_ALIGN_LEFT, 0);
-    lv_label_set_text(gates_status_label, "2 GATES");
+    lv_label_set_text(gates_status_label, "- GATES");
     lv_obj_set_style_text_color(gates_status_label, lv_color_white(), LV_PART_MAIN);
 
     run_stop_btn = lv_button_create(status_bar_div);
     lv_obj_add_flag(run_stop_btn, LV_OBJ_FLAG_CHECKABLE);
     lv_obj_set_height(run_stop_btn, LV_SIZE_CONTENT);
-    lv_obj_set_width(run_stop_btn, lv_pct(15));
+    lv_obj_set_width(run_stop_btn, lv_pct(10));
     lv_obj_set_style_pad_all(run_stop_btn, 1, LV_PART_MAIN);
     lv_obj_set_style_bg_color(run_stop_btn, lv_palette_main(LV_PALETTE_RED), LV_PART_MAIN);
     lv_obj_set_style_text_color(run_stop_btn, lv_color_white(), LV_PART_MAIN);
@@ -137,12 +144,12 @@ void ui_init(void)
 
     lv_obj_t *driver_title = lv_label_create(driver_div);
     lv_label_set_text(driver_title, "DRIVER");
-    lv_obj_set_style_text_font(driver_title, &lv_font_montserrat_10, LV_PART_MAIN);
+    lv_obj_set_style_text_font(driver_title, &roboto_mono_10, LV_PART_MAIN);
     lv_obj_set_style_text_color(driver_title, lv_color_white(), LV_PART_MAIN);
 
     driver_label = lv_label_create(driver_div);
     lv_label_set_text(driver_label, "WWW");
-    lv_obj_set_style_text_font(driver_label, &lv_font_montserrat_18, LV_PART_MAIN);
+    lv_obj_set_style_text_font(driver_label, &roboto_mono_18, LV_PART_MAIN);
     lv_obj_set_style_text_color(driver_label, lv_color_white(), LV_PART_MAIN);
 
     /// LAP COUNT
@@ -156,12 +163,12 @@ void ui_init(void)
 
     lv_obj_t *lap_count_title = lv_label_create(lap_count_div);
     lv_label_set_text(lap_count_title, "LAP");
-    lv_obj_set_style_text_font(lap_count_title, &lv_font_montserrat_10, LV_PART_MAIN);
+    lv_obj_set_style_text_font(lap_count_title, &roboto_mono_10, LV_PART_MAIN);
     lv_obj_set_style_text_color(lap_count_title, lv_color_white(), LV_PART_MAIN);
 
     lap_count_label = lv_label_create(lap_count_div);
     lv_label_set_text(lap_count_label, "00");
-    lv_obj_set_style_text_font(lap_count_label, &lv_font_montserrat_18, LV_PART_MAIN);
+    lv_obj_set_style_text_font(lap_count_label, &roboto_mono_18, LV_PART_MAIN);
     lv_obj_set_style_text_color(lap_count_label, lv_color_white(), LV_PART_MAIN);
 
     /// OC COUNT
@@ -175,12 +182,12 @@ void ui_init(void)
 
     lv_obj_t *oc_count_title = lv_label_create(oc_count_div);
     lv_label_set_text(oc_count_title, "OC");
-    lv_obj_set_style_text_font(oc_count_title, &lv_font_montserrat_10, LV_PART_MAIN);
+    lv_obj_set_style_text_font(oc_count_title, &roboto_mono_10, LV_PART_MAIN);
     lv_obj_set_style_text_color(oc_count_title, lv_palette_main(LV_PALETTE_AMBER), LV_PART_MAIN);
 
     oc_count_label = lv_label_create(oc_count_div);
     lv_label_set_text(oc_count_label, "00");
-    lv_obj_set_style_text_font(oc_count_label, &lv_font_montserrat_18, LV_PART_MAIN);
+    lv_obj_set_style_text_font(oc_count_label, &roboto_mono_18, LV_PART_MAIN);
     lv_obj_set_style_text_color(oc_count_label, lv_palette_main(LV_PALETTE_AMBER), LV_PART_MAIN);
 
     /// DOO COUNT
@@ -194,12 +201,12 @@ void ui_init(void)
 
     lv_obj_t *doo_count_title = lv_label_create(doo_count_div);
     lv_label_set_text(doo_count_title, "DOO");
-    lv_obj_set_style_text_font(doo_count_title, &lv_font_montserrat_10, LV_PART_MAIN);
+    lv_obj_set_style_text_font(doo_count_title, &roboto_mono_10, LV_PART_MAIN);
     lv_obj_set_style_text_color(doo_count_title, lv_palette_main(LV_PALETTE_AMBER), LV_PART_MAIN);
 
     doo_count_label = lv_label_create(doo_count_div);
     lv_label_set_text(doo_count_label, "00");
-    lv_obj_set_style_text_font(doo_count_label, &lv_font_montserrat_18, LV_PART_MAIN);
+    lv_obj_set_style_text_font(doo_count_label, &roboto_mono_18, LV_PART_MAIN);
     lv_obj_set_style_text_color(doo_count_label, lv_palette_main(LV_PALETTE_AMBER), LV_PART_MAIN);
 
     /// PENALTY TIME
@@ -213,17 +220,17 @@ void ui_init(void)
 
     lv_obj_t *penalty_time_title = lv_label_create(penalty_time_div);
     lv_label_set_text(penalty_time_title, "PENALTY");
-    lv_obj_set_style_text_font(penalty_time_title, &lv_font_montserrat_10, LV_PART_MAIN);
+    lv_obj_set_style_text_font(penalty_time_title, &roboto_mono_10, LV_PART_MAIN);
     lv_obj_set_style_text_color(penalty_time_title, lv_palette_main(LV_PALETTE_AMBER), LV_PART_MAIN);
 
     penalty_time_label = lv_label_create(penalty_time_div);
     lv_label_set_text(penalty_time_label, "+00:00");
-    lv_obj_set_style_text_font(penalty_time_label, &lv_font_montserrat_18, LV_PART_MAIN);
+    lv_obj_set_style_text_font(penalty_time_label, &roboto_mono_18, LV_PART_MAIN);
     lv_obj_set_style_text_color(penalty_time_label, lv_palette_main(LV_PALETTE_AMBER), LV_PART_MAIN);
 
     /// CURRENT LAP TIME
     lv_obj_t *lap_current_div = lv_obj_create(background_div);
-    lv_obj_set_size(lap_current_div, lv_pct(100), lv_pct(25));
+    lv_obj_set_size(lap_current_div, lv_pct(100), lv_pct(20));
     lv_obj_add_style(lap_current_div, &default_style, LV_PART_MAIN);
     lv_obj_set_style_bg_color(lap_current_div, lv_palette_main(LV_PALETTE_YELLOW), LV_PART_MAIN);
     lv_obj_remove_flag(lap_current_div, LV_OBJ_FLAG_SCROLLABLE);
@@ -237,23 +244,15 @@ void ui_init(void)
     lv_obj_add_style(lap_time_div, &center_style, LV_PART_MAIN);
     lv_obj_remove_flag(lap_time_div, LV_OBJ_FLAG_SCROLLABLE);
 
-    lv_obj_set_layout(lap_time_div, LV_LAYOUT_FLEX);
-    lv_obj_set_flex_flow(lap_time_div, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_flex_align(lap_time_div, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-
-    lv_obj_t *lap_time_title = lv_label_create(lap_time_div);
-    lv_label_set_text(lap_time_title, "TIME");
-    lv_obj_set_style_text_font(lap_time_title, &lv_font_montserrat_10, LV_PART_MAIN);
-    lv_obj_set_style_text_color(lap_time_title, lv_color_white(), LV_PART_MAIN);
-
     lap_time_label = lv_label_create(lap_time_div);
     lv_label_set_text(lap_time_label, "00:00.00");
-    lv_obj_set_style_text_font(lap_time_label, &lv_font_montserrat_40, LV_PART_MAIN);
+    lv_obj_center(lap_time_label);
+    lv_obj_set_style_text_font(lap_time_label, &roboto_mono_38, LV_PART_MAIN);
     lv_obj_set_style_text_color(lap_time_label, lv_color_white(), LV_PART_MAIN);
 
     /// LISTS
     lv_obj_t *lists_div = lv_obj_create(background_div);
-    lv_obj_set_size(lists_div, lv_pct(100), lv_pct(45));
+    lv_obj_set_size(lists_div, lv_pct(100), lv_pct(50));
     lv_obj_add_style(lists_div, &default_style, LV_PART_MAIN);
     lv_obj_set_style_bg_opa(lists_div, 100, LV_PART_MAIN);
     lv_obj_set_style_pad_all(lists_div, 0, LV_PART_MAIN);
@@ -276,7 +275,7 @@ void ui_init(void)
     lv_obj_add_style(top_table, &table_style, LV_PART_MAIN);
     lv_obj_add_style(top_table, &table_cell_style, LV_PART_ITEMS);
     lv_obj_remove_flag(top_table, LV_OBJ_FLAG_SCROLLABLE);
-    lv_table_set_cell_value(top_table, 0, 0, "LAST LAPS");
+    lv_table_set_cell_value(top_table, 0, 0, "TOP LAPS");
 
     lv_table_set_cell_value(top_table, 1, 0, "00");
     lv_table_set_cell_value(top_table, 1, 1, "24:55.98");
@@ -300,8 +299,8 @@ void ui_init(void)
 
     last_table = lv_table_create(lists_div);
     lv_obj_set_size(last_table, lv_pct(50), lv_pct(100));
-    lv_table_set_column_count(top_table, 3);
-    lv_table_set_row_count(top_table, 6);
+    lv_table_set_column_count(last_table, 3);
+    lv_table_set_row_count(last_table, 6);
     lv_table_set_column_width(last_table, 0, 30);
     lv_table_set_column_width(last_table, 1, 75);
     lv_table_set_column_width(last_table, 2, 55);

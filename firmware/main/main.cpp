@@ -33,7 +33,7 @@ volatile bool stop_flag = true;
 volatile Wifi_reset wifi_reset_flag = WIFI_NO_RESET;
 volatile wifi_mode_t wifi_mode_flag = WIFI_MODE_NULL;
 
-bool lists_refresh_lcd_flag = false;
+bool lists_refresh_lcd_flag = true;
 
 void Laptime::reset()
 {
