@@ -176,4 +176,6 @@ extern volatile Wifi_reset wifi_reset_flag;
 
 extern volatile wifi_mode_t wifi_mode_flag;
 
+extern bool lists_refresh_lcd_flag;
+
 #endif

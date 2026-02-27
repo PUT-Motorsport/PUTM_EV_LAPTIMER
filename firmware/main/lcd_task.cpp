@@ -98,32 +98,35 @@ void lcd_task(void *args)
             lvgl_port_unlock();
         }
 
-        // // Update Laptime Lists
-        // if (xSemaphoreTake(laptime_lists_mutex, 0) == pdTRUE)
-        // {
-        //     char lap_count_top_str[COUNT_STR_LENGTH] = {0};
-        //     char laptime_top_str[LAPTIME_STR_LENGTH] = {0};
-        //     char driver_top_str[DRIVER_TAG_LENGTH] = {0};
+        // Update Laptime Lists
+        if (lists_refresh_lcd_flag == true)
+        {
+            if (xSemaphoreTake(laptime_lists_mutex, 0) == pdTRUE)
+            {
+                ESP_LOGI(TAG, "list refresh");
+                char lap_count_top_str[COUNT_STR_LENGTH] = {0};
+                char laptime_top_str[LAPTIME_STR_LENGTH] = {0};
 
-        //     char lap_count_last_str[COUNT_STR_LENGTH] = {0};
-        //     char laptime_last_str[LAPTIME_STR_LENGTH] = {0};
-        //     char driver_last_str[DRIVER_TAG_LENGTH] = {0};
+                char lap_count_last_str[COUNT_STR_LENGTH] = {0};
+                char laptime_last_str[LAPTIME_STR_LENGTH] = {0};
 
-        //     lvgl_port_lock(0);
-        //     for (int i = 0; i < LAPTIME_LIST_SIZE_LCD; i++)
-        //     {
-        //         laptime_list_top[i].convert_string_count(lap_count_top_str, sizeof(lap_count_top_str));
-        //         laptime_list_top[i].convert_string_time(laptime_top_str, sizeof(laptime_top_str));
+                lvgl_port_lock(0);
+                for (int i = 0; i < LAPTIME_LIST_SIZE_LCD; i++)
+                {
+                    laptime_list_top[i].convert_string_count(lap_count_top_str, sizeof(lap_count_top_str));
+                    laptime_list_top[i].convert_string_time(laptime_top_str, sizeof(laptime_top_str));
 
-        //         laptime_list_top[i].convert_string_count(lap_count_last_str, sizeof(lap_count_last_str));
-        //         laptime_list_last[i].convert_string_time(laptime_last_str, sizeof(laptime_last_str));
+                    laptime_list_top[i].convert_string_count(lap_count_last_str, sizeof(lap_count_last_str));
+                    laptime_list_last[i].convert_string_time(laptime_last_str, sizeof(laptime_last_str));
 
-        //         ui_update_top_lap(i + 1, lap_count_top_str, laptime_top_str, driver_list_local.list[laptime_list_top[i].driver_id]);
-        //         ui_update_last_lap(i + 1, lap_count_last_str, laptime_last_str, driver_list_local.list[laptime_list_last[i].driver_id]);
-        //     }
-        //     lvgl_port_unlock();
-        //     xSemaphoreGive(laptime_lists_mutex);
-        // }
+                    ui_update_top_lap(i + 1, lap_count_top_str, laptime_top_str, driver_list_local.list[laptime_list_top[i].driver_id]);
+                    ui_update_last_lap(i + 1, lap_count_last_str, laptime_last_str, driver_list_local.list[laptime_list_last[i].driver_id]);
+                }
+                lvgl_port_unlock();
+                xSemaphoreGive(laptime_lists_mutex);
+                lists_refresh_lcd_flag = false;
+            }
+        }
 
         vTaskDelay(20 / portTICK_PERIOD_MS);
     }

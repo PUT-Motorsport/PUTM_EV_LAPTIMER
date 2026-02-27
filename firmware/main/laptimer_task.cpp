@@ -386,20 +386,24 @@ void laptimer_task(void *args)
         xQueueSend(laptime_current_queue_wifi, &laptime_current, 0);
 
         // Save laptime to lists and sd card, send with uart, reset laptime
-        if (laptime_saved.time > 0 && xSemaphoreTake(laptime_lists_mutex, 0) == pdTRUE)
+        if (laptime_saved.time > 0)
         {
-            Laptime laptime_saved_local = laptime_saved;
-            laptime_saved.reset();
+            if (xSemaphoreTake(laptime_lists_mutex, 0) == pdTRUE)
+            {
+                Laptime laptime_saved_local = laptime_saved;
+                laptime_saved.reset();
 
-            ESP_ERROR_CHECK(system_get_time(laptime_saved_local.timeofday, laptime_saved_local.date));
-            // ESP_ERROR_CHECK(rtc_set_time(laptime_saved_local.timeofday, laptime_saved_local.date));
-            ESP_LOGI(TAG, "TIMEOFDAY: %s, DATE: %s", laptime_saved_local.timeofday, laptime_saved_local.date);
-            laptime_save_uart(laptime_saved_local);
-            laptime_save_top(laptime_saved_local, laptime_list_top);
-            laptime_save_last(laptime_saved_local, laptime_list_last);
-            laptime_save_driver(laptime_saved_local, laptime_list_driver);
-            xQueueSend(laptime_saved_queue_sd, &laptime_saved_local, 0);
-            xSemaphoreGive(laptime_lists_mutex);
+                ESP_ERROR_CHECK(system_get_time(laptime_saved_local.timeofday, laptime_saved_local.date));
+                // ESP_ERROR_CHECK(rtc_set_time(laptime_saved_local.timeofday, laptime_saved_local.date));
+                ESP_LOGI(TAG, "TIMEOFDAY: %s, DATE: %s", laptime_saved_local.timeofday, laptime_saved_local.date);
+                laptime_save_uart(laptime_saved_local);
+                laptime_save_top(laptime_saved_local, laptime_list_top);
+                laptime_save_last(laptime_saved_local, laptime_list_last);
+                laptime_save_driver(laptime_saved_local, laptime_list_driver);
+                xQueueSend(laptime_saved_queue_sd, &laptime_saved_local, 0);
+                xSemaphoreGive(laptime_lists_mutex);
+                lists_refresh_lcd_flag = true;
+            }
         }
 
         vTaskDelay(10 / portTICK_PERIOD_MS);
