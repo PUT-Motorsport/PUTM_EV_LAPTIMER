@@ -207,14 +207,16 @@ esp_err_t wifi_reinit(wifi_mode_t wifi_mode, char wifi_ssid[WIFI_SSID_STR_LENGTH
     return wifi_init(wifi_mode, wifi_ssid, wifi_password);
 }
 
-esp_err_t wifi_get_ip(char ip_string[52])
+esp_err_t wifi_get_ip(char ip_string[WIFI_IP_LENGTH])
 {
     esp_netif_ip_info_t ip_info;
     if (s_wifi_netif == NULL || ip_string == NULL)
         return ESP_FAIL;
     if (esp_netif_get_ip_info(s_wifi_netif, &ip_info) != ESP_OK)
         return ESP_FAIL;
-    snprintf(ip_string, 52, "%3d.%3d.%3d.%3d", IP2STR(&ip_info.ip));
+    if (ip_info.ip.addr == 0)
+        return ESP_FAIL;
+    snprintf(ip_string, WIFI_IP_LENGTH, "%3d.%3d.%3d.%3d", IP2STR(&ip_info.ip));
     return ESP_OK;
 }
 

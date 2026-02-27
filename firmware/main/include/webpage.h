@@ -135,11 +135,17 @@ h3 { margin-top: 0; color: #ccc; border-bottom: 1px solid #555; padding-bottom: 
         <h3>CONFIGURATION</h3>
         <div style="margin-bottom: 10px;">
             <label style="color:#aaa; display:block; margin-bottom:5px;">Mode</label>
-            <label><input type="checkbox" id="cfg_gates"> 2 GATES MODE</label>
+            <select id="cfg_gates" style="width:100%; padding:8px; background:#333; border:1px solid #555; color:#fff;">
+                <option value="0">1 GATE</option>
+                <option value="1">2 GATES</option>
+            </select>
         </div>
         <div style="margin-bottom: 10px;">
             <label style="color:#aaa; display:block; margin-bottom:5px;">WiFi Mode</label>
-            <label><input type="checkbox" id="cfg_wifi_mode"> Enable Station Mode (STA)</label>
+            <select id="cfg_wifi_mode" style="width:100%; padding:8px; background:#333; border:1px solid #555; color:#fff;">
+                <option value="0">WIFI AP</option>
+                <option value="1">WIFI STA</option>
+            </select>
         </div>
         <div style="margin-bottom: 10px;">
             <label style="color:#aaa; display:block; margin-bottom:5px;">WiFi SSID</label>
@@ -182,9 +188,8 @@ function toggleSettings() {
 
 function loadConfig() {
     fetch('/api/config').then(r => r.json()).then(d => {
-        document.getElementById('cfg_gates').checked = d.two_gate_mode;
-        // if wifi_mode is WIFI_MODE_STA (true), checkbox should be checked
-        document.getElementById('cfg_wifi_mode').checked = (d.wifi_mode === 1); // WIFI_MODE_STA is 1
+        document.getElementById('cfg_gates').value = d.two_gate_mode ? "1" : "0";
+        document.getElementById('cfg_wifi_mode').value = (d.wifi_mode === 1) ? "1" : "0";
         document.getElementById('cfg_ssid').value = d.wifi_ssid || "";
         document.getElementById('cfg_pass').value = d.wifi_password || "";
         document.getElementById('cfg_time_set').value = d.time_set || "";
@@ -199,8 +204,8 @@ function saveConfig() {
     let drivers = document.getElementById('cfg_drivers').value.split('\n').map(s => s.trim()).filter(s => s.length > 0);
     let formattedDate = document.getElementById('cfg_date_set').value;
     let data = {
-        two_gate_mode: document.getElementById('cfg_gates').checked,
-        wifi_mode: document.getElementById('cfg_wifi_mode').checked ? 1 : 0, // 1 for STA, 0 for AP
+        two_gate_mode: document.getElementById('cfg_gates').value === "1",
+        wifi_mode: parseInt(document.getElementById('cfg_wifi_mode').value),
         wifi_ssid: document.getElementById('cfg_ssid').value,
         wifi_password: document.getElementById('cfg_pass').value,
         time_set: document.getElementById('cfg_time_set').value,

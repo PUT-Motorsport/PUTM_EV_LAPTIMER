@@ -16,6 +16,11 @@ static Laptime laptime_current;
 
 static Driver_list driver_list_local;
 
+<<<<<<< HEAD
+=======
+static bool ip_refresh_flag = false;
+
+>>>>>>> dev-lvgl
 /**
  * @brief Mutex used by data_get_handler to ensure that it can read local data safely
  */
@@ -468,9 +473,13 @@ void wifi_task(void *args)
 
     char wifi_ssid_local[WIFI_SSID_STR_LENGTH] = WIFI_SSID_DEFAULT;
     char wifi_password_local[WIFI_PASSWORD_STR_LENGTH] = WIFI_PASSWORD_DEFAULT;
+<<<<<<< HEAD
     char ip_str[52] = {0};
     wifi_mode_t wifi_mode_local = WIFI_MODE_NULL;
     xQueueSend(wifi_mode_queue, &wifi_mode_local, 0);
+=======
+    char ip_str[WIFI_IP_LENGTH] = {0};
+>>>>>>> dev-lvgl
     int driver_update_counter = 0;
 
     for (;;)
@@ -502,7 +511,11 @@ void wifi_task(void *args)
                 {
                     snprintf(wifi_ssid_local, sizeof(wifi_ssid_local), config_main.wifi_ssid);
                     snprintf(wifi_password_local, sizeof(wifi_password_local), config_main.wifi_password);
+<<<<<<< HEAD
                     wifi_mode_local = config_main.wifi_mode;
+=======
+                    wifi_mode_flag = config_main.wifi_mode;
+>>>>>>> dev-lvgl
                     xSemaphoreGive(config_mutex);
                 }
             }
@@ -511,6 +524,7 @@ void wifi_task(void *args)
             {
                 snprintf(wifi_ssid_local, sizeof(wifi_ssid_local), "%s", WIFI_SSID_DEFAULT);
                 snprintf(wifi_password_local, sizeof(wifi_password_local), "%s", WIFI_PASSWORD_DEFAULT);
+<<<<<<< HEAD
                 wifi_mode_local = WIFI_MODE_DEFAULT;
             }
 
@@ -532,13 +546,52 @@ void wifi_task(void *args)
                 {
                     laptime_current = laptime_current_temp;
                     xSemaphoreGive(data_mutex);
+=======
+                wifi_mode_flag = WIFI_MODE_DEFAULT;
+            }
+
+            if (wifi_reinit(wifi_mode_flag, wifi_ssid_local, wifi_password_local) == ESP_OK)
+            {
+                start_webserver();
+                snprintf(ip_str, sizeof(ip_str), "WAIT FOR IP");
+                xQueueSend(ip_queue, ip_str, portMAX_DELAY);
+                ip_refresh_flag = true;
+                wifi_reset_flag = WIFI_NO_RESET;
+            }
+            else
+                wifi_mode_flag = WIFI_MODE_NULL;
+        }
+        else
+        {
+            // Read current laptime to display
+            Laptime laptime_current_temp;
+            if (xQueueReceive(laptime_current_queue_wifi, &laptime_current_temp, 0) == pdTRUE)
+            {
+                if (xSemaphoreTake(data_mutex, portMAX_DELAY))
+                {
+                    laptime_current = laptime_current_temp;
+                    xSemaphoreGive(data_mutex);
                 }
             }
 
             // Get ip and send to lcd task to display on screen
+            if (ip_refresh_flag == true)
+            {
+                if (wifi_get_ip(ip_str) == ESP_OK)
+                {
+                    xQueueSend(ip_queue, ip_str, portMAX_DELAY);
+                    ip_refresh_flag = false;
+>>>>>>> dev-lvgl
+                }
+            }
+
+<<<<<<< HEAD
+            // Get ip and send to lcd task to display on screen
             wifi_get_ip(ip_str);
             xQueueSend(ip_queue, ip_str, 0);
         }
+=======
+>>>>>>> dev-lvgl
         vTaskDelay(pdMS_TO_TICKS(20));
     }
 }

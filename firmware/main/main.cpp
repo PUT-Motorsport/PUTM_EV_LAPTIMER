@@ -21,7 +21,6 @@ QueueHandle_t laptime_current_queue_wifi = xQueueCreate(1, sizeof(Laptime));
 SemaphoreHandle_t laptime_lists_mutex = xSemaphoreCreateMutex();
 
 QueueHandle_t ip_queue = xQueueCreate(1, sizeof(char[52]));
-QueueHandle_t wifi_mode_queue = xQueueCreate(1, sizeof(wifi_mode_t));
 
 Config config_main;
 
@@ -29,9 +28,18 @@ Laptime laptime_list_top[LAPTIME_LIST_SIZE_LOCAL];
 Laptime laptime_list_last[LAPTIME_LIST_SIZE_LOCAL];
 Laptime laptime_list_driver[DRIVER_MAX_COUNT];
 
+<<<<<<< HEAD
 bool sd_active_flag = false;
 bool stop_flag = true;
 Wifi_reset wifi_reset_flag = WIFI_NO_RESET;
+=======
+volatile bool sd_active_flag = false;
+volatile bool stop_flag = true;
+volatile Wifi_reset wifi_reset_flag = WIFI_NO_RESET;
+volatile wifi_mode_t wifi_mode_flag = WIFI_MODE_NULL;
+
+bool lists_refresh_lcd_flag = true;
+>>>>>>> dev-lvgl
 
 void Laptime::reset()
 {
@@ -65,7 +73,22 @@ void Laptime::convert_string_full(char laptime_str[LAPTIME_STR_LENGTH], size_t s
         snprintf(laptime_str, size, "%02u, %02u:%02u:%02u",
                  this->count, mm, ss, ms);
 }
-void Laptime::convert_string_time(char laptime_str[LAPTIME_STR_LENGTH], size_t size)
+void Laptime::convert_string_count(char count_str[COUNT_STR_LENGTH], size_t size)
+{
+    if (count_str == NULL)
+        return;
+
+    if (this->time == 0)
+    {
+        snprintf(count_str, size, "--");
+        return;
+    }
+
+    if (size >= COUNT_STR_LENGTH)
+        snprintf(count_str, size, "%02u",
+                 this->count);
+}
+void Laptime::convert_string_time(char laptime_str[COUNT_STR_LENGTH], size_t size)
 
 {
     if (laptime_str == NULL)
@@ -83,14 +106,14 @@ void Laptime::convert_string_time(char laptime_str[LAPTIME_STR_LENGTH], size_t s
     if (size == LAPTIME_STR_LENGTH)
         snprintf(laptime_str, size, "%02u:%02u:%02u", mm, ss, ms);
 }
-void Laptime::convert_string_penalty(char laptime_str[PENALTY_TIME_STR_LENGTH], size_t size)
+void Laptime::convert_string_penalty(char penalty_str[PENALTY_TIME_STR_LENGTH], size_t size)
 {
-    if (laptime_str == NULL)
+    if (penalty_str == NULL)
         return;
 
     if (this->time == 0)
     {
-        snprintf(laptime_str, size, PENALTY_STR_DEFAULT);
+        snprintf(penalty_str, size, PENALTY_STR_DEFAULT);
         return;
     }
 
@@ -98,7 +121,7 @@ void Laptime::convert_string_penalty(char laptime_str[PENALTY_TIME_STR_LENGTH], 
     unsigned int ss = (this->penalty_time / 100) % 60;
     if (size >= 11)
     {
-        snprintf(laptime_str, size, "+%02u:%02u", mm, ss);
+        snprintf(penalty_str, size, "+%02u:%02u", mm, ss);
     }
 }
 
@@ -119,8 +142,8 @@ extern "C" void app_main(void)
     }
 
     xTaskCreatePinnedToCore(sdcard_task, "SD_TASK", 4096, NULL, 0, NULL, 0);
-    xTaskCreatePinnedToCore(laptimer_task, "LAPTIMER_TASK", 8192, NULL, 2, NULL, 1);
-    xTaskCreatePinnedToCore(lcd_task, "LCD_TASK", 8192, NULL, 1, NULL, 1);
+    xTaskCreatePinnedToCore(laptimer_task, "LAPTIMER_TASK", 8192, NULL, 3, NULL, 0);
+    xTaskCreatePinnedToCore(lcd_task, "LCD_TASK", 8192, NULL, 2, NULL, 1);
     xTaskCreatePinnedToCore(wifi_task, "WIFI_TASK", 4096, NULL, 1, NULL, 0);
 
     vTaskDelete(NULL);
