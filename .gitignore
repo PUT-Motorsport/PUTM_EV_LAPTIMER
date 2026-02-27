@@ -27,5 +27,4 @@
 /firmware/TODO
 /firmware/sdkconfig.old
 /firmware/managed_components/**
-/firmware/main/lvgl_ui_old.c
 todo.md

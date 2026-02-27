@@ -15,7 +15,6 @@ static lv_obj_t *gates_status_label;
 static lv_obj_t *run_stop_btn;
 static lv_obj_t *run_stop_label;
 
-static lv_obj_t *penalty_count_label;
 static lv_obj_t *lap_time_label;
 static lv_obj_t *penalty_time_label;
 static lv_obj_t *driver_label;
@@ -25,6 +24,20 @@ static lv_obj_t *lap_count_label;
 
 static lv_obj_t *top_table;
 static lv_obj_t *last_table;
+
+const lv_palette_t color_list[11] = {
+    LV_PALETTE_NONE,
+    LV_PALETTE_BLUE,
+    LV_PALETTE_RED,
+    LV_PALETTE_GREEN,
+    LV_PALETTE_YELLOW,
+    LV_PALETTE_BROWN,
+    LV_PALETTE_CYAN,
+    LV_PALETTE_DEEP_ORANGE,
+    LV_PALETTE_DEEP_PURPLE,
+    LV_PALETTE_LIME,
+    LV_PALETTE_PINK,
+};
 
 void ui_init(void)
 {
@@ -44,6 +57,12 @@ void ui_init(void)
     lv_style_set_bg_color(&center_style, lv_palette_darken(LV_PALETTE_GREY, 4));
     lv_style_set_pad_all(&center_style, 3);
     lv_style_set_margin_all(&center_style, 0);
+
+    static lv_style_t statur_bar_style;
+    lv_style_init(&statur_bar_style);
+    lv_style_set_border_width(&statur_bar_style, 0);
+    lv_style_set_pad_all(&statur_bar_style, 0);
+    lv_style_set_margin_all(&statur_bar_style, 0);
 
     static lv_style_t table_style;
     lv_style_init(&table_style);
@@ -82,15 +101,17 @@ void ui_init(void)
     lv_obj_t *status_bar_div = lv_obj_create(background_div);
     lv_obj_set_size(status_bar_div, lv_pct(100), lv_pct(10));
     lv_obj_add_style(status_bar_div, &default_style, LV_PART_MAIN);
-    lv_obj_set_style_bg_color(status_bar_div, lv_palette_main(LV_PALETTE_GREY), LV_PART_MAIN);
+    lv_obj_set_style_border_width(status_bar_div, 1, LV_BORDER_SIDE_BOTTOM);
+    lv_obj_set_style_border_color(status_bar_div, lv_palette_main(LV_PALETTE_GREY), LV_PART_MAIN);
     lv_obj_remove_flag(status_bar_div, LV_OBJ_FLAG_SCROLLABLE);
 
     lv_obj_set_layout(status_bar_div, LV_LAYOUT_FLEX);
     lv_obj_set_flex_flow(status_bar_div, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(status_bar_div, LV_FLEX_ALIGN_SPACE_AROUND, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_flex_align(status_bar_div, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
     sd_status_label = lv_label_create(status_bar_div);
     lv_obj_set_width(sd_status_label, lv_pct(5));
+    lv_obj_add_style(sd_status_label, &statur_bar_style, LV_PART_MAIN);
     lv_label_set_long_mode(sd_status_label, LV_LABEL_LONG_CLIP);
     lv_obj_set_style_text_align(sd_status_label, LV_TEXT_ALIGN_LEFT, 0);
     lv_label_set_text(sd_status_label, LV_SYMBOL_SD_CARD);
@@ -98,6 +119,7 @@ void ui_init(void)
 
     wifi_status_label = lv_label_create(status_bar_div);
     lv_obj_set_width(wifi_status_label, lv_pct(60));
+    lv_obj_add_style(wifi_status_label, &statur_bar_style, LV_PART_MAIN);
     lv_label_set_long_mode(wifi_status_label, LV_LABEL_LONG_CLIP);
     lv_obj_set_style_text_align(wifi_status_label, LV_TEXT_ALIGN_LEFT, 0);
     lv_label_set_text(wifi_status_label, LV_SYMBOL_WIFI);
@@ -105,12 +127,14 @@ void ui_init(void)
 
     gates_status_label = lv_label_create(status_bar_div);
     lv_obj_set_width(gates_status_label, lv_pct(20));
+    lv_obj_add_style(gates_status_label, &statur_bar_style, LV_PART_MAIN);
     lv_label_set_long_mode(gates_status_label, LV_LABEL_LONG_CLIP);
     lv_obj_set_style_text_align(gates_status_label, LV_TEXT_ALIGN_LEFT, 0);
     lv_label_set_text(gates_status_label, "- GATES");
     lv_obj_set_style_text_color(gates_status_label, lv_color_white(), LV_PART_MAIN);
 
     run_stop_btn = lv_button_create(status_bar_div);
+    lv_obj_add_style(run_stop_btn, &statur_bar_style, LV_PART_MAIN);
     lv_obj_add_flag(run_stop_btn, LV_OBJ_FLAG_CHECKABLE);
     lv_obj_set_height(run_stop_btn, LV_SIZE_CONTENT);
     lv_obj_set_width(run_stop_btn, lv_pct(10));
@@ -121,6 +145,29 @@ void ui_init(void)
     run_stop_label = lv_label_create(run_stop_btn);
     lv_label_set_text(run_stop_label, LV_SYMBOL_STOP);
     lv_obj_center(run_stop_label);
+
+    /// CURRENT LAP TIME
+    lv_obj_t *lap_current_div = lv_obj_create(background_div);
+    lv_obj_set_size(lap_current_div, lv_pct(100), lv_pct(20));
+    lv_obj_add_style(lap_current_div, &default_style, LV_PART_MAIN);
+    lv_obj_set_style_bg_color(lap_current_div, lv_palette_main(LV_PALETTE_YELLOW), LV_PART_MAIN);
+    lv_obj_remove_flag(lap_current_div, LV_OBJ_FLAG_SCROLLABLE);
+
+    lv_obj_set_layout(lap_current_div, LV_LAYOUT_FLEX);
+    lv_obj_set_flex_flow(lap_current_div, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(lap_current_div, LV_FLEX_ALIGN_SPACE_AROUND, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+
+    lv_obj_t *lap_time_div = lv_obj_create(lap_current_div);
+    lv_obj_set_size(lap_time_div, lv_pct(70), lv_pct(100));
+    lv_obj_add_style(lap_time_div, &center_style, LV_PART_MAIN);
+    lv_obj_set_style_radius(lap_time_div, 20, LV_PART_MAIN);
+    lv_obj_remove_flag(lap_time_div, LV_OBJ_FLAG_SCROLLABLE);
+
+    lap_time_label = lv_label_create(lap_time_div);
+    lv_label_set_text(lap_time_label, "00:00.00");
+    lv_obj_center(lap_time_label);
+    lv_obj_set_style_text_font(lap_time_label, &roboto_mono_38, LV_PART_MAIN);
+    lv_obj_set_style_text_color(lap_time_label, lv_color_white(), LV_PART_MAIN);
 
     /// LAP INFO
     lv_obj_t *lap_info_div = lv_obj_create(background_div);
@@ -227,28 +274,6 @@ void ui_init(void)
     lv_label_set_text(penalty_time_label, "+00:00");
     lv_obj_set_style_text_font(penalty_time_label, &roboto_mono_18, LV_PART_MAIN);
     lv_obj_set_style_text_color(penalty_time_label, lv_palette_main(LV_PALETTE_AMBER), LV_PART_MAIN);
-
-    /// CURRENT LAP TIME
-    lv_obj_t *lap_current_div = lv_obj_create(background_div);
-    lv_obj_set_size(lap_current_div, lv_pct(100), lv_pct(20));
-    lv_obj_add_style(lap_current_div, &default_style, LV_PART_MAIN);
-    lv_obj_set_style_bg_color(lap_current_div, lv_palette_main(LV_PALETTE_YELLOW), LV_PART_MAIN);
-    lv_obj_remove_flag(lap_current_div, LV_OBJ_FLAG_SCROLLABLE);
-
-    lv_obj_set_layout(lap_current_div, LV_LAYOUT_FLEX);
-    lv_obj_set_flex_flow(lap_current_div, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(lap_current_div, LV_FLEX_ALIGN_SPACE_AROUND, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-
-    lv_obj_t *lap_time_div = lv_obj_create(lap_current_div);
-    lv_obj_set_size(lap_time_div, lv_pct(100), lv_pct(100));
-    lv_obj_add_style(lap_time_div, &center_style, LV_PART_MAIN);
-    lv_obj_remove_flag(lap_time_div, LV_OBJ_FLAG_SCROLLABLE);
-
-    lap_time_label = lv_label_create(lap_time_div);
-    lv_label_set_text(lap_time_label, "00:00.00");
-    lv_obj_center(lap_time_label);
-    lv_obj_set_style_text_font(lap_time_label, &roboto_mono_38, LV_PART_MAIN);
-    lv_obj_set_style_text_color(lap_time_label, lv_color_white(), LV_PART_MAIN);
 
     /// LISTS
     lv_obj_t *lists_div = lv_obj_create(background_div);
@@ -384,7 +409,7 @@ void ui_update_status(bool sd_on, int wifi_mode, const char *ip_str, bool two_ga
     }
 }
 
-void ui_update_current_lap(const char *time_str, const char *penalty_str, int oc_count, int doo_count, const char *driver_name)
+void ui_update_current_lap(const char *time_str, const char *penalty_str, int oc_count, int doo_count, const char *driver_str, int driver_id)
 {
     if (time_str)
         lv_label_set_text(lap_time_label, time_str);
@@ -394,15 +419,18 @@ void ui_update_current_lap(const char *time_str, const char *penalty_str, int oc
     lv_label_set_text_fmt(oc_count_label, "%d", oc_count);
     lv_label_set_text_fmt(doo_count_label, "%d", doo_count);
 
-    if (driver_name)
-        lv_label_set_text_fmt(driver_label, "%s", driver_name);
+    if (driver_str)
+    {
+        lv_label_set_text_fmt(driver_label, "%s", driver_str);
+        lv_obj_set_style_text_color(driver_label, lv_palette_main(color_list[driver_id]), LV_PART_MAIN);
+    }
 }
 
-void ui_update_top_lap(int index, const char *lap_str, const char *time_str, const char *driver_str)
+void ui_update_top_lap(int index, const char *lap_str, const char *time_str, const char *driver_str, int driver_id)
 {
     if (index >= 0 && index <= UI_LIST_SIZE)
     {
-        if (time_str)
+        if (time_str && driver_str && lap_str)
         {
             lv_table_set_cell_value(top_table, index, 0, lap_str);
             lv_table_set_cell_value(top_table, index, 1, time_str);
@@ -411,11 +439,11 @@ void ui_update_top_lap(int index, const char *lap_str, const char *time_str, con
     }
 }
 
-void ui_update_last_lap(int index, const char *lap_str, const char *time_str, const char *driver_str)
+void ui_update_last_lap(int index, const char *lap_str, const char *time_str, const char *driver_str, int driver_id)
 {
     if (index >= 0 && index <= UI_LIST_SIZE)
     {
-        if (time_str)
+        if (time_str && driver_str && lap_str)
         {
             lv_table_set_cell_value(last_table, index, 0, lap_str);
             lv_table_set_cell_value(last_table, index, 1, time_str);

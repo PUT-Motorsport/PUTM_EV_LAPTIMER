@@ -94,7 +94,7 @@ void lcd_task(void *args)
                                   laptime_penalty_str,
                                   laptime_current.oc_count,
                                   laptime_current.doo_count,
-                                  driver_list_local.list[laptime_current.driver_id]);
+                                  driver_list_local.list[laptime_current.driver_id], laptime_current.driver_id);
             lvgl_port_unlock();
         }
 
@@ -119,8 +119,8 @@ void lcd_task(void *args)
                     laptime_list_top[i].convert_string_count(lap_count_last_str, sizeof(lap_count_last_str));
                     laptime_list_last[i].convert_string_time(laptime_last_str, sizeof(laptime_last_str));
 
-                    ui_update_top_lap(i + 1, lap_count_top_str, laptime_top_str, driver_list_local.list[laptime_list_top[i].driver_id]);
-                    ui_update_last_lap(i + 1, lap_count_last_str, laptime_last_str, driver_list_local.list[laptime_list_last[i].driver_id]);
+                    ui_update_top_lap(i + 1, lap_count_top_str, laptime_top_str, driver_list_local.list[laptime_list_top[i].driver_id], laptime_list_top[i].driver_id);
+                    ui_update_last_lap(i + 1, lap_count_last_str, laptime_last_str, driver_list_local.list[laptime_list_last[i].driver_id], laptime_list_top[i].driver_id);
                 }
                 lvgl_port_unlock();
                 xSemaphoreGive(laptime_lists_mutex);
