@@ -32,7 +32,10 @@
 #define WIFI_PASSWORD_STR_LENGTH 64
 #define WIFI_IP_LENGTH 52
 
-#define DRIVER_LIST_DEFAULT {"---", "AAA", "BBB", "CCC"}
+#define DRIVER_LIST_DEFAULT        \
+    {                              \
+        "---", "AAA", "BBB", "CCC" \
+    }
 
 #define LAPTIME_STR_DEFAULT "--, --:--.--"
 #define PENALTY_STR_DEFAULT "+00:00"
@@ -177,5 +180,7 @@ extern volatile Wifi_reset wifi_reset_flag;
 extern volatile wifi_mode_t wifi_mode_flag;
 
 extern bool lists_refresh_lcd_flag;
+
+;
 
 #endif

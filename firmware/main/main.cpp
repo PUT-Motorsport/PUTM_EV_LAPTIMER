@@ -135,9 +135,12 @@ extern "C" void app_main(void)
         xSemaphoreGive(config_mutex);
     }
 
-    xTaskCreatePinnedToCore(sdcard_task, "SD_TASK", 4096, NULL, 0, NULL, 0);
+    if (CONFIG_TWO_GATE_WIRELESS_MASTER)
+    {
+        xTaskCreatePinnedToCore(sdcard_task, "SD_TASK", 4096, NULL, 0, NULL, 0);
+        xTaskCreatePinnedToCore(lcd_task, "LCD_TASK", 8192, NULL, 2, NULL, 1);
+    }
     xTaskCreatePinnedToCore(laptimer_task, "LAPTIMER_TASK", 8192, NULL, 3, NULL, 0);
-    xTaskCreatePinnedToCore(lcd_task, "LCD_TASK", 8192, NULL, 2, NULL, 1);
     xTaskCreatePinnedToCore(wifi_task, "WIFI_TASK", 4096, NULL, 1, NULL, 0);
 
     vTaskDelete(NULL);

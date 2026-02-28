@@ -1,4 +1,14 @@
 menu "PUTM EV Laptimer"
+    choice 
+        prompt "Two gate wireless role"
+        default TWO_GATE_WIRELESS_MASTER
+
+        config TWO_GATE_WIRELESS_MASTER
+            bool "MASTER"
+        
+        config TWO_GATE_WIRELESS_SLAVE
+            bool "SLAVE"
+    endchoice
         config GATE1_PIN
             int "Gate 1 Pin (GPIO)"
             default 14

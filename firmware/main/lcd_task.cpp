@@ -20,9 +20,6 @@ void lcd_task(void *args)
     lvgl_port_unlock();
 
     static char ip_str[WIFI_IP_LENGTH] = "WAIT FOR IP";
-    // static char gate_str[8];
-    // static char stop_str[5];
-    // static char sd_str[7];
 
     static bool sd_active_old = sd_active_flag;
     static wifi_mode_t wifi_mode_old = wifi_mode_flag;
@@ -103,7 +100,6 @@ void lcd_task(void *args)
         {
             if (xSemaphoreTake(laptime_lists_mutex, 0) == pdTRUE)
             {
-                ESP_LOGI(TAG, "list refresh");
                 char lap_count_top_str[COUNT_STR_LENGTH] = {0};
                 char laptime_top_str[LAPTIME_STR_LENGTH] = {0};
 
