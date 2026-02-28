@@ -518,7 +518,7 @@ void wifi_task(void *args)
             {
                 start_webserver();
                 snprintf(ip_str, sizeof(ip_str), "WAIT FOR IP");
-                xQueueSend(ip_queue, ip_str, portMAX_DELAY);
+                xQueueSend(ip_queue, ip_str, 0);
                 ip_refresh_flag = true;
                 wifi_reset_flag = WIFI_NO_RESET;
             }
@@ -543,7 +543,7 @@ void wifi_task(void *args)
             {
                 if (wifi_get_ip(ip_str) == ESP_OK)
                 {
-                    xQueueSend(ip_queue, ip_str, portMAX_DELAY);
+                    xQueueSend(ip_queue, ip_str, 0);
                     ip_refresh_flag = false;
                 }
             }
