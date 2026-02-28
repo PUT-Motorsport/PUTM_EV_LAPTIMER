@@ -82,7 +82,7 @@ void Laptime::convert_string_count(char count_str[COUNT_STR_LENGTH], size_t size
         snprintf(count_str, size, "%02u",
                  this->count);
 }
-void Laptime::convert_string_time(char laptime_str[COUNT_STR_LENGTH], size_t size)
+void Laptime::convert_string_time(char laptime_str[LAPTIME_STR_LENGTH], size_t size)
 
 {
     if (laptime_str == NULL)

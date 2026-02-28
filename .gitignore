@@ -24,6 +24,7 @@
 /firmware/.vscode
 .DS_Store
 /firmware/.clangd
+/firmware/.clang-format
 /firmware/TODO
 /firmware/sdkconfig.old
 /firmware/managed_components/**
