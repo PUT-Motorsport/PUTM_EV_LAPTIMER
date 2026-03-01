@@ -240,6 +240,6 @@ extern volatile wifi_mode_t wifi_mode_flag;
  * Set by laptimer_task after saving laptime and unset by lcd_task after refreshing lists.
  * @}
  */
-extern bool lists_refresh_lcd_flag;
+extern volatile bool lists_refresh_lcd_flag;
 
 #endif
