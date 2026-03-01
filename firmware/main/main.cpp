@@ -8,22 +8,14 @@
 #include "gpio.h"
 #include "timer.h"
 
-// Access to config structure
 SemaphoreHandle_t config_mutex = xSemaphoreCreateMutex();
-
-// List of laptimes to save on sd card
 QueueHandle_t laptime_saved_queue_sd = xQueueCreate(LAPTIME_LIST_SIZE_LOCAL, sizeof(Laptime));
-
-// Current laptime to display
 QueueHandle_t laptime_current_queue_lcd = xQueueCreate(1, sizeof(Laptime));
 QueueHandle_t laptime_current_queue_wifi = xQueueCreate(1, sizeof(Laptime));
-
 SemaphoreHandle_t laptime_lists_mutex = xSemaphoreCreateMutex();
-
 QueueHandle_t ip_queue = xQueueCreate(1, sizeof(char[52]));
 
 Config config_main;
-
 Laptime laptime_list_top[LAPTIME_LIST_SIZE_LOCAL];
 Laptime laptime_list_last[LAPTIME_LIST_SIZE_LOCAL];
 Laptime laptime_list_driver[DRIVER_MAX_COUNT];
@@ -32,8 +24,7 @@ volatile bool sd_active_flag = false;
 volatile bool stop_flag = true;
 volatile Wifi_reset wifi_reset_flag = WIFI_NO_RESET;
 volatile wifi_mode_t wifi_mode_flag = WIFI_MODE_NULL;
-
-bool lists_refresh_lcd_flag = true;
+volatile bool lists_refresh_lcd_flag = true;
 
 void Laptime::reset()
 {
