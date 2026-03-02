@@ -51,9 +51,9 @@ void Laptime::convert_string_full(char laptime_str[LAPTIME_STR_LENGTH], size_t s
         return;
     }
 
-    unsigned int mm = (this->time / 6000) % 60;
-    unsigned int ss = (this->time / 100) % 60;
-    unsigned int ms = this->time % 100;
+    uint16_t mm = (this->time / 6000) % 60;
+    uint16_t ss = (this->time / 100) % 60;
+    uint16_t ms = this->time % 100;
     if (size == LAPTIME_STR_LENGTH)
         snprintf(laptime_str, size, "%02u, %02u:%02u:%02u",
                  this->count, mm, ss, ms);
@@ -85,9 +85,9 @@ void Laptime::convert_string_time(char laptime_str[LAPTIME_STR_LENGTH], size_t s
         return;
     }
 
-    unsigned int mm = (this->time / 6000) % 60;
-    unsigned int ss = (this->time / 100) % 60;
-    unsigned int ms = this->time % 100;
+    uint16_t mm = (this->time / 6000) % 60;
+    uint16_t ss = (this->time / 100) % 60;
+    uint16_t ms = this->time % 100;
     if (size == LAPTIME_STR_LENGTH)
         snprintf(laptime_str, size, "%02u:%02u:%02u", mm, ss, ms);
 }
@@ -102,8 +102,8 @@ void Laptime::convert_string_penalty(char penalty_str[PENALTY_TIME_STR_LENGTH], 
         return;
     }
 
-    unsigned int mm = (this->penalty_time / 6000) % 60;
-    unsigned int ss = (this->penalty_time / 100) % 60;
+    uint16_t mm = (this->penalty_time / 6000) % 60;
+    uint16_t ss = (this->penalty_time / 100) % 60;
     if (size >= 11)
     {
         snprintf(penalty_str, size, "+%02u:%02u", mm, ss);

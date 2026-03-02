@@ -12,7 +12,7 @@
 
 static const char *TAG = "WIFI_AP";
 
-static int s_retry_num = 0;
+static int32_t s_retry_num = 0;
 static EventGroupHandle_t s_wifi_event_group;
 static esp_netif_t *s_wifi_netif = NULL;
 static bool mdns_started = false;

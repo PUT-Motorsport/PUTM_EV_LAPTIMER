@@ -84,12 +84,12 @@ esp_err_t sdcard_unmount(sdmmc_card_t **out_card)
     return esp_vfs_fat_sdcard_unmount(SD_CARD_MOUNT_PATH, *out_card);
 }
 
-static int build_path(const char *filename, char *out_path, size_t out_path_len)
+static int32_t build_path(const char *filename, char *out_path, size_t out_path_len)
 {
     if (filename == NULL || out_path == NULL)
         return -1;
-    int n = snprintf(out_path, out_path_len, "%s/%s", SD_CARD_MOUNT_PATH,
-                     filename);
+    int32_t n = snprintf(out_path, out_path_len, "%s/%s", SD_CARD_MOUNT_PATH,
+                         filename);
     if (n < 0 || (size_t)n >= out_path_len)
     {
         return -1;

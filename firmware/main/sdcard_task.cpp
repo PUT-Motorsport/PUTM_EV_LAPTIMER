@@ -21,14 +21,13 @@ const char *laptimes_file_name = "laptimer.csv";
 static const char *TAG = "SDCARD_TASK";
 
 char session_str[SESSION_STR_LEN]{"#00"};
-int session_num = 0;
-
+int16_t session_num = 0;
 bool sd_detect_flag = false;
 
 esp_err_t sdcard_get_config(sdmmc_card_t **card_pointer)
 {
     esp_err_t ret = ESP_OK;
-    unsigned int br;
+    size_t br;
     char sd_buffer[SD_BUFFER_SIZE] = "\0";
 
     Config config_temp;
@@ -146,7 +145,7 @@ esp_err_t sdcard_init(sdmmc_card_t **card_pointer)
         return ret;
     }
     sd_active_flag = true;
-    unsigned int br;
+    size_t br;
     char sd_buffer[SD_BUFFER_SIZE] = "\0";
 
     /// Try to read laptimer file, if it's missing create one with session number 0
@@ -227,7 +226,7 @@ esp_err_t sdcard_check_integrity(char laptime_check_str[LAPTIME_STR_LENGTH])
         return ESP_FAIL;
 
     esp_err_t ret = ESP_OK;
-    unsigned int br;
+    size_t br;
     char sd_buffer[SD_BUFFER_SIZE] = "\0";
     ret = sdcard_read(laptimes_file_name, sd_buffer, sizeof(sd_buffer), &br);
     if (ret)
