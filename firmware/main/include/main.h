@@ -1,5 +1,9 @@
 #pragma once
 
+#include <stdio.h>
+#include <string.h>
+#include <stdbool.h>
+
 #include "freertos/idf_additions.h"
 #include "esp_log.h"
 #include "esp_err.h"

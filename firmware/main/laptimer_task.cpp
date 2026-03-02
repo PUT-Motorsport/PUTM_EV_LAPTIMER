@@ -5,9 +5,6 @@
 #include "sdcard.h"
 #include "timer.h"
 
-#include <stdio.h>
-#include <cwchar>
-
 static const char *TAG = "LAPTIMER_TASK";
 
 /**

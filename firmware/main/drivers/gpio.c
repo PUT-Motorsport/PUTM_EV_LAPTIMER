@@ -1,6 +1,4 @@
 #include "gpio.h"
-#include "esp_log.h"
-#include "main.h"
 
 esp_err_t gpio_init(void)
 {

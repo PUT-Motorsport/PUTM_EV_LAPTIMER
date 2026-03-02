@@ -1,7 +1,5 @@
 #pragma once
 
-#include "esp_err.h"
-
 #include "main.h"
 
 /// @brief Minimal time to save in ms

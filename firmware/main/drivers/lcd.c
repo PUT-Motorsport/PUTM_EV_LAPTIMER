@@ -1,21 +1,14 @@
 #include "lcd.h"
-#include <stdio.h>
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-
-#include "esp_err.h"
-#include "esp_log.h"
-
-#include "esp_lcd_panel_io.h"
-#include "esp_lcd_panel_ops.h"
-#include <esp_lcd_panel_dev.h>
+#include "lvgl.h"
+#include "esp_lvgl_port.h"
+#include "esp_lcd_ili9341.h"
 
 #include "driver/spi_master.h"
 
 static const char *TAG = "LCD";
 
-lv_disp_t *lcd_init(void)
+esp_err_t lcd_init(void)
 {
     ESP_LOGI(TAG, "Initialize SPI bus");
     spi_bus_config_t buscfg = {
@@ -39,6 +32,7 @@ lv_disp_t *lcd_init(void)
         .spi_mode = 0,
         .trans_queue_depth = 10,
     };
+
     ESP_ERROR_CHECK(esp_lcd_new_panel_io_spi(SPI3_HOST, &io_config, &io_handle));
 
     esp_lcd_panel_handle_t panel_handle = NULL;
@@ -53,7 +47,6 @@ lv_disp_t *lcd_init(void)
     ESP_ERROR_CHECK(esp_lcd_panel_reset(panel_handle));
     ESP_ERROR_CHECK(esp_lcd_panel_init(panel_handle));
     ESP_ERROR_CHECK(esp_lcd_panel_mirror(panel_handle, true, false));
-
     ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(panel_handle, true));
 
     ESP_LOGI(TAG, "Initialize LVGL");
@@ -61,7 +54,7 @@ lv_disp_t *lcd_init(void)
     lvgl_cfg.task_affinity = 1;
     lvgl_cfg.task_stack_caps = MALLOC_CAP_SPIRAM;
 
-    lvgl_port_init(&lvgl_cfg);
+    ESP_ERROR_CHECK(lvgl_port_init(&lvgl_cfg));
 
     const lvgl_port_display_cfg_t disp_cfg = {
         .io_handle = io_handle,
@@ -84,5 +77,6 @@ lv_disp_t *lcd_init(void)
             .swap_bytes = true,
             .sw_rotate = false,
         }};
-    return lvgl_port_add_disp(&disp_cfg);
+    lvgl_port_add_disp(&disp_cfg);
+    return ESP_OK;
 }

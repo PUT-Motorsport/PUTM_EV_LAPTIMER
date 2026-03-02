@@ -2,6 +2,7 @@
 
 #include "lcd.h"
 #include "lvgl_ui.h"
+
 #include "esp_lvgl_port.h"
 
 const char *TAG = "LCD_TASK";
@@ -13,7 +14,7 @@ const char *TAG = "LCD_TASK";
 void lcd_task(void *args)
 {
     static Driver_list driver_list_local;
-    lv_disp_t *disp = lcd_init();
+    ESP_ERROR_CHECK(lcd_init());
 
     lvgl_port_lock(0);
     ui_init();

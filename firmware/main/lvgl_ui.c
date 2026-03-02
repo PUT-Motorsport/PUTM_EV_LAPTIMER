@@ -1,5 +1,6 @@
 #include "lvgl_ui.h"
-#include <stdio.h>
+
+#include "lvgl.h"
 
 #define OUTLINE 5
 #define UI_LIST_SIZE 5

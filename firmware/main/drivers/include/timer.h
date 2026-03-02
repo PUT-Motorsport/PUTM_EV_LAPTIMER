@@ -1,8 +1,8 @@
 #pragma once
 
-#include "driver/gptimer_types.h"
-#include "esp_err.h"
 #include "main.h"
+
+#include "driver/gptimer_types.h"
 #include "RV3028C7.h"
 
 esp_err_t rtc_init();

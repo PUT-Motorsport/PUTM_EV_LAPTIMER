@@ -1,14 +1,9 @@
 #include "sdcard.h"
 
-#include "esp_log.h"
 #include "esp_vfs_fat.h"
 #include "sdmmc_cmd.h"
 #include "driver/spi_common.h"
 
-#include "main.h"
-
-#include <stdio.h>
-#include <string.h>
 #include <sys/stat.h>
 
 #define SD_CARD_MOUNT_PATH "/sdcard"
