@@ -10,7 +10,7 @@
 #include "lwip/err.h"
 #include "lwip/sys.h"
 
-static const char *TAG = "WIFI_AP";
+static const char *TAG = "WIFI_DRIVER";
 
 static int32_t s_retry_num = 0;
 static EventGroupHandle_t s_wifi_event_group;
@@ -164,11 +164,6 @@ esp_err_t wifi_start(wifi_mode_t wifi_mode, char wifi_ssid[WIFI_SSID_STR_LENGTH]
             .sta = {
                 .scan_method = WIFI_ALL_CHANNEL_SCAN,
                 .failure_retry_cnt = 5,
-                /* Authmode threshold resets to WPA2 as default if password matches WPA2 standards (password len => 8).
-                 * If you want to connect the device to deprecated WEP/WPA networks, Please set the threshold value
-                 * to WIFI_AUTH_WEP/WIFI_AUTH_WPA_PSK and set the password with length and format matching to
-                 * WIFI_AUTH_WEP/WIFI_AUTH_WPA_PSK standards.
-                 */
                 .threshold.authmode = WIFI_AUTH_WPA2_PSK,
                 .sae_pwe_h2e = WPA3_SAE_PWE_BOTH,
             },
@@ -192,7 +187,6 @@ esp_err_t wifi_restart(wifi_mode_t wifi_mode, char wifi_ssid[WIFI_SSID_STR_LENGT
 {
     esp_wifi_stop();
     esp_netif_destroy_default_wifi(s_wifi_netif);
-    mdns_started = false;
     ESP_LOGI(TAG, "WIFI STOP OK");
     return wifi_start(wifi_mode, wifi_ssid, wifi_password);
 }

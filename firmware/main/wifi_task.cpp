@@ -473,6 +473,7 @@ void wifi_task(void *args)
     char ip_str[WIFI_IP_LENGTH] = {0};
 
     ESP_ERROR_CHECK(wifi_init());
+    start_webserver();
 
     for (;;)
     {
@@ -515,7 +516,6 @@ void wifi_task(void *args)
 
             if (wifi_restart(wifi_mode_flag, wifi_ssid_local, wifi_password_local) == ESP_OK)
             {
-                start_webserver();
                 snprintf(ip_str, sizeof(ip_str), "WAIT FOR IP");
                 xQueueSend(ip_queue, ip_str, 0);
                 ip_refresh_flag = true;
@@ -540,9 +540,8 @@ void wifi_task(void *args)
             // Get ip and send to lcd task to display on screen
             if (ip_refresh_flag == true)
             {
-                if (wifi_get_ip(ip_str) == ESP_OK)
+                if (wifi_get_ip(ip_str) == ESP_OK && xQueueSend(ip_queue, ip_str, portMAX_DELAY))
                 {
-                    xQueueSend(ip_queue, ip_str, 0);
                     ip_refresh_flag = false;
                 }
             }
