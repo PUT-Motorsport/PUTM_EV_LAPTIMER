@@ -56,8 +56,8 @@ esp_err_t rtc_get_time(char time_now[TIMEOFDAY_STR_LENGTH], char date_now[DATE_S
     char *time_buf = strtok(NULL, "T");
     if (date_buf == NULL || time_buf == NULL)
         return ESP_FAIL;
-    snprintf(time_now, TIMEOFDAY_STR_LENGTH, time_buf);
-    snprintf(date_now, DATE_STR_LENGTH, date_buf);
+    snprintf(time_now, TIMEOFDAY_STR_LENGTH, "%s", time_buf);
+    snprintf(date_now, DATE_STR_LENGTH, "%s", date_buf);
     return ESP_OK;
 }
 

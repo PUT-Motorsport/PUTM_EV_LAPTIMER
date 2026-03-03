@@ -193,14 +193,8 @@ function loadConfig() {
         document.getElementById('cfg_ssid').value = d.wifi_ssid || "";
         document.getElementById('cfg_pass').value = d.wifi_password || "";
         document.getElementById('cfg_time_set').value = d.time_set || "";
-        // Convert DD/MM/YYYY to YYYY-MM-DD for input type=date
         if (d.date_set) {
-            let parts = d.date_set.split('/');
-            if(parts.length === 3) {
-                document.getElementById('cfg_date_set').value = `${parts[2]}-${parts[1]}-${parts[0]}`;
-            } else {
-                document.getElementById('cfg_date_set').value = "";
-            }
+            document.getElementById('cfg_date_set').value = d.date_set;
         }
         if (d.driver_list) {
             document.getElementById('cfg_drivers').value = d.driver_list.join('\n');
@@ -210,23 +204,13 @@ function loadConfig() {
 
 function saveConfig() {
     let drivers = document.getElementById('cfg_drivers').value.split('\n').map(s => s.trim()).filter(s => s.length > 0);
-    // Convert YYYY-MM-DD to DD/MM/YYYY
-    let rawDate = document.getElementById('cfg_date_set').value;
-    let formattedDate = "";
-    if (rawDate) {
-        let parts = rawDate.split('-');
-        if(parts.length === 3) {
-            formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
-        }
-    }
-
     let data = {
         two_gate_mode: document.getElementById('cfg_gates').value === "1",
         wifi_mode: parseInt(document.getElementById('cfg_wifi_mode').value),
         wifi_ssid: document.getElementById('cfg_ssid').value,
         wifi_password: document.getElementById('cfg_pass').value,
         time_set: document.getElementById('cfg_time_set').value,
-        date_set: formattedDate,
+        date_set: document.getElementById('cfg_date_set').value,
         driver_list: drivers
     };
     fetch('/api/config', {
