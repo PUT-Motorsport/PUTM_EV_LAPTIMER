@@ -356,9 +356,9 @@ void ui_init(void)
     lv_table_set_cell_value(last_table, 5, 2, "WWW");
 }
 
-void ui_update_status(bool sd_on, int wifi_mode, const char *ip_str, bool two_gates, bool stop_flag)
+void ui_update_sd(bool sd_status)
 {
-    if (sd_on)
+    if (sd_status)
     {
         lv_obj_set_style_text_color(sd_status_label, lv_palette_main(LV_PALETTE_GREEN), LV_PART_MAIN);
     }
@@ -366,28 +366,30 @@ void ui_update_status(bool sd_on, int wifi_mode, const char *ip_str, bool two_ga
     {
         lv_obj_set_style_text_color(sd_status_label, lv_palette_main(LV_PALETTE_RED), LV_PART_MAIN);
     }
+}
 
-    static char wifi_str[62] = "\0";
-    if (wifi_mode == 1)
+void ui_update_wifi(wifi_mode_t wifi_mode, const char ip_str[WIFI_IP_LENGTH])
+{
+    if (wifi_mode == WIFI_MODE_STA)
     {
-        snprintf(wifi_str, sizeof(wifi_str), LV_SYMBOL_WIFI "STA: %s", ip_str);
-        lv_label_set_text(wifi_status_label, wifi_str);
+        lv_label_set_text_fmt(wifi_status_label, LV_SYMBOL_WIFI "STA: %s", ip_str);
         lv_obj_set_style_text_color(wifi_status_label, lv_palette_main(LV_PALETTE_GREEN), LV_PART_MAIN);
     }
-    else if (wifi_mode == 2)
+    else if (wifi_mode == WIFI_MODE_AP)
     {
-        snprintf(wifi_str, sizeof(wifi_str), LV_SYMBOL_WIFI "AP: %s", ip_str);
-        lv_label_set_text(wifi_status_label, wifi_str);
+        lv_label_set_text_fmt(wifi_status_label, LV_SYMBOL_WIFI "AP: %s", ip_str);
         lv_obj_set_style_text_color(wifi_status_label, lv_palette_main(LV_PALETTE_GREEN), LV_PART_MAIN);
     }
     else
     {
-        snprintf(wifi_str, sizeof(wifi_str), LV_SYMBOL_WIFI);
-        lv_label_set_text(wifi_status_label, wifi_str);
+        lv_label_set_text(wifi_status_label, LV_SYMBOL_WIFI);
         lv_obj_set_style_text_color(wifi_status_label, lv_palette_main(LV_PALETTE_RED), LV_PART_MAIN);
     }
+}
 
-    if (two_gates)
+void ui_update_gates_mode(bool two_gates_mode)
+{
+    if (two_gates_mode)
     {
         lv_label_set_text(gates_status_label, "2 GATES");
     }
@@ -395,7 +397,10 @@ void ui_update_status(bool sd_on, int wifi_mode, const char *ip_str, bool two_ga
     {
         lv_label_set_text(gates_status_label, "1 GATE");
     }
+}
 
+void ui_update_stop_status(bool stop_flag)
+{
     if (stop_flag)
     {
         lv_obj_set_style_bg_color(run_stop_btn, lv_palette_main(LV_PALETTE_RED), LV_PART_MAIN);

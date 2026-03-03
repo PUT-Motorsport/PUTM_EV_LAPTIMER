@@ -255,10 +255,14 @@ void sdcard_task(void *args)
 
     for (;;)
     {
-        if (xSemaphoreTake(config_mutex, 0) == pdTRUE) // Update driver list from config
+        // Update driver list from config
+        if (driver_list_local.driver_count != config_main.driver_list.driver_count)
         {
-            memcpy(&driver_list_local, &config_main.driver_list, sizeof(driver_list_local));
-            xSemaphoreGive(config_mutex);
+            if (xSemaphoreTake(config_mutex, 0) == pdTRUE)
+            {
+                memcpy(&driver_list_local, &config_main.driver_list, sizeof(driver_list_local));
+                xSemaphoreGive(config_mutex);
+            }
         }
 
         sd_detect_flag = !gpio_get_level((gpio_num_t)SD_CD);

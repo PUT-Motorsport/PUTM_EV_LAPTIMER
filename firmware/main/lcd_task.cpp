@@ -20,14 +20,14 @@ void lcd_task(void *args)
     ui_init();
     lvgl_port_unlock();
 
-    static char ip_str[WIFI_IP_LENGTH] = "WAIT FOR IP";
+    char ip_str[WIFI_IP_LENGTH] = "WAIT FOR IP";
 
-    static bool sd_active_old = sd_active_flag;
-    static wifi_mode_t wifi_mode_old = wifi_mode_flag;
-    static bool two_gate_old = config_main.two_gate_mode;
-    static bool stop_old = stop_flag;
+    bool sd_active_old = !sd_active_flag;
+    wifi_mode_t wifi_mode_old = WIFI_MODE_NULL;
+    bool two_gate_old = !config_main.two_gate_mode;
+    bool stop_old = !stop_flag;
 
-    bool update_status = true;
+    static Laptime laptime_current;
 
     for (;;)
     {
@@ -45,38 +45,33 @@ void lcd_task(void *args)
         if (sd_active_flag != sd_active_old)
         {
             sd_active_old = sd_active_flag;
-            update_status = true;
+            lvgl_port_lock(0);
+            ui_update_sd(sd_active_old);
+            lvgl_port_unlock();
         }
-        if (wifi_mode_flag != wifi_mode_old)
+        if (wifi_mode_flag != wifi_mode_old || xQueueReceive(ip_queue, ip_str, 0) == pdTRUE)
         {
             wifi_mode_old = wifi_mode_flag;
-            update_status = true;
+            lvgl_port_lock(0);
+            ui_update_wifi(wifi_mode_old, ip_str);
+            lvgl_port_unlock();
         }
         if (config_main.two_gate_mode != two_gate_old)
         {
             two_gate_old = config_main.two_gate_mode;
-            update_status = true;
+            lvgl_port_lock(0);
+            ui_update_gates_mode(two_gate_old);
+            lvgl_port_unlock();
         }
         if (stop_flag != stop_old)
         {
             stop_old = stop_flag;
-            update_status = true;
-        }
-        if (xQueueReceive(ip_queue, ip_str, 0) == pdTRUE)
-        {
-            update_status = true;
-        }
-
-        if (update_status)
-        {
             lvgl_port_lock(0);
-            ui_update_status(sd_active_old, wifi_mode_old, ip_str, two_gate_old, stop_old);
+            ui_update_stop_status(stop_old);
             lvgl_port_unlock();
-            update_status = false;
         }
 
         // Update Current Laptime
-        static Laptime laptime_current;
         if (xQueueReceive(laptime_current_queue_lcd, &laptime_current, 0) == pdTRUE)
         {
             char laptime_count_str[COUNT_STR_LENGTH] = {0};

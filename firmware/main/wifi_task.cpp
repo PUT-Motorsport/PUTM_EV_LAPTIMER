@@ -471,16 +471,13 @@ void wifi_task(void *args)
     char wifi_ssid_local[WIFI_SSID_STR_LENGTH] = WIFI_SSID_DEFAULT;
     char wifi_password_local[WIFI_PASSWORD_STR_LENGTH] = WIFI_PASSWORD_DEFAULT;
     char ip_str[WIFI_IP_LENGTH] = {0};
-    int driver_update_counter = 0;
 
     for (;;)
     {
 
         // Update driver list from config
-        driver_update_counter++;
-        if (driver_update_counter >= 100)
+        if (driver_list_local.driver_count != config_main.driver_list.driver_count)
         {
-            driver_update_counter = 0;
             if (xSemaphoreTake(config_mutex, 0) == pdTRUE)
             {
                 if (xSemaphoreTake(data_mutex, portMAX_DELAY) == pdTRUE)
