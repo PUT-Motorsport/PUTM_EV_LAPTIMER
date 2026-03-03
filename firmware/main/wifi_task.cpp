@@ -536,16 +536,19 @@ void wifi_task(void *args)
                     xSemaphoreGive(data_mutex);
                 }
             }
+        }
+#ifdef CONFIG_TWO_GATE_WIRELESS_MASTER
 
-            // Get ip and send to lcd task to display on screen
-            if (ip_refresh_flag == true)
+        // Get ip and send to lcd task to display on screen
+        if (ip_refresh_flag == true)
+        {
+            if (wifi_get_ip(ip_str) == ESP_OK && xQueueSend(ip_queue, ip_str, portMAX_DELAY))
             {
-                if (wifi_get_ip(ip_str) == ESP_OK && xQueueSend(ip_queue, ip_str, portMAX_DELAY))
-                {
-                    ip_refresh_flag = false;
-                }
+                ip_refresh_flag = false;
             }
         }
+
+#endif
 
         vTaskDelay(pdMS_TO_TICKS(20));
     }

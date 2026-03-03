@@ -302,6 +302,13 @@ void IRAM_ATTR reset_pin_isr()
     }
 }
 
+void IRAM_ATTR wifi_pin_isr()
+{
+    button_isr(&wifi_press);
+}
+
+#ifdef CONFIG_TWO_GATE_WIRELESS_MASTER
+
 void IRAM_ATTR doo_pin_isr()
 {
     button_isr(&doo_press);
@@ -317,10 +324,7 @@ void IRAM_ATTR driver_select_pin_isr()
     button_isr(&driver_select_press);
 }
 
-void IRAM_ATTR wifi_pin_isr()
-{
-    button_isr(&wifi_press);
-}
+#endif
 
 esp_err_t isr_init()
 {
@@ -330,14 +334,20 @@ esp_err_t isr_init()
                                          (gpio_isr_t)gate2_pin_isr, NULL));
     ESP_ERROR_CHECK(gpio_isr_handler_add(LAP_RESET_PIN,
                                          (gpio_isr_t)reset_pin_isr, NULL));
+    ESP_ERROR_CHECK(gpio_isr_handler_add(WIFI_PIN,
+                                         (gpio_isr_t)wifi_pin_isr, NULL));
+
+#ifdef CONFIG_TWO_GATE_WIRELESS_MASTER
+
     ESP_ERROR_CHECK(gpio_isr_handler_add(LAP_DOO_PIN,
                                          (gpio_isr_t)doo_pin_isr, NULL));
     ESP_ERROR_CHECK(gpio_isr_handler_add(LAP_OC_PIN,
                                          (gpio_isr_t)oc_pin_isr, NULL));
     ESP_ERROR_CHECK(gpio_isr_handler_add(DRIVER_SELECT_PIN,
                                          (gpio_isr_t)driver_select_pin_isr, NULL));
-    ESP_ERROR_CHECK(gpio_isr_handler_add(WIFI_PIN,
-                                         (gpio_isr_t)wifi_pin_isr, NULL));
+
+#endif
+
     ESP_LOGI("ISR", "INIT OK");
     return ESP_OK;
 }

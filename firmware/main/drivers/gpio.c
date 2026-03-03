@@ -9,6 +9,7 @@ esp_err_t gpio_init(void)
         .pull_down_en = true,
         .intr_type = GPIO_INTR_POSEDGE,
     };
+    ESP_ERROR_CHECK(gpio_config(&gate1_btn_config));
 
     gpio_config_t gate2_btn_config = {
         .pin_bit_mask = 1ULL << CONFIG_GATE2_PIN,
@@ -17,6 +18,7 @@ esp_err_t gpio_init(void)
         .pull_down_en = true,
         .intr_type = GPIO_INTR_POSEDGE,
     };
+    ESP_ERROR_CHECK(gpio_config(&gate2_btn_config));
 
     gpio_config_t stop_btn_config = {
         .pin_bit_mask = 1ULL << CONFIG_STOP_PIN,
@@ -25,6 +27,7 @@ esp_err_t gpio_init(void)
         .pull_down_en = false,
         .intr_type = GPIO_INTR_NEGEDGE,
     };
+    ESP_ERROR_CHECK(gpio_config(&stop_btn_config));
 
     gpio_config_t wifi_btn_config = {
         .pin_bit_mask = 1ULL << CONFIG_WIFI_PIN,
@@ -33,6 +36,9 @@ esp_err_t gpio_init(void)
         .pull_down_en = false,
         .intr_type = GPIO_INTR_NEGEDGE,
     };
+    ESP_ERROR_CHECK(gpio_config(&wifi_btn_config));
+
+#ifdef CONFIG_TWO_GATE_WIRELESS_MASTER
 
     gpio_config_t doo_btn_config = {
         .pin_bit_mask = 1ULL << CONFIG_DOO_PIN,
@@ -41,6 +47,7 @@ esp_err_t gpio_init(void)
         .pull_down_en = false,
         .intr_type = GPIO_INTR_NEGEDGE,
     };
+    ESP_ERROR_CHECK(gpio_config(&doo_btn_config));
 
     gpio_config_t oc_btn_config = {
         .pin_bit_mask = 1ULL << CONFIG_OC_PIN,
@@ -49,6 +56,7 @@ esp_err_t gpio_init(void)
         .pull_down_en = false,
         .intr_type = GPIO_INTR_NEGEDGE,
     };
+    ESP_ERROR_CHECK(gpio_config(&oc_btn_config));
 
     gpio_config_t driver_select_btn_config = {
         .pin_bit_mask = 1ULL << CONFIG_DRIVER_SELECT_PIN,
@@ -57,6 +65,7 @@ esp_err_t gpio_init(void)
         .pull_down_en = false,
         .intr_type = GPIO_INTR_NEGEDGE,
     };
+    ESP_ERROR_CHECK(gpio_config(&driver_select_btn_config));
 
     gpio_config_t sd_cd_config = {
         .pin_bit_mask = 1ULL << CONFIG_SD_CD,
@@ -64,14 +73,10 @@ esp_err_t gpio_init(void)
         .pull_up_en = false,
         .pull_down_en = false,
     };
+    ESP_ERROR_CHECK(gpio_config(&sd_cd_config));
 
-    const gpio_config_t *configs[] = {&gate1_btn_config, &gate2_btn_config, &stop_btn_config,
-                                      &wifi_btn_config, &doo_btn_config, &oc_btn_config, &driver_select_btn_config, &sd_cd_config};
+#endif
 
-    for (int i = 0; i < sizeof(configs) / sizeof(configs[0]); i++)
-    {
-        ESP_ERROR_CHECK(gpio_config(configs[i]));
-    }
     ESP_ERROR_CHECK(gpio_install_isr_service(ESP_INTR_FLAG_IRAM));
     ESP_LOGI("GPIO", "INIT OK");
     return ESP_OK;

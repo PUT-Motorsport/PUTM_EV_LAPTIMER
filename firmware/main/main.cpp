@@ -1,9 +1,14 @@
 #include "main.h"
 
 #include "laptimer_task.h"
+#include "wifi_task.h"
+
+#ifdef CONFIG_TWO_GATE_WIRELESS_MASTER
+
 #include "sdcard_task.h"
 #include "lcd_task.h"
-#include "wifi_task.h"
+
+#endif
 
 #include "gpio.h"
 #include "timer.h"
@@ -126,11 +131,13 @@ extern "C" void app_main(void)
         xSemaphoreGive(config_mutex);
     }
 
-    if (CONFIG_TWO_GATE_WIRELESS_MASTER)
-    {
-        xTaskCreatePinnedToCore(sdcard_task, "SD_TASK", 4096, NULL, 0, NULL, 0);
-        xTaskCreatePinnedToCore(lcd_task, "LCD_TASK", 8192, NULL, 2, NULL, 1);
-    }
+#ifdef CONFIG_TWO_GATE_WIRELESS_MASTER
+
+    xTaskCreatePinnedToCore(sdcard_task, "SD_TASK", 4096, NULL, 0, NULL, 0);
+    xTaskCreatePinnedToCore(lcd_task, "LCD_TASK", 8192, NULL, 2, NULL, 1);
+
+#endif
+
     xTaskCreatePinnedToCore(laptimer_task, "LAPTIMER_TASK", 8192, NULL, 3, NULL, 0);
     xTaskCreatePinnedToCore(wifi_task, "WIFI_TASK", 4096, NULL, 1, NULL, 0);
 
