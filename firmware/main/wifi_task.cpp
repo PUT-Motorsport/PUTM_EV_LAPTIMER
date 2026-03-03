@@ -472,6 +472,8 @@ void wifi_task(void *args)
     char wifi_password_local[WIFI_PASSWORD_STR_LENGTH] = WIFI_PASSWORD_DEFAULT;
     char ip_str[WIFI_IP_LENGTH] = {0};
 
+    ESP_ERROR_CHECK(wifi_init());
+
     for (;;)
     {
 
@@ -511,7 +513,7 @@ void wifi_task(void *args)
                 wifi_mode_flag = WIFI_MODE_DEFAULT;
             }
 
-            if (wifi_reinit(wifi_mode_flag, wifi_ssid_local, wifi_password_local) == ESP_OK)
+            if (wifi_restart(wifi_mode_flag, wifi_ssid_local, wifi_password_local) == ESP_OK)
             {
                 start_webserver();
                 snprintf(ip_str, sizeof(ip_str), "WAIT FOR IP");
