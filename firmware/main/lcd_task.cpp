@@ -1,9 +1,12 @@
-#include "lcd_task.h"
+#include "lcd_task.hpp"
 
 #include "lcd.h"
 #include "lvgl_ui.h"
 
 #include "esp_lvgl_port.h"
+
+/// @brief Size of lcd displayed best/last laptime list
+#define LAPTIME_LIST_SIZE_LCD 5
 
 const char *TAG = "LCD_TASK";
 
@@ -74,20 +77,19 @@ void lcd_task(void *args)
         // Update Current Laptime
         if (xQueueReceive(laptime_current_queue_lcd, &laptime_current, 0) == pdTRUE)
         {
-            char laptime_count_str[COUNT_STR_LENGTH] = {0};
             char laptime_current_str[LAPTIME_STR_LENGTH] = {0};
             char laptime_penalty_str[PENALTY_TIME_STR_LENGTH] = {0};
 
-            laptime_current.convert_string_count(laptime_count_str, sizeof(laptime_count_str));
             laptime_current.convert_string_time(laptime_current_str, sizeof(laptime_current_str));
             laptime_current.convert_string_penalty(laptime_penalty_str, sizeof(laptime_penalty_str));
 
             lvgl_port_lock(0);
             ui_update_current_lap(laptime_current_str,
                                   laptime_penalty_str,
+                                  laptime_current.count,
                                   laptime_current.oc_count,
                                   laptime_current.doo_count,
-                                  driver_list_local.list[laptime_current.driver_id], laptime_current.driver_id);
+                                  driver_list_local.list.at(laptime_current.driver_id), laptime_current.driver_id);
             lvgl_port_unlock();
         }
 
@@ -105,14 +107,14 @@ void lcd_task(void *args)
                 lvgl_port_lock(0);
                 for (int i = 0; i < LAPTIME_LIST_SIZE_LCD; i++)
                 {
-                    laptime_list_top[i].convert_string_count(lap_count_top_str, sizeof(lap_count_top_str));
-                    laptime_list_top[i].convert_string_time(laptime_top_str, sizeof(laptime_top_str));
+                    laptime_list_top.at(i).convert_string_count(lap_count_top_str, sizeof(lap_count_top_str));
+                    laptime_list_top.at(i).convert_string_time(laptime_top_str, sizeof(laptime_top_str));
 
-                    laptime_list_top[i].convert_string_count(lap_count_last_str, sizeof(lap_count_last_str));
-                    laptime_list_last[i].convert_string_time(laptime_last_str, sizeof(laptime_last_str));
+                    laptime_list_top.at(i).convert_string_count(lap_count_last_str, sizeof(lap_count_last_str));
+                    laptime_list_last.at(i).convert_string_time(laptime_last_str, sizeof(laptime_last_str));
 
-                    ui_update_top_lap(i + 1, lap_count_top_str, laptime_top_str, driver_list_local.list[laptime_list_top[i].driver_id], laptime_list_top[i].driver_id);
-                    ui_update_last_lap(i + 1, lap_count_last_str, laptime_last_str, driver_list_local.list[laptime_list_last[i].driver_id], laptime_list_top[i].driver_id);
+                    ui_update_top_lap(i + 1, lap_count_top_str, laptime_top_str, driver_list_local.list[laptime_list_top.at(i).driver_id], laptime_list_top.at(i).driver_id);
+                    ui_update_last_lap(i + 1, lap_count_last_str, laptime_last_str, driver_list_local.list[laptime_list_last.at(i).driver_id], laptime_list_last.at(i).driver_id);
                 }
                 lvgl_port_unlock();
                 xSemaphoreGive(laptime_lists_mutex);

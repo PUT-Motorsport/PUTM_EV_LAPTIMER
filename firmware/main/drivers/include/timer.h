@@ -1,6 +1,6 @@
 #pragma once
 
-#include "main.h"
+#include "defines.h"
 
 #include "driver/gptimer_types.h"
 #include "RV3028C7.h"

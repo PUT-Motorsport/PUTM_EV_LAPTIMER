@@ -1,6 +1,6 @@
 #pragma once
 
-#include "main.h"
+#include "defines.h"
 
 #include "sd_protocol_types.h"
 

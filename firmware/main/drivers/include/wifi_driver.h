@@ -1,6 +1,6 @@
 #pragma once
 
-#include "main.h"
+#include "defines.h"
 
 #include "esp_wifi.h"
 

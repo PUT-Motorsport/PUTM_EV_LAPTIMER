@@ -1,14 +1,12 @@
 #pragma once
 
-#include <stdio.h>
-#include <string.h>
-#include <stdbool.h>
+#include "defines.h"
 
 #include "freertos/idf_additions.h"
-#include "esp_log.h"
-#include "esp_err.h"
-#include "sdkconfig.h"
-#include <esp_wifi_types_generic.h>
+
+#ifdef __cplusplus
+
+#include <array>
 
 /**
  * @defgroup defines
@@ -31,13 +29,6 @@
 
 #define DRIVER_TAG_LENGTH 4
 
-#define TIMEOFDAY_STR_LENGTH 9
-#define DATE_STR_LENGTH 11
-
-#define WIFI_SSID_STR_LENGTH 32
-#define WIFI_PASSWORD_STR_LENGTH 64
-#define WIFI_IP_LENGTH 52
-
 #define DRIVER_LIST_DEFAULT        \
     {                              \
         "---", "AAA", "BBB", "CCC" \
@@ -55,8 +46,6 @@
 #define WIFI_MAX_CONN_DEFAULT 3
 #define TIMEOFDAY_STR_DEFAULT "21:37:00"
 #define DATE_STR_DEFAULT "2026-01-01"
-
-#ifdef __cplusplus
 
 /**
  * @}
@@ -121,7 +110,7 @@ public:
  */
 struct Driver_list
 {
-    char list[DRIVER_MAX_COUNT][DRIVER_TAG_LENGTH] = DRIVER_LIST_DEFAULT;
+    std::array<char[DRIVER_TAG_LENGTH], DRIVER_MAX_COUNT> list = {DRIVER_LIST_DEFAULT};
     uint8_t driver_count = 3;
 };
 
@@ -151,8 +140,6 @@ enum Wifi_reset
     WIFI_RESET_CONFIG,
     WIFI_RESET_DEFAULTS,
 };
-
-#endif
 
 /**
  * @}
@@ -187,8 +174,6 @@ extern SemaphoreHandle_t laptime_lists_mutex;
  */
 extern QueueHandle_t ip_queue;
 
-#ifdef __cplusplus
-
 /**
  * @}
  * @defgroup globals
@@ -203,17 +188,17 @@ extern Config config_main;
 /**
  * @brief Laptimes sorted from fastest to slowest
  */
-extern Laptime laptime_list_top[LAPTIME_LIST_SIZE_LOCAL];
+extern std::array<Laptime, LAPTIME_LIST_SIZE_LOCAL> laptime_list_top;
 
 /**
  * @brief Laptimes sorted from newest to oldest
  */
-extern Laptime laptime_list_last[LAPTIME_LIST_SIZE_LOCAL];
+extern std::array<Laptime, LAPTIME_LIST_SIZE_LOCAL> laptime_list_last;
 
 /**
  * @brief List with fastest laptimes of each driver
  */
-extern Laptime laptime_list_driver[DRIVER_MAX_COUNT];
+extern std::array<Laptime, DRIVER_MAX_COUNT> laptime_list_driver;
 
 /**
  * @brief Indicates if sdcard is active (inserted and initialized).

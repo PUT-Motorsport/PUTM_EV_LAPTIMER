@@ -1,12 +1,12 @@
-#include "main.h"
+#include "main.hpp"
 
-#include "laptimer_task.h"
-#include "wifi_task.h"
+#include "laptimer_task.hpp"
+#include "wifi_task.hpp"
 
 #ifdef CONFIG_TWO_GATE_WIRELESS_MASTER
 
-#include "sdcard_task.h"
-#include "lcd_task.h"
+#include "sdcard_task.hpp"
+#include "lcd_task.hpp"
 
 #endif
 
@@ -21,9 +21,10 @@ SemaphoreHandle_t laptime_lists_mutex = xSemaphoreCreateMutex();
 QueueHandle_t ip_queue = xQueueCreate(1, sizeof(char[52]));
 
 Config config_main;
-Laptime laptime_list_top[LAPTIME_LIST_SIZE_LOCAL];
-Laptime laptime_list_last[LAPTIME_LIST_SIZE_LOCAL];
-Laptime laptime_list_driver[DRIVER_MAX_COUNT];
+
+std::array<Laptime, LAPTIME_LIST_SIZE_LOCAL> laptime_list_top;
+std::array<Laptime, LAPTIME_LIST_SIZE_LOCAL> laptime_list_last;
+std::array<Laptime, DRIVER_MAX_COUNT> laptime_list_driver;
 
 volatile bool sd_active_flag = false;
 volatile bool stop_flag = true;

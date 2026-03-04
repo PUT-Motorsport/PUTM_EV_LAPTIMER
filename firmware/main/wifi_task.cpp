@@ -1,11 +1,14 @@
-#include "wifi_task.h"
+#include "wifi_task.hpp"
 
 #include "wifi_driver.h"
 #include "timer.h"
-#include "webpage.h"
+#include "webpage.hpp"
 
 #include "esp_http_server.h"
 #include "cJSON.h"
+
+/// @brief Size of wifi displayed best/last laptime list
+#define LAPTIME_LIST_SIZE_WIFI 50
 
 static const char *TAG = "WIFI_TASK";
 

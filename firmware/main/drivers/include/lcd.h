@@ -1,6 +1,6 @@
 #pragma once
 
-#include "main.h"
+#include "defines.h"
 
 #define LCD_RES_H 320
 #define LCD_RES_V 240

@@ -413,13 +413,14 @@ void ui_update_stop_status(bool stop_flag)
     }
 }
 
-void ui_update_current_lap(const char *time_str, const char *penalty_str, int oc_count, int doo_count, const char *driver_str, int driver_id)
+void ui_update_current_lap(const char *time_str, const char *penalty_str, int lap_count, int oc_count, int doo_count, const char *driver_str, int driver_id)
 {
     if (time_str)
         lv_label_set_text(lap_time_label, time_str);
     if (penalty_str)
         lv_label_set_text(penalty_time_label, penalty_str);
 
+    lv_label_set_text_fmt(lap_count_label, "%d", lap_count);
     lv_label_set_text_fmt(oc_count_label, "%d", oc_count);
     lv_label_set_text_fmt(doo_count_label, "%d", doo_count);
 

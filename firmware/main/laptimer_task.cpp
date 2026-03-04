@@ -1,11 +1,18 @@
-#include "laptimer_task.h"
+#include "laptimer_task.hpp"
 
 #include "gpio.h"
-#include "main.h"
+#include "main.hpp"
 #include "sdcard.h"
 #include "timer.h"
 
+/// @brief Minimal time to save in ms
+#define LAPTIME_MIN 500
+
 static const char *TAG = "LAPTIMER_TASK";
+
+/// @brief Time penalty added to current laptime by LAP_DOO_PIN and LAP_OC_PIN in ms
+const uint32_t DOO_TIME_PENALTY = 200;
+const uint32_t OC_TIME_PENALTY = 1000;
 
 /**
  * @brief Used to store current laptime that is readed from timer in main loop and saved in ISR
@@ -32,51 +39,42 @@ Button_press wifi_press;
  * @param list that stores local laptimes
  * @return
  */
-static esp_err_t laptime_save_top(Laptime laptime, Laptime list_top[LAPTIME_LIST_SIZE_LOCAL])
+static esp_err_t laptime_save_top(Laptime laptime, std::array<Laptime, LAPTIME_LIST_SIZE_LOCAL> &list_top)
 {
-    if (list_top == NULL)
-        return ESP_FAIL;
-
     for (int i = 0; i < LAPTIME_LIST_SIZE_LOCAL; i++)
     {
-        if (laptime.time < list_top[i].time || list_top[i].time == 0)
+        if (laptime.time < list_top.at(i).time || list_top.at(i).time == 0)
         {
             for (int j = LAPTIME_LIST_SIZE_LOCAL - 1; j > i; j--)
             {
-                list_top[j] = list_top[j - 1];
+                list_top.at(j) = list_top.at(j - 1);
             }
-            list_top[i] = laptime;
+            list_top.at(i) = laptime;
             break;
         }
     }
     return ESP_OK;
 }
 
-static esp_err_t laptime_save_last(Laptime laptime, Laptime list_last[LAPTIME_LIST_SIZE_LOCAL])
+static esp_err_t laptime_save_last(Laptime laptime, std::array<Laptime, LAPTIME_LIST_SIZE_LOCAL> &list_last)
 {
-    if (list_last == NULL)
-        return ESP_FAIL;
-
     for (int i = LAPTIME_LIST_SIZE_LOCAL - 1; i > 0; i--)
     {
-        list_last[i] = list_last[i - 1];
+        list_last.at(i) = list_last.at(i - 1);
     }
-    list_last[0] = laptime;
+    list_last.at(0) = laptime;
     return ESP_OK;
 }
 
-static esp_err_t laptime_save_driver(Laptime laptime, Laptime list_driver[DRIVER_MAX_COUNT])
+static esp_err_t laptime_save_driver(Laptime laptime, std::array<Laptime, DRIVER_MAX_COUNT> &list_driver)
 {
-    if (list_driver == NULL)
-        return ESP_FAIL;
-
-    if (laptime.time < list_driver[laptime.driver_id].time || list_driver[laptime.driver_id].time == 0)
-        list_driver[laptime.driver_id].time = laptime.time;
-    list_driver[laptime.driver_id].driver_id = laptime.driver_id;
-    list_driver[laptime.driver_id].oc_count += laptime.oc_count;
-    list_driver[laptime.driver_id].doo_count += laptime.doo_count;
-    list_driver[laptime.driver_id].penalty_time += laptime.penalty_time;
-    list_driver[laptime.driver_id].count++;
+    if (laptime.time < list_driver.at(laptime.driver_id).time || list_driver.at(laptime.driver_id).time == 0)
+        list_driver.at(laptime.driver_id).time = laptime.time;
+    list_driver.at(laptime.driver_id).driver_id = laptime.driver_id;
+    list_driver.at(laptime.driver_id).oc_count += laptime.oc_count;
+    list_driver.at(laptime.driver_id).doo_count += laptime.doo_count;
+    list_driver.at(laptime.driver_id).penalty_time += laptime.penalty_time;
+    list_driver.at(laptime.driver_id).count++;
 
     return ESP_OK;
 }
@@ -101,7 +99,7 @@ static void laptime_save_uart(Laptime laptime)
  * @param button_press Struct containing button press state and press time
  * @return Changed button state
  */
-button_state button_hold(bool btn_level, Button_press button_press)
+Button_state button_hold(bool btn_level, Button_press button_press)
 {
     TickType_t tick = xTaskGetTickCount();
     switch (button_press.state)
@@ -137,7 +135,7 @@ button_state button_hold(bool btn_level, Button_press button_press)
  * @brief Adding or removing penalty to laptime based on button state
  * @param laptime Laptime that receives penalty
  */
-void penalty_check(Laptime *laptime)
+static void penalty_check(Laptime *laptime)
 {
 
     switch (doo_press.state = button_hold(gpio_get_level(LAP_DOO_PIN), doo_press))
@@ -181,7 +179,7 @@ void penalty_check(Laptime *laptime)
  * @param laptime Laptime that will have driver changed
  * @param driver_list structure with list of drivers and driver count
  */
-bool driver_select(Laptime *laptime, Driver_list *driver_list)
+static bool driver_select(Laptime *laptime, Driver_list *driver_list)
 {
     switch (driver_select_press.state = button_hold(gpio_get_level(DRIVER_SELECT_PIN), driver_select_press))
     {
@@ -205,7 +203,7 @@ bool driver_select(Laptime *laptime, Driver_list *driver_list)
  * @brief Returns wifi reset state based on button press state
  * @return Wifi reset state
  */
-Wifi_reset wifi_reset_check()
+static Wifi_reset wifi_reset_check()
 {
     switch (wifi_press.state = button_hold(gpio_get_level(WIFI_PIN), wifi_press))
     {

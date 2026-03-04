@@ -1,4 +1,4 @@
-#include "sdcard_task.h"
+#include "sdcard_task.hpp"
 
 #include "portmacro.h"
 #include "sd_protocol_types.h"
@@ -12,6 +12,8 @@
 
 #include <cJSON.h>
 
+#define SD_BUFFER_SIZE 256
+
 #define SESSION_STR_LEN 14
 
 const char *config_file_name = "config.json";
@@ -19,11 +21,11 @@ const char *laptimes_file_name = "laptimer.csv";
 
 static const char *TAG = "SDCARD_TASK";
 
-char session_str[SESSION_STR_LEN]{"#00"};
+char session_str[SESSION_STR_LEN] = {"#00"};
 int16_t session_num = 0;
 bool sd_detect_flag = false;
 
-esp_err_t sdcard_get_config(sdmmc_card_t **card_pointer)
+static esp_err_t sdcard_get_config(sdmmc_card_t **card_pointer)
 {
     esp_err_t ret = ESP_OK;
     size_t br;
@@ -122,7 +124,7 @@ esp_err_t sdcard_get_config(sdmmc_card_t **card_pointer)
  * @param card_pointer Pointer to sd card handle
  * @return Error check
  */
-esp_err_t sdcard_init(sdmmc_card_t **card_pointer)
+static esp_err_t sdcard_init(sdmmc_card_t **card_pointer)
 {
     esp_err_t ret = ESP_OK;
     ret = sdcard_mount(card_pointer);
@@ -180,7 +182,7 @@ esp_err_t sdcard_init(sdmmc_card_t **card_pointer)
  * @param card_pointer Pointer to sd card handle
  * @return Error check
  */
-esp_err_t sdcard_deinit(sdmmc_card_t **card_pointer)
+static esp_err_t sdcard_deinit(sdmmc_card_t **card_pointer)
 {
     return sdcard_unmount(card_pointer);
 }
@@ -190,7 +192,7 @@ esp_err_t sdcard_deinit(sdmmc_card_t **card_pointer)
  * @param laptime_saved_str
  * @return Error check
  */
-esp_err_t sdcard_save_laptime(Laptime laptime_saved, Driver_list *driver_list)
+static esp_err_t sdcard_save_laptime(Laptime laptime_saved, Driver_list *driver_list)
 {
     esp_err_t ret = ESP_OK;
     char laptime_record_str[LAPTIME_STR_LENGTH + PENALTY_TIME_STR_LENGTH + 2 * PENALTY_COUNT_STR_LENGTH + DRIVER_TAG_LENGTH + DATE_STR_LENGTH + TIMEOFDAY_STR_LENGTH] = {0};
@@ -219,7 +221,7 @@ esp_err_t sdcard_save_laptime(Laptime laptime_saved, Driver_list *driver_list)
     return ret;
 }
 
-esp_err_t sdcard_check_integrity(char laptime_check_str[LAPTIME_STR_LENGTH])
+static esp_err_t sdcard_check_integrity(char laptime_check_str[LAPTIME_STR_LENGTH])
 {
     if (laptime_check_str == NULL)
         return ESP_FAIL;
