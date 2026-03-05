@@ -41,11 +41,11 @@ Button_press wifi_press;
  */
 static esp_err_t laptime_save_top(Laptime laptime, std::array<Laptime, LAPTIME_LIST_SIZE_LOCAL> &list_top)
 {
-    for (int i = 0; i < LAPTIME_LIST_SIZE_LOCAL; i++)
+    for (auto i = 0; i < list_top.size(); i++)
     {
         if (laptime.time < list_top.at(i).time || list_top.at(i).time == 0)
         {
-            for (int j = LAPTIME_LIST_SIZE_LOCAL - 1; j > i; j--)
+            for (auto j = list_top.size() - 1; j > i; j--)
             {
                 list_top.at(j) = list_top.at(j - 1);
             }
@@ -58,7 +58,7 @@ static esp_err_t laptime_save_top(Laptime laptime, std::array<Laptime, LAPTIME_L
 
 static esp_err_t laptime_save_last(Laptime laptime, std::array<Laptime, LAPTIME_LIST_SIZE_LOCAL> &list_last)
 {
-    for (int i = LAPTIME_LIST_SIZE_LOCAL - 1; i > 0; i--)
+    for (auto i = list_last.size() - 1; i > 0; i--)
     {
         list_last.at(i) = list_last.at(i - 1);
     }

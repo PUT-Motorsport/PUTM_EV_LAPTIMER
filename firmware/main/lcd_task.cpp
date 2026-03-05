@@ -110,7 +110,7 @@ void lcd_task(void *args)
                     laptime_list_top.at(i).convert_string_count(lap_count_top_str, sizeof(lap_count_top_str));
                     laptime_list_top.at(i).convert_string_time(laptime_top_str, sizeof(laptime_top_str));
 
-                    laptime_list_top.at(i).convert_string_count(lap_count_last_str, sizeof(lap_count_last_str));
+                    laptime_list_last.at(i).convert_string_count(lap_count_last_str, sizeof(lap_count_last_str));
                     laptime_list_last.at(i).convert_string_time(laptime_last_str, sizeof(laptime_last_str));
 
                     ui_update_top_lap(i + 1, lap_count_top_str, laptime_top_str, driver_list_local.list[laptime_list_top.at(i).driver_id], laptime_list_top.at(i).driver_id);
