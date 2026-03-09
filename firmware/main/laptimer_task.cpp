@@ -250,7 +250,7 @@ void IRAM_ATTR gate1_pin_isr()
         else if (stop_flag == true)
         {
             stop_flag = false;
-            timer_reset(laptime_timer);
+            timer_start(laptime_timer);
         }
         return;
     }
@@ -259,7 +259,7 @@ void IRAM_ATTR gate1_pin_isr()
         if (stop_flag == true)
         {
             stop_flag = false;
-            timer_reset(laptime_timer);
+            timer_start(laptime_timer);
         }
     }
     return;
@@ -282,6 +282,7 @@ void IRAM_ATTR gate2_pin_isr()
             laptime_saved = laptime_current;
             laptime_saved.time += laptime_current.penalty_time;
             stop_flag = true;
+            timer_stop(laptime_timer);
             laptime_current.new_lap();
         }
     }
@@ -296,6 +297,7 @@ void IRAM_ATTR reset_pin_isr()
     if (stop_flag == false)
     {
         stop_flag = true;
+        timer_stop(laptime_timer);
         laptime_current.reset();
     }
 }

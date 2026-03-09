@@ -124,8 +124,8 @@ esp_err_t wifi_start(wifi_mode_t wifi_mode, char wifi_ssid[WIFI_SSID_STR_LENGTH]
             .ap = {
                 .ssid_len = strlen(wifi_ssid),
                 .channel = 1,
-                .max_connection = 3,
                 .authmode = WIFI_AUTH_OPEN,
+                .max_connection = 3,
                 .pmf_cfg = {
                     .required = false,
                 },
@@ -163,9 +163,9 @@ esp_err_t wifi_start(wifi_mode_t wifi_mode, char wifi_ssid[WIFI_SSID_STR_LENGTH]
         wifi_config_t wifi_sta_config = {
             .sta = {
                 .scan_method = WIFI_ALL_CHANNEL_SCAN,
-                .failure_retry_cnt = 5,
                 .threshold.authmode = WIFI_AUTH_WPA2_PSK,
                 .sae_pwe_h2e = WPA3_SAE_PWE_BOTH,
+                .failure_retry_cnt = 5,
             },
         };
         snprintf((char *)wifi_sta_config.sta.ssid, sizeof(wifi_sta_config.sta.ssid), wifi_ssid);

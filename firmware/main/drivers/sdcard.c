@@ -47,8 +47,8 @@ esp_err_t sdcard_mount(sdmmc_card_t **out_card)
     host.max_freq_khz = 1000;
 
     sdspi_device_config_t slot_config = SDSPI_DEVICE_CONFIG_DEFAULT();
-    slot_config.gpio_cs = SD_SPI_CS;
-    slot_config.host_id = host.slot;
+    slot_config.gpio_cs = (gpio_num_t)SD_SPI_CS;
+    slot_config.host_id = SPI2_HOST;
 
     esp_err_t ret = esp_vfs_fat_sdspi_mount(SD_CARD_MOUNT_PATH, &host, &slot_config,
                                             &mount_config, out_card);

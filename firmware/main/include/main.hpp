@@ -62,7 +62,7 @@ class Laptime
 {
 public:
     volatile uint16_t count = 1;
-    volatile uint64_t time = 0;
+    volatile uint32_t time = 0;
 
     uint32_t penalty_time = 0;
     uint16_t doo_count = 0;

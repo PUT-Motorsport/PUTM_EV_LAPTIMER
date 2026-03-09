@@ -30,8 +30,6 @@ void lcd_task(void *args)
     bool two_gate_old = !config_main.two_gate_mode;
     bool stop_old = !stop_flag;
 
-    static Laptime laptime_current;
-
     for (;;)
     {
         // Update driver list from config
@@ -75,6 +73,7 @@ void lcd_task(void *args)
         }
 
         // Update Current Laptime
+        Laptime laptime_current;
         if (xQueueReceive(laptime_current_queue_lcd, &laptime_current, 0) == pdTRUE)
         {
             char laptime_current_str[LAPTIME_STR_LENGTH] = {0};

@@ -22,7 +22,6 @@ esp_err_t timer_init()
                                      .resolution_hz = 1 * 10000};
     ESP_ERROR_CHECK(gptimer_new_timer(&timer_config, &laptime_timer));
     ESP_ERROR_CHECK(gptimer_enable(laptime_timer));
-    ESP_ERROR_CHECK(gptimer_start(laptime_timer));
 
     setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0/3", 1);
     tzset();
@@ -62,7 +61,7 @@ esp_err_t rtc_get_time(char time_now[TIMEOFDAY_STR_LENGTH], char date_now[DATE_S
 }
 
 // Get time from main lap timer measured in 1/100s
-uint64_t timer_get_time(gptimer_handle_t timer_handle)
+uint32_t timer_get_time(gptimer_handle_t timer_handle)
 {
     uint64_t timer_value = 0;
     uint32_t timer_res = 0;
@@ -77,6 +76,18 @@ uint64_t timer_get_time(gptimer_handle_t timer_handle)
 esp_err_t timer_reset(gptimer_handle_t timer_handle)
 {
     return gptimer_set_raw_count(timer_handle, 0);
+}
+
+esp_err_t timer_stop(gptimer_handle_t timer_handle)
+{
+    gptimer_set_raw_count(timer_handle, 0);
+    return gptimer_stop(timer_handle);
+}
+
+esp_err_t timer_start(gptimer_handle_t timer_handle)
+{
+    gptimer_set_raw_count(timer_handle, 0);
+    return gptimer_start(timer_handle);
 }
 
 // Set system time and date
