@@ -27,6 +27,7 @@
 /firmware/TODO
 /firmware/sdkconfig.old
 /firmware/managed_components/**
+/firmware/.clang-format
 /hardware/**.lck
 /hardware/_autosave**
 todo.md
