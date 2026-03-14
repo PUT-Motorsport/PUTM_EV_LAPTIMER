@@ -11,7 +11,39 @@ This is standalone laptimer for Formula Student made on ESP32-S3 with ESP-IDF an
 - Add penalties from FSG Rules during laptime
 
 ## How to use
-
+LCD GUI:
+<br/>
+![gui](documentation/lcd_gui.jpg)
+1. SD card status
+   - RED - not initialized
+   - GREEN - initialized
+2. WIFI status, mode and IP
+   - RED - not initialized
+   - GREEN - initialized
+   - STA - station mode
+   -  AP - access point mode
+3. Gate mode
+   - 1 GATE - like F1 race finish line, next lap starts automatically 
+   - 2 GATES - one gate starts lap, second gate ends lap, then timer stops
+4. RUN/STOP
+   - RED - lap stopped
+   - GREEN - lap in progress
+5. Current lap time
+6. Current lap info
+   - DRIVER - tag of current driver
+   - LAP - lap count
+   - OC - number of FSG OC penalties
+   - DOO - number of FSG DOO penalties
+   - PENALTY - cumulated penalty time added to current lap time after finishing
+7. Lap time lists
+   <br/>
+Similar interface can be accessed by connecting to a webpage hosted on ip address displayed on LCD. Moreover, on webpage you can download .csv files with lap times and change system configuration settings:
+- Gate mode
+- Wifi mode
+- SSID and password of wifi network
+- Date and time
+- List of drivers
+Those settings can be also changed by inserting SD card with [config file](firmware/main/config.txt)<br/>
 ## How to install
 1. It's recommended to install ESP-IDF for Visual Studio Code with [this guide](https://github.com/espressif/vscode-esp-idf-extension/blob/master/README.md).
 2. After cloning repository you should configure ESP-IDF project using
