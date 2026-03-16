@@ -19611,7 +19611,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Datasheet" "https://www.vishay.com/docs/93311/vs-50wq03fn.pdf"
 			(at 157.48 102.87 0)
 			(effects
 				(font
