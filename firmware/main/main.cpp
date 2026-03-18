@@ -13,25 +13,6 @@
 #include "gpio.h"
 #include "timer.h"
 
-SemaphoreHandle_t config_mutex = xSemaphoreCreateMutex();
-QueueHandle_t laptime_saved_queue_sd = xQueueCreate(LAPTIME_LIST_SIZE_LOCAL, sizeof(Laptime));
-QueueHandle_t laptime_current_queue_lcd = xQueueCreate(1, sizeof(Laptime));
-QueueHandle_t laptime_current_queue_wifi = xQueueCreate(1, sizeof(Laptime));
-SemaphoreHandle_t laptime_lists_mutex = xSemaphoreCreateMutex();
-QueueHandle_t ip_queue = xQueueCreate(1, sizeof(char[52]));
-
-Config config_main;
-
-std::array<Laptime, LAPTIME_LIST_SIZE_LOCAL> laptime_list_top;
-std::array<Laptime, LAPTIME_LIST_SIZE_LOCAL> laptime_list_last;
-std::array<Laptime, DRIVER_MAX_COUNT> laptime_list_driver;
-
-volatile bool sd_active_flag = false;
-volatile bool stop_flag = true;
-volatile Wifi_reset wifi_reset_flag = WIFI_NO_RESET;
-volatile wifi_mode_t wifi_mode_flag = WIFI_MODE_NULL;
-volatile bool lists_refresh_lcd_flag = true;
-
 void Laptime::reset()
 {
 
@@ -116,6 +97,26 @@ void Laptime::convert_string_penalty(char penalty_str[PENALTY_TIME_STR_LENGTH], 
     }
 }
 
+SemaphoreHandle_t config_mutex = xSemaphoreCreateMutex();
+SemaphoreHandle_t laptime_lists_mutex = xSemaphoreCreateMutex();
+
+QueueHandle_t laptime_saved_queue_sd = xQueueCreate(LAPTIME_LIST_SIZE_LOCAL, sizeof(Laptime));
+QueueHandle_t laptime_current_queue_lcd = xQueueCreate(1, sizeof(Laptime));
+QueueHandle_t laptime_current_queue_wifi = xQueueCreate(1, sizeof(Laptime));
+QueueHandle_t ip_queue = xQueueCreate(1, sizeof(char[52]));
+
+Config config_main;
+
+std::array<Laptime, LAPTIME_LIST_SIZE_LOCAL> laptime_list_top;
+std::array<Laptime, LAPTIME_LIST_SIZE_LOCAL> laptime_list_last;
+std::array<Laptime, DRIVER_MAX_COUNT> laptime_list_driver;
+
+volatile bool sd_active_flag = false;
+volatile bool stop_flag = true;
+volatile Wifi_reset wifi_reset_flag = WIFI_NO_RESET;
+volatile wifi_mode_t wifi_mode_flag = WIFI_MODE_NULL;
+volatile bool lists_refresh_lcd_flag = true;
+
 /**
  * @brief Main task initializes core peripherals and creates program tasks
  */
@@ -123,7 +124,6 @@ extern "C" void app_main(void)
 {
     ESP_ERROR_CHECK(gpio_init());
     ESP_ERROR_CHECK(timer_init());
-    ESP_ERROR_CHECK(isr_init());
     // ESP_ERROR_CHECK(rtc_init());
 
     if (xSemaphoreTake(config_mutex, portMAX_DELAY))

@@ -5,12 +5,12 @@
 #include "sdcard.h"
 #include "timer.h"
 
-/// @brief Minimal time to save in ms
+/// @brief Minimal time to save in 1/100s
 #define LAPTIME_MIN 500
 
 static const char *TAG = "LAPTIMER_TASK";
 
-/// @brief Time penalty added to current laptime by LAP_DOO_PIN and LAP_OC_PIN in ms
+/// @brief Time penalty added to current laptime by LAP_DOO_PIN and LAP_OC_PIN in 1/100s
 const uint32_t DOO_TIME_PENALTY = 200;
 const uint32_t OC_TIME_PENALTY = 1000;
 
@@ -362,8 +362,9 @@ esp_err_t isr_init()
  */
 void laptimer_task(void *args)
 {
-    Driver_list driver_list_local;
+    ESP_ERROR_CHECK(isr_init());
 
+    Driver_list driver_list_local;
     for (;;)
     {
         // Update driver list from config
