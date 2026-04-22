@@ -5,7 +5,50 @@
 #include "webpage.hpp"
 
 #include "esp_http_server.h"
-#include "cJSON.h"
+#include <ArduinoJson.h>
+
+struct HttpdChunkWriter {
+    httpd_req_t *req;
+    char buffer[512];
+    size_t len;
+
+    HttpdChunkWriter(httpd_req_t *r) : req(r), len(0) {}
+
+    size_t write(uint8_t c) {
+        buffer[len++] = c;
+        if (len == sizeof(buffer)) {
+            httpd_resp_send_chunk(req, buffer, len);
+            len = 0;
+        }
+        return 1;
+    }
+
+    size_t write(const uint8_t *buf, size_t size) {
+        size_t written = 0;
+        while (size > 0) {
+            size_t space = sizeof(buffer) - len;
+            size_t chunk = size < space ? size : space;
+            memcpy(buffer + len, buf, chunk);
+            len += chunk;
+            buf += chunk;
+            size -= chunk;
+            written += chunk;
+            if (len == sizeof(buffer)) {
+                httpd_resp_send_chunk(req, buffer, len);
+                len = 0;
+            }
+        }
+        return written;
+    }
+
+    void flush() {
+        if (len > 0) {
+            httpd_resp_send_chunk(req, buffer, len);
+            len = 0;
+        }
+        httpd_resp_send_chunk(req, NULL, 0); // End chunked response
+    }
+};
 
 /// @brief Size of wifi displayed best/last laptime list
 #define LAPTIME_LIST_SIZE_WIFI 50
@@ -39,7 +82,7 @@ static esp_err_t root_get_handler(httpd_req_t *req)
  */
 static esp_err_t data_get_handler(httpd_req_t *req)
 {
-    cJSON *root = cJSON_CreateObject();
+    JsonDocument root;
 
     char laptime_current_str[LAPTIME_STR_LENGTH] = LAPTIME_STR_DEFAULT;
     char penalty_time_str[PENALTY_TIME_STR_LENGTH] = PENALTY_STR_DEFAULT;
@@ -48,119 +91,100 @@ static esp_err_t data_get_handler(httpd_req_t *req)
     if (xSemaphoreTake(data_mutex, portMAX_DELAY))
     {
         laptime_current.convert_string_full(laptime_current_str, sizeof(laptime_current_str));
-        cJSON_AddStringToObject(root, "current", laptime_current_str);
+        root["current"] = laptime_current_str;
 
         int id = laptime_current.driver_id;
         if (id < 0 || id >= DRIVER_MAX_COUNT)
             id = 0;
-        cJSON_AddStringToObject(root, "current_driver_tag", driver_list_local.list[id]);
-        cJSON_AddNumberToObject(root, "current_driver_id", id);
+        root["current_driver_tag"] = driver_list_local.list[id];
+        root["current_driver_id"] = id;
 
         laptime_current.convert_string_penalty(penalty_time_str, sizeof(penalty_time_str));
-        cJSON_AddStringToObject(root, "penalty_time", penalty_time_str);
+        root["penalty_time"] = penalty_time_str;
 
         snprintf(penalty_count_str, sizeof(penalty_count_str), "%u", laptime_current.oc_count);
-        cJSON_AddStringToObject(root, "penalty_oc", penalty_count_str);
+        root["penalty_oc"] = penalty_count_str;
 
         snprintf(penalty_count_str, sizeof(penalty_count_str), "%u", laptime_current.doo_count);
-        cJSON_AddStringToObject(root, "penalty_doo", penalty_count_str);
+        root["penalty_doo"] = penalty_count_str;
 
-        cJSON *status = cJSON_CreateObject();
-        cJSON_AddBoolToObject(status, "mode", config_main.two_gate_mode);
-        cJSON_AddBoolToObject(status, "stop", stop_flag);
-        cJSON_AddBoolToObject(status, "sd", sd_active_flag);
-        cJSON_AddItemToObject(root, "status", status);
+        JsonObject status = root["status"].to<JsonObject>();
+        status["mode"] = config_main.two_gate_mode;
+        status["stop"] = stop_flag;
+        status["sd"] = sd_active_flag;
 
         // Take global mutex for lists
         if (xSemaphoreTake(laptime_lists_mutex, portMAX_DELAY))
         {
-            cJSON *drivers_arr = cJSON_CreateArray();
-            cJSON *driver_best_arr = cJSON_CreateArray();
-            cJSON *driver_lap_count_arr = cJSON_CreateArray();
-            cJSON *driver_pen_time_arr = cJSON_CreateArray();
-            cJSON *driver_pen_oc_arr = cJSON_CreateArray();
-            cJSON *driver_pen_doo_arr = cJSON_CreateArray();
+            JsonArray drivers_arr = root["all_drivers"].to<JsonArray>();
+            JsonArray driver_best_arr = root["driver_best"].to<JsonArray>();
+            JsonArray driver_lap_count_arr = root["driver_lap_count"].to<JsonArray>();
+            JsonArray driver_pen_time_arr = root["driver_pen_time"].to<JsonArray>();
+            JsonArray driver_pen_oc_arr = root["driver_pen_oc"].to<JsonArray>();
+            JsonArray driver_pen_doo_arr = root["driver_pen_doo"].to<JsonArray>();
 
             for (int i = 0; i <= driver_list_local.driver_count; i++)
             {
-                cJSON_AddItemToArray(drivers_arr, cJSON_CreateString(driver_list_local.list[i]));
+                drivers_arr.add(driver_list_local.list[i]);
 
                 laptime_list_driver[i].convert_string_time(laptime_current_str, sizeof(laptime_current_str));
-                cJSON_AddItemToArray(driver_best_arr, cJSON_CreateString(laptime_current_str));
+                driver_best_arr.add(laptime_current_str);
 
-                cJSON_AddItemToArray(driver_lap_count_arr, cJSON_CreateNumber(laptime_list_driver[i].count - 1));
+                driver_lap_count_arr.add(laptime_list_driver[i].count - 1);
 
                 laptime_list_driver[i].convert_string_penalty(penalty_time_str, sizeof(penalty_time_str));
-                cJSON_AddItemToArray(driver_pen_time_arr, cJSON_CreateString(penalty_time_str));
+                driver_pen_time_arr.add(penalty_time_str);
 
                 snprintf(penalty_count_str, sizeof(penalty_count_str), "%u", laptime_list_driver[i].oc_count);
-                cJSON_AddItemToArray(driver_pen_oc_arr, cJSON_CreateString(penalty_count_str));
+                driver_pen_oc_arr.add(penalty_count_str);
 
                 snprintf(penalty_count_str, sizeof(penalty_count_str), "%u", laptime_list_driver[i].doo_count);
-                cJSON_AddItemToArray(driver_pen_doo_arr, cJSON_CreateString(penalty_count_str));
+                driver_pen_doo_arr.add(penalty_count_str);
             }
-            cJSON_AddItemToObject(root, "all_drivers", drivers_arr);
-            cJSON_AddItemToObject(root, "driver_best", driver_best_arr);
-            cJSON_AddItemToObject(root, "driver_lap_count", driver_lap_count_arr);
-            cJSON_AddItemToObject(root, "driver_pen_time", driver_pen_time_arr);
-            cJSON_AddItemToObject(root, "driver_pen_oc", driver_pen_oc_arr);
-            cJSON_AddItemToObject(root, "driver_pen_doo", driver_pen_doo_arr);
 
-            cJSON *last_arr = cJSON_CreateArray();
-            cJSON *top_arr = cJSON_CreateArray();
+            JsonArray last_arr = root["last"].to<JsonArray>();
+            JsonArray top_arr = root["top"].to<JsonArray>();
 
-            cJSON *last_driver_tag_arr = cJSON_CreateArray();
-            cJSON *last_driver_id_arr = cJSON_CreateArray();
-            cJSON *top_driver_tag_arr = cJSON_CreateArray();
-            cJSON *top_driver_id_arr = cJSON_CreateArray();
+            JsonArray last_driver_tag_arr = root["last_driver_tag"].to<JsonArray>();
+            JsonArray last_driver_id_arr = root["last_driver_id"].to<JsonArray>();
+            JsonArray top_driver_tag_arr = root["top_driver_tag"].to<JsonArray>();
+            JsonArray top_driver_id_arr = root["top_driver_id"].to<JsonArray>();
 
-            cJSON *last_pen_time_arr = cJSON_CreateArray();
-            cJSON *last_pen_oc_arr = cJSON_CreateArray();
-            cJSON *last_pen_doo_arr = cJSON_CreateArray();
+            JsonArray last_pen_time_arr = root["last_pen_time"].to<JsonArray>();
+            JsonArray last_pen_oc_arr = root["last_pen_oc"].to<JsonArray>();
+            JsonArray last_pen_doo_arr = root["last_pen_doo"].to<JsonArray>();
 
             for (int i = 0; i < LAPTIME_LIST_SIZE_WIFI; i++)
             {
                 // Last
                 laptime_list_last[i].convert_string_full(laptime_current_str, sizeof(laptime_current_str));
-                cJSON_AddItemToArray(last_arr, cJSON_CreateString(laptime_current_str));
+                last_arr.add(laptime_current_str);
 
                 int drv_id = laptime_list_last[i].driver_id;
                 if (drv_id < 0 || drv_id >= DRIVER_MAX_COUNT)
                     drv_id = 0;
-                cJSON_AddItemToArray(last_driver_tag_arr, cJSON_CreateString(driver_list_local.list[drv_id]));
-                cJSON_AddItemToArray(last_driver_id_arr, cJSON_CreateNumber(drv_id));
+                last_driver_tag_arr.add(driver_list_local.list[drv_id]);
+                last_driver_id_arr.add(drv_id);
 
                 laptime_list_last[i].convert_string_penalty(penalty_time_str, sizeof(penalty_time_str));
-                cJSON_AddItemToArray(last_pen_time_arr, cJSON_CreateString(penalty_time_str));
+                last_pen_time_arr.add(penalty_time_str);
 
                 snprintf(penalty_count_str, sizeof(penalty_count_str), "%u", laptime_list_last[i].oc_count);
-                cJSON_AddItemToArray(last_pen_oc_arr, cJSON_CreateString(penalty_count_str));
+                last_pen_oc_arr.add(penalty_count_str);
 
                 snprintf(penalty_count_str, sizeof(penalty_count_str), "%u", laptime_list_last[i].doo_count);
-                cJSON_AddItemToArray(last_pen_doo_arr, cJSON_CreateString(penalty_count_str));
+                last_pen_doo_arr.add(penalty_count_str);
 
                 // Top
                 laptime_list_top[i].convert_string_full(laptime_current_str, sizeof(laptime_current_str));
-                cJSON_AddItemToArray(top_arr, cJSON_CreateString(laptime_current_str));
+                top_arr.add(laptime_current_str);
 
                 drv_id = laptime_list_top[i].driver_id;
                 if (drv_id < 0 || drv_id >= DRIVER_MAX_COUNT)
                     drv_id = 0;
-                cJSON_AddItemToArray(top_driver_tag_arr, cJSON_CreateString(driver_list_local.list[drv_id]));
-                cJSON_AddItemToArray(top_driver_id_arr, cJSON_CreateNumber(drv_id));
+                top_driver_tag_arr.add(driver_list_local.list[drv_id]);
+                top_driver_id_arr.add(drv_id);
             }
-
-            cJSON_AddItemToObject(root, "last", last_arr);
-            cJSON_AddItemToObject(root, "top", top_arr);
-
-            cJSON_AddItemToObject(root, "last_driver_tag", last_driver_tag_arr);
-            cJSON_AddItemToObject(root, "last_driver_id", last_driver_id_arr);
-            cJSON_AddItemToObject(root, "top_driver_tag", top_driver_tag_arr);
-            cJSON_AddItemToObject(root, "top_driver_id", top_driver_id_arr);
-
-            cJSON_AddItemToObject(root, "last_pen_time", last_pen_time_arr);
-            cJSON_AddItemToObject(root, "last_pen_oc", last_pen_oc_arr);
-            cJSON_AddItemToObject(root, "last_pen_doo", last_pen_doo_arr);
 
             xSemaphoreGive(laptime_lists_mutex);
         }
@@ -168,11 +192,10 @@ static esp_err_t data_get_handler(httpd_req_t *req)
         xSemaphoreGive(data_mutex);
     }
 
-    const char *sys_info = cJSON_PrintUnformatted(root);
     httpd_resp_set_type(req, "application/json");
-    httpd_resp_send(req, sys_info, strlen(sys_info));
-    free((void *)sys_info);
-    cJSON_Delete(root);
+    HttpdChunkWriter writer(req);
+    serializeJson(root, writer);
+    writer.flush();
     return ESP_OK;
 }
 
@@ -268,32 +291,29 @@ static esp_err_t drivers_csv_get_handler(httpd_req_t *req)
  */
 static esp_err_t config_get_handler(httpd_req_t *req)
 {
-    cJSON *root = cJSON_CreateObject();
+    JsonDocument root;
     if (xSemaphoreTake(config_mutex, portMAX_DELAY))
     {
-        cJSON_AddBoolToObject(root, "two_gate_mode", config_main.two_gate_mode);
+        root["two_gate_mode"] = config_main.two_gate_mode;
         // Return current wifi mode as number (0 for AP, 1 for STA)
-        cJSON_AddNumberToObject(root, "wifi_mode", config_main.wifi_mode);
-        cJSON_AddStringToObject(root, "wifi_ssid", config_main.wifi_ssid);
-        cJSON_AddStringToObject(root, "wifi_password", config_main.wifi_password);
-        cJSON_AddStringToObject(root, "time_set", config_main.time_set);
-        cJSON_AddStringToObject(root, "date_set", config_main.date_set);
+        root["wifi_mode"] = config_main.wifi_mode;
+        root["wifi_ssid"] = config_main.wifi_ssid;
+        root["wifi_password"] = config_main.wifi_password;
+        root["time_set"] = config_main.time_set;
+        root["date_set"] = config_main.date_set;
 
-        cJSON *drivers = cJSON_CreateArray();
+        JsonArray drivers = root["driver_list"].to<JsonArray>();
         // Driver list starts from 1, index 0 is placeholder
         for (int i = 1; i <= config_main.driver_list.driver_count; i++)
         {
-            cJSON_AddItemToArray(drivers, cJSON_CreateString(config_main.driver_list.list[i]));
+            drivers.add(config_main.driver_list.list[i]);
         }
-        cJSON_AddItemToObject(root, "driver_list", drivers);
-
         xSemaphoreGive(config_mutex);
     }
-    const char *resp = cJSON_PrintUnformatted(root);
     httpd_resp_set_type(req, "application/json");
-    httpd_resp_send(req, resp, strlen(resp));
-    free((void *)resp);
-    cJSON_Delete(root);
+    HttpdChunkWriter writer(req);
+    serializeJson(root, writer);
+    writer.flush();
     return ESP_OK;
 }
 
@@ -316,8 +336,9 @@ static esp_err_t config_post_handler(httpd_req_t *req)
         return ESP_FAIL;
     buf[ret] = '\0';
 
-    cJSON *root = cJSON_Parse(buf);
-    if (!root)
+    JsonDocument root;
+    DeserializationError error = deserializeJson(root, buf);
+    if (error)
     {
         httpd_resp_send_500(req);
         return ESP_FAIL;
@@ -325,57 +346,48 @@ static esp_err_t config_post_handler(httpd_req_t *req)
 
     if (xSemaphoreTake(config_mutex, portMAX_DELAY))
     {
-        cJSON *gates = cJSON_GetObjectItem(root, "two_gate_mode");
-        if (gates)
-            config_main.two_gate_mode = cJSON_IsTrue(gates);
+        if (root["two_gate_mode"].is<bool>())
+            config_main.two_gate_mode = root["two_gate_mode"];
 
-        cJSON *wifi_mode_json = cJSON_GetObjectItem(root, "wifi_mode");
-        if (wifi_mode_json)
+        if (root["wifi_mode"].is<int>())
         {
-            if (cJSON_IsNumber(wifi_mode_json))
-            {
-                config_main.wifi_mode = (wifi_mode_json->valueint == 1) ? WIFI_MODE_STA : WIFI_MODE_AP;
-            }
-            else if (cJSON_IsBool(wifi_mode_json))
-            {
-                config_main.wifi_mode = cJSON_IsTrue(wifi_mode_json) ? WIFI_MODE_STA : WIFI_MODE_AP;
-            }
+            config_main.wifi_mode = (root["wifi_mode"].as<int>() == 1) ? WIFI_MODE_STA : WIFI_MODE_AP;
+        }
+        else if (root["wifi_mode"].is<bool>())
+        {
+            config_main.wifi_mode = root["wifi_mode"].as<bool>() ? WIFI_MODE_STA : WIFI_MODE_AP;
         }
 
-        cJSON *ssid = cJSON_GetObjectItem(root, "wifi_ssid");
-        if (ssid && ssid->valuestring)
+        if (root["wifi_ssid"].is<const char*>())
         {
-            strncpy(config_main.wifi_ssid, ssid->valuestring, sizeof(config_main.wifi_ssid) - 1);
+            strncpy(config_main.wifi_ssid, root["wifi_ssid"].as<const char*>(), sizeof(config_main.wifi_ssid) - 1);
             config_main.wifi_ssid[sizeof(config_main.wifi_ssid) - 1] = '\0';
         }
 
-        cJSON *pass = cJSON_GetObjectItem(root, "wifi_password");
-        if (pass && pass->valuestring)
+        if (root["wifi_password"].is<const char*>())
         {
-            strncpy(config_main.wifi_password, pass->valuestring, sizeof(config_main.wifi_password) - 1);
+            strncpy(config_main.wifi_password, root["wifi_password"].as<const char*>(), sizeof(config_main.wifi_password) - 1);
             config_main.wifi_password[sizeof(config_main.wifi_password) - 1] = '\0';
         }
 
-        cJSON *time_set_json = cJSON_GetObjectItem(root, "time_set");
-        if (time_set_json && time_set_json->valuestring)
+        if (root["time_set"].is<const char*>())
         {
-            strncpy(config_main.time_set, time_set_json->valuestring, sizeof(config_main.time_set) - 1);
+            strncpy(config_main.time_set, root["time_set"].as<const char*>(), sizeof(config_main.time_set) - 1);
             config_main.time_set[sizeof(config_main.time_set) - 1] = '\0';
         }
 
-        cJSON *date_set_json = cJSON_GetObjectItem(root, "date_set");
-        if (date_set_json && date_set_json->valuestring)
+        if (root["date_set"].is<const char*>())
         {
-            strncpy(config_main.date_set, date_set_json->valuestring, sizeof(config_main.date_set) - 1);
+            strncpy(config_main.date_set, root["date_set"].as<const char*>(), sizeof(config_main.date_set) - 1);
             config_main.date_set[sizeof(config_main.date_set) - 1] = '\0';
         }
 
         system_set_time(config_main.time_set, config_main.date_set);
 
-        cJSON *drivers = cJSON_GetObjectItem(root, "driver_list");
-        if (drivers && cJSON_IsArray(drivers))
+        if (root["driver_list"].is<JsonArray>())
         {
-            int count = cJSON_GetArraySize(drivers);
+            JsonArray drivers = root["driver_list"].as<JsonArray>();
+            int count = drivers.size();
             // Limit to max count (minus 1 for the placeholder at index 0)
             if (count > DRIVER_MAX_COUNT - 1)
                 count = DRIVER_MAX_COUNT - 1;
@@ -386,17 +398,15 @@ static esp_err_t config_post_handler(httpd_req_t *req)
             // We overwrite from index 1
             for (int i = 0; i < count; i++)
             {
-                cJSON *item = cJSON_GetArrayItem(drivers, i);
-                if (item && item->valuestring)
+                if (drivers[i].is<const char*>())
                 {
-                    strncpy(config_main.driver_list.list[i + 1], item->valuestring, DRIVER_TAG_LENGTH - 1);
+                    strncpy(config_main.driver_list.list[i + 1], drivers[i].as<const char*>(), DRIVER_TAG_LENGTH - 1);
                     config_main.driver_list.list[i + 1][DRIVER_TAG_LENGTH - 1] = '\0';
                 }
             }
         }
         xSemaphoreGive(config_mutex);
     }
-    cJSON_Delete(root);
     httpd_resp_send(req, "OK", 2);
     return ESP_OK;
 }

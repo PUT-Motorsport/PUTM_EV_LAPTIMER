@@ -4,169 +4,166 @@
 #include "sd_protocol_types.h"
 #include "sdmmc_cmd.h"
 
-#include "sdcard.h"
 #include "gpio.h"
+#include "sdcard.h"
 
-#include <stddef.h>
-#include <stdlib.h>
+#include <cstdbool>
+#include <cstddef>
+#include <cstdlib>
 
-#include <cJSON.h>
+#include <ArduinoJson.h>
 
 #define SD_BUFFER_SIZE 256
 
 #define SESSION_STR_LEN 14
 
-const char *config_file_name = "config.json";
-const char *laptimes_file_name = "laptimer.csv";
+const char* config_file_name = "config.json";
+const char* laptimes_file_name = "laptimer.csv";
 
-static const char *TAG = "SDCARD_TASK";
+static const char* TAG = "SDCARD_TASK";
 
 char session_str[SESSION_STR_LEN] = {"#00"};
 int16_t session_num = 0;
 bool sd_detect_flag = false;
 
-static esp_err_t sdcard_get_config(sdmmc_card_t **card_pointer)
-{
+static esp_err_t sdcard_get_config(sdmmc_card_t** card_pointer) {
     esp_err_t ret = ESP_OK;
     size_t br;
     char sd_buffer[SD_BUFFER_SIZE] = "\0";
 
     Config config_temp;
 
-    if (sdcard_read(config_file_name, sd_buffer, sizeof(sd_buffer), &br) !=
-        ESP_OK)
-    {
+    if(sdcard_read(config_file_name, sd_buffer, sizeof(sd_buffer), &br) !=
+       ESP_OK) {
         ESP_LOGI(TAG, "CREATING NEW FILE: %s", config_file_name);
-        ret = sdcard_write(config_file_name,
-                           "{\n"
-                           "    \"two_gate_mode\" : 0,\n"
-                           "    \"wifi_config\" : {\n"
-                           "        \"mode\" : 0,\n"
-                           "        \"ssid\" : \"PUTM_LAPTIMER\",\n"
-                           "        \"password\" : \"\"\n"
-                           "    },\n"
-                           "    \"driver_list\" : [ \"aaa\", \"bbb\", \"ccc\" ]\n"
-                           "}\n");
-        if (ret)
-        {
+        ret =
+            sdcard_write(config_file_name,
+                         "{\n"
+                         "    \"two_gate_mode\" : 0,\n"
+                         "    \"wifi_config\" : {\n"
+                         "        \"mode\" : 0,\n"
+                         "        \"ssid\" : \"PUTM_LAPTIMER\",\n"
+                         "        \"password\" : \"\"\n"
+                         "    },\n"
+                         "    \"driver_list\" : [ \"aaa\", \"bbb\", \"ccc\" ]\n"
+                         "}\n");
+        if(ret) {
             return ret;
         }
-    }
-    else
-    {
+    } else {
         sd_buffer[br] = '\0';
-        cJSON *config_json = cJSON_Parse(sd_buffer);
-        if (config_json == NULL)
-        {
-            return ESP_FAIL;
-        }
+        JsonDocument doc;
 
-        cJSON *gates_json = cJSON_GetObjectItem(config_json, "two_gate_mode");
-        cJSON *wifi_json = cJSON_GetObjectItem(config_json, "wifi_config");
-        cJSON *driver_list_json = cJSON_GetObjectItem(config_json, "driver_list");
+        deserializeJson(doc, sd_buffer);
 
-        if (gates_json)
-        {
-            config_temp.two_gate_mode = (bool)cJSON_GetNumberValue(gates_json);
-            ESP_LOGI(TAG, "Gates number: %u\n", (uint8_t)config_temp.two_gate_mode + 1);
-        }
+        if(doc["two_gate_mode"].is<bool>())
+            config_temp.two_gate_mode = doc["two_gate_mode"].as<bool>();
 
-        if (wifi_json)
-        {
-            cJSON *wifi_mode_json = cJSON_GetObjectItem(wifi_json, "mode");
-            cJSON *wifi_ssid_json = cJSON_GetObjectItem(wifi_json, "ssid");
-            cJSON *wifi_password_json = cJSON_GetObjectItem(wifi_json, "password");
-            if ((bool)cJSON_GetNumberValue(wifi_mode_json) == false)
+        ESP_LOGI(TAG, "Gates number: %u\n",
+                 (uint8_t)config_temp.two_gate_mode + 1);
+
+        if(doc["wifi_config"]["mode"].is<bool>()) {
+            auto wifi_mode_json = doc["wifi_config"]["mode"].as<bool>();
+            if(wifi_mode_json == false)
                 config_temp.wifi_mode = WIFI_MODE_AP;
             else
                 config_temp.wifi_mode = WIFI_MODE_STA;
-
-            if (cJSON_IsString(wifi_ssid_json) && (wifi_ssid_json->valuestring != NULL))
-            {
-                snprintf(config_temp.wifi_ssid, sizeof(config_temp.wifi_ssid), "%s", wifi_ssid_json->valuestring);
-            }
-            if (cJSON_IsString(wifi_password_json) && (wifi_password_json->valuestring != NULL))
-            {
-                snprintf(config_temp.wifi_password, sizeof(config_temp.wifi_password), "%s", wifi_password_json->valuestring);
-            }
-            ESP_LOGI(TAG, "Wifi ssid: %s, Wifi password: %s\n", config_temp.wifi_ssid, config_temp.wifi_password);
+        } else if(doc["wifi_config"]["mode"].is<int>()) {
+            auto wifi_mode_json = doc["wifi_config"]["mode"].as<int>();
+            if(wifi_mode_json == 0)
+                config_temp.wifi_mode = WIFI_MODE_AP;
+            else
+                config_temp.wifi_mode = WIFI_MODE_STA;
         }
 
-        if (driver_list_json)
-        {
-            config_temp.driver_list.driver_count = cJSON_GetArraySize(driver_list_json);
-            ESP_LOGI(TAG, "Driver_count: %u\n", config_temp.driver_list.driver_count);
+        if(doc["wifi_config"]["ssid"].is<const char*>() &&
+           doc["wifi_config"]["password"].is<const char*>()) {
+            const char* wifi_ssid_json =
+                doc["wifi_config"]["ssid"].as<const char*>();
+            const char* wifi_password_json =
+                doc["wifi_config"]["password"].as<const char*>();
+            snprintf(config_temp.wifi_ssid, sizeof(config_temp.wifi_ssid), "%s",
+                     wifi_ssid_json);
+            snprintf(config_temp.wifi_password,
+                     sizeof(config_temp.wifi_password), "%s",
+                     wifi_password_json);
+        } else {
+            return ESP_FAIL;
+        }
 
-            for (int i = 0; i < config_temp.driver_list.driver_count; i++)
-            {
-                cJSON *driver_temp_json = cJSON_GetArrayItem(driver_list_json, i);
-                if (cJSON_IsString(driver_temp_json) && (driver_temp_json->valuestring != NULL))
-                {
-                    snprintf(config_temp.driver_list.list[i + 1], sizeof(config_temp.driver_list.list[i + 1]), "%s", driver_temp_json->valuestring);
-                    ESP_LOGI(TAG, "DRIVER: %s\n", config_temp.driver_list.list[i + 1]);
+        ESP_LOGI(TAG, "Wifi ssid: %s, Wifi password: %s\n",
+                 config_temp.wifi_ssid, config_temp.wifi_password);
+
+        if(doc["driver_list"].is<JsonArray>()) {
+            JsonArray driver_list_json = doc["driver_list"].as<JsonArray>();
+            config_temp.driver_list.driver_count = driver_list_json.size();
+            ESP_LOGI(TAG, "Driver_count: %u\n",
+                     config_temp.driver_list.driver_count);
+
+            for(int i = 0; i < config_temp.driver_list.driver_count; i++) {
+                if(driver_list_json[i].is<const char*>()) {
+                    const char* driver = driver_list_json[i].as<const char*>();
+                    snprintf(config_temp.driver_list.list[i + 1],
+                             sizeof(config_temp.driver_list.list[i + 1]), "%s",
+                             driver);
+                    ESP_LOGI(TAG, "DRIVER: %s\n",
+                             config_temp.driver_list.list[i + 1]);
                 }
             }
         }
+    }
 
-        cJSON_Delete(config_json);
-
-        if (xSemaphoreTake(config_mutex, portMAX_DELAY) == pdTRUE)
-        {
-            memcpy(&config_main, &config_temp, sizeof(config_main));
-            xSemaphoreGive(config_mutex);
-        }
+    if(xSemaphoreTake(config_mutex, portMAX_DELAY) == pdTRUE) {
+        memcpy(&config_main, &config_temp, sizeof(config_main));
+        xSemaphoreGive(config_mutex);
     }
     return ESP_OK;
 }
 
 /**
- * @brief Mounts sd card in file system, checks communication and creates new .csv file if doesn't exist
+ * @brief Mounts sd card in file system, checks communication and creates new
+ * .csv file if doesn't exist
  * @param card_pointer Pointer to sd card handle
  * @return Error check
  */
-static esp_err_t sdcard_init(sdmmc_card_t **card_pointer)
-{
+static esp_err_t sdcard_init(sdmmc_card_t** card_pointer) {
     esp_err_t ret = ESP_OK;
     ret = sdcard_mount(card_pointer);
-    if (ret)
-    {
+    if(ret) {
         ESP_LOGE(TAG, "%s", esp_err_to_name(ret));
         return ret;
     }
-    sdmmc_card_t *card_handle = *card_pointer;
-    if (card_handle == NULL)
-    {
+    sdmmc_card_t* card_handle = *card_pointer;
+    if(card_handle == NULL) {
         return ESP_FAIL;
     }
 
     /// Try to communicate with sd card
     ret = sdmmc_get_status(card_handle);
-    if (ret)
-    {
+    if(ret) {
         return ret;
     }
     sd_active_flag = true;
     size_t br;
     char sd_buffer[SD_BUFFER_SIZE] = "\0";
 
-    /// Try to read laptimer file, if it's missing create one with session number 0
-    if (sdcard_read(laptimes_file_name, sd_buffer, sizeof(sd_buffer), &br) !=
-        ESP_OK)
-    {
+    /// Try to read laptimer file, if it's missing create one with session
+    /// number 0
+    if(sdcard_read(laptimes_file_name, sd_buffer, sizeof(sd_buffer), &br) !=
+       ESP_OK) {
         ESP_LOGI(TAG, "CREATING NEW FILE: %s", laptimes_file_name);
-        ret = sdcard_write(laptimes_file_name, "SESSION, LAP, TIME, PENALTY, OC, DOO, DRIVER, DATE, HOUR\n");
-        if (ret)
-        {
+        ret = sdcard_write(
+            laptimes_file_name,
+            "SESSION, LAP, TIME, PENALTY, OC, DOO, DRIVER, DATE, HOUR\n");
+        if(ret) {
             return ret;
         }
     }
     // If file exists, check last session number and increment it
-    else if (session_num == 0)
-    {
+    else if(session_num == 0) {
         sd_buffer[br] = '\0';
-        char *last_ch = strrchr(sd_buffer, '#');
-        if (last_ch != NULL)
-        {
+        char* last_ch = strrchr(sd_buffer, '#');
+        if(last_ch != NULL) {
             session_num = atoi(last_ch + 1);
             session_num++;
         }
@@ -182,59 +179,64 @@ static esp_err_t sdcard_init(sdmmc_card_t **card_pointer)
  * @param card_pointer Pointer to sd card handle
  * @return Error check
  */
-static esp_err_t sdcard_deinit(sdmmc_card_t **card_pointer)
-{
+static esp_err_t sdcard_deinit(sdmmc_card_t** card_pointer) {
     return sdcard_unmount(card_pointer);
 }
 
 /**
- * @brief Saves received laptime on sd card, if card doesn't respond return error
+ * @brief Saves received laptime on sd card, if card doesn't respond return
+ * error
  * @param laptime_saved_str
  * @return Error check
  */
-static esp_err_t sdcard_save_laptime(Laptime laptime_saved, Driver_list *driver_list)
-{
+static esp_err_t sdcard_save_laptime(Laptime laptime_saved,
+                                     Driver_list* driver_list) {
     esp_err_t ret = ESP_OK;
-    char laptime_record_str[LAPTIME_STR_LENGTH + PENALTY_TIME_STR_LENGTH + 2 * PENALTY_COUNT_STR_LENGTH + DRIVER_TAG_LENGTH + DATE_STR_LENGTH + TIMEOFDAY_STR_LENGTH] = {0};
+    char laptime_record_str[LAPTIME_STR_LENGTH + PENALTY_TIME_STR_LENGTH +
+                            2 * PENALTY_COUNT_STR_LENGTH + DRIVER_TAG_LENGTH +
+                            DATE_STR_LENGTH + TIMEOFDAY_STR_LENGTH] = {0};
 
     char laptime_saved_str[LAPTIME_STR_LENGTH] = {0};
     char laptime_penalty_str[PENALTY_TIME_STR_LENGTH] = {0};
 
-    laptime_saved.convert_string_full(laptime_saved_str, sizeof(laptime_saved_str));
-    laptime_saved.convert_string_penalty(laptime_penalty_str, sizeof(laptime_penalty_str));
-    snprintf(laptime_record_str, sizeof(laptime_record_str), "%s,%s,%s,%3u,%3u,%s,%s,%s\n", session_str, laptime_saved_str, laptime_penalty_str,
-             laptime_saved.oc_count, laptime_saved.doo_count,
-             driver_list->list[laptime_saved.driver_id],
-             laptime_saved.date, laptime_saved.timeofday);
+    laptime_saved.convert_string_full(laptime_saved_str,
+                                      sizeof(laptime_saved_str));
+    laptime_saved.convert_string_penalty(laptime_penalty_str,
+                                         sizeof(laptime_penalty_str));
+    snprintf(laptime_record_str, sizeof(laptime_record_str),
+             "%s,%s,%s,%3u,%3u,%s,%s,%s\n", session_str, laptime_saved_str,
+             laptime_penalty_str, laptime_saved.oc_count,
+             laptime_saved.doo_count,
+             driver_list->list[laptime_saved.driver_id], laptime_saved.date,
+             laptime_saved.timeofday);
 
-    if (sd_active_flag == false)
+    if(sd_active_flag == false)
         return ESP_FAIL;
 
     ret = sdcard_append(laptimes_file_name, laptime_record_str);
-    if (ret)
+    if(ret)
         return ret;
 
-    if (ret == ESP_OK)
+    if(ret == ESP_OK)
         ESP_LOGI(TAG, "LAPTIME SAVE OK");
     else
         ESP_LOGI(TAG, "LAPTIME SAVE FAIL");
     return ret;
 }
 
-static esp_err_t sdcard_check_integrity(char laptime_check_str[LAPTIME_STR_LENGTH])
-{
-    if (laptime_check_str == NULL)
+static esp_err_t
+    sdcard_check_integrity(char laptime_check_str[LAPTIME_STR_LENGTH]) {
+    if(laptime_check_str == NULL)
         return ESP_FAIL;
 
     esp_err_t ret = ESP_OK;
     size_t br;
     char sd_buffer[SD_BUFFER_SIZE] = "\0";
     ret = sdcard_read(laptimes_file_name, sd_buffer, sizeof(sd_buffer), &br);
-    if (ret)
-    {
+    if(ret) {
         return ret;
     }
-    if (strstr(sd_buffer, laptime_check_str) != NULL)
+    if(strstr(sd_buffer, laptime_check_str) != NULL)
         ret = ESP_OK;
     else
         ret = ESP_FAIL;
@@ -247,46 +249,45 @@ static esp_err_t sdcard_check_integrity(char laptime_check_str[LAPTIME_STR_LENGT
  * - Deinitalizes sd card if save failed
  * - Tries to reinitialize card when receive semaphore from laptimer_task
  */
-void sdcard_task(void *args)
-{
-    sdmmc_card_t *card_handle = NULL;
+void sdcard_task(void* args) {
+    sdmmc_card_t* card_handle = NULL;
     Driver_list driver_list_local;
 
-    if (sdcard_spi_init() == ESP_FAIL)
+    if(sdcard_spi_init() == ESP_FAIL)
         vTaskDelete(NULL);
 
-    for (;;)
-    {
+    for(;;) {
         // Update driver list from config
-        if (driver_list_local.driver_count != config_main.driver_list.driver_count)
-        {
-            if (xSemaphoreTake(config_mutex, 0) == pdTRUE)
-            {
-                memcpy(&driver_list_local, &config_main.driver_list, sizeof(driver_list_local));
+        if(driver_list_local.driver_count !=
+           config_main.driver_list.driver_count) {
+            if(xSemaphoreTake(config_mutex, 0) == pdTRUE) {
+                memcpy(&driver_list_local, &config_main.driver_list,
+                       sizeof(driver_list_local));
                 xSemaphoreGive(config_mutex);
             }
         }
 
         sd_detect_flag = !gpio_get_level((gpio_num_t)SD_CD);
 
-        if (sd_detect_flag == false && sd_active_flag == true) // SD removed
+        if(sd_detect_flag == false && sd_active_flag == true) // SD removed
         {
             sdcard_deinit(&card_handle);
             sd_active_flag = false;
         }
 
-        if (sd_detect_flag == true && sd_active_flag == true) // SD ok
+        if(sd_detect_flag == true && sd_active_flag == true) // SD ok
         {
             Laptime laptime_saved;
-            if (xQueueReceive(laptime_saved_queue_sd, &laptime_saved, 0) == pdTRUE)
-            {
-                sd_active_flag = !sdcard_save_laptime(laptime_saved, &driver_list_local);
+            if(xQueueReceive(laptime_saved_queue_sd, &laptime_saved, 0) ==
+               pdTRUE) {
+                sd_active_flag =
+                    !sdcard_save_laptime(laptime_saved, &driver_list_local);
                 // sdcard_check_integrity(laptime_saved_str);
             }
         }
-        if (sd_detect_flag == true && sd_active_flag == false) // SD inserted
+        if(sd_detect_flag == true && sd_active_flag == false) // SD inserted
         {
-            if (sdcard_init(&card_handle) == ESP_OK)
+            if(sdcard_init(&card_handle) == ESP_OK)
                 sd_active_flag = true;
             else
                 sd_active_flag = false;
