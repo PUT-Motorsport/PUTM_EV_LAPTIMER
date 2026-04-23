@@ -1,6 +1,6 @@
 #pragma once
 
-#include "esp_err.h"
+#include "defines.h"
 
 #include "sd_protocol_types.h"
 

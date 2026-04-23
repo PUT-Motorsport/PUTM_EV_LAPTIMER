@@ -1,0 +1,11 @@
+{
+    "gates_number" : 1,
+    "wifi_config" : {
+        "mode" : "AP",
+        "ssid" : "PUTM_LAPTIMER",
+        "password" : null,
+        "channel" : 1,
+        "max_connection" : 3
+    },
+    "driver_list" : ["abc", "cba", "xda", "sdi"]
+}

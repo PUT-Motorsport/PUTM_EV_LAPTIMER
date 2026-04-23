@@ -1,5 +1,7 @@
 #pragma once
 
+#include "defines.h"
+
 #include "driver/gpio.h"
 
 /**

@@ -1,99 +1,131 @@
 menu "PUTM EV Laptimer"
-        config GATE1_PIN
-            int "Gate 1 Pin (GPIO)"
-            default 14
-            help
-                Input for first gate that starts new lap on negative edge
+    choice 
+        prompt "Two gate wireless role"
+        default TWO_GATE_WIRELESS_MASTER
 
-        config GATE2_PIN
-            int "Gate 1 Pin (GPIO)"
-            default 13
-            help
-                Input for second gate that stops lap on negative edge in 2 gate mode
-
-        config STOP_PIN
-            int "Stop Button Pin (GPIO)"
-            default 4
-            help
-                Input for button that resets current laptime, tries to reinitialize sd card and checks status of LAP_MODE_PIN on negative edge
-
-        config WIFI_PIN
-            int "Wifi reset Pin (GPIO)"
-            default 5
-            help
-                Resets wifi
-
-        config DOO_PIN
-            int "DOO Penalty Button Pin (GPIO)"
-            default 6
-            help
-                Input for button that adds Down or Out time penalty to current laptime (2s for Endurance) on negative edge
-
-        config OC_PIN
-            int "Off-Course Penalty Button Pin (GPIO)"
-            default 7
-            help
-                Input for button that adds Off-Course time penalty to current laptime (10s for Endurance) on negative edge
-
-        config DRIVER_SELECT_PIN
-            int "Driver Selection Button Pin (GPIO)"
-            default 15
-            help
-                Input for button that switches current laptime driver on negative edge
-
-        config ADDITIONAL1_BTN
-            int "First Additional Button Pin (GPIO)"
-            default 16
-            help
-                No function
-
-        config ADDITIONAL2_BTN
-            int "Second Additional Button Pin (GPIO)"
-            default 17
-            help
-                No function
-
-        config SD_SPI_CLK
-            int "SD Card SPI CLK (GPIO)"
-            default 42
+        config TWO_GATE_WIRELESS_MASTER
+            bool "MASTER"
         
-        config SD_SPI_MISO
-            int "SD Card SPI MISO (GPIO)"
-            default 40
+        config TWO_GATE_WIRELESS_SLAVE
+            bool "SLAVE"
+    endchoice
 
-        config SD_SPI_MOSI
-            int "SD Card SPI MOSI (GPIO)"
-            default 41
+    config GATE1_PIN
+        int "Gate 1 Pin (GPIO)"
+        default 14 if IDF_TARGET="esp32s3"
+        default 21 if IDF_TARGET="esp32"
+        help
+            Input for first gate that starts new lap on negative edge
 
-        config SD_SPI_CS
-            int "SD Card SPI CS (GPIO)"
-            default 2
+    config GATE2_PIN
+        int "Gate 2 Pin (GPIO)"
+        default 13 if IDF_TARGET="esp32s3"
+        default 23 if IDF_TARGET="esp32"
+        help
+            Input for second gate that stops lap on negative edge in 2 gate mode
 
-        config SD_CD
-            int "SD Card CD (GPIO)"
-            default 1
+    config STOP_PIN
+        int "Stop Button Pin (GPIO)"
+        default 4 if IDF_TARGET="esp32s3"
+        default 19 if IDF_TARGET="esp32"
+        help
+            Input for button that resets current laptime, tries to reinitialize sd card and checks status of LAP_MODE_PIN on negative edge
 
-        # config LCD_SPI_CLK
-        #     int "LCD SPI CLK (GPIO)"
-        #     default 11
+    config WIFI_PIN
+        int "Wifi reset Pin (GPIO)"
+        default 5 if IDF_TARGET="esp32s3"
+        default 22 if IDF_TARGET="esp32"
+        help
+            Resets wifi
 
-        # config LCD_SPI_MOSI
-        #     int "LCD SPI MOSI (GPIO)"
-        #     default 9
+    config DOO_PIN
+        int "DOO Penalty Button Pin (GPIO)"
+        default 6 if IDF_TARGET="esp32s3"
+        default -1 if IDF_TARGET="esp32"
+        help
+            Input for button that adds Down or Out time penalty to current laptime (2s for Endurance) on negative edge
 
-        # config LCD_SPI_CS
-        #     int "LCD SPI CS (GPIO)"
-        #     default 10
+    config OC_PIN
+        int "Off-Course Penalty Button Pin (GPIO)"
+        default 7 if IDF_TARGET="esp32s3"
+        default -1 if IDF_TARGET="esp32"
+        help
+            Input for button that adds Off-Course time penalty to current laptime (10s for Endurance) on negative edge
 
-        # config LCD_DC
-        #     int "LCD DC (GPIO)"
-        #     default 12
+    config DRIVER_SELECT_PIN
+        int "Driver Selection Button Pin (GPIO)"
+        default 15 if IDF_TARGET="esp32s3"
+        default -1 if IDF_TARGET="esp32"
+        help
+            Input for button that switches current laptime driver on negative edge
 
-        config RTC_I2C_SDA
-            int "RV3028C8 RTC I2C SDA Pin (GPIO)"
-            default 47
+    config ADDITIONAL1_BTN
+        int "First Additional Button Pin (GPIO)"
+        default 16 if IDF_TARGET="esp32s3"
+        default -1 if IDF_TARGET="esp32"
+        help
+            No function
 
-        config RTC_I2C_SCL
-            int "RV3028C8 RTC I2C SCL Pin (GPIO)"
-            default 21
+    config ADDITIONAL2_BTN
+        int "Second Additional Button Pin (GPIO)"
+        default 17 if IDF_TARGET="esp32s3"
+        default -1 if IDF_TARGET="esp32"
+        help
+            No function
+
+    config SD_SPI_CLK
+        int "SD Card SPI CLK (GPIO)"
+        default 42 if IDF_TARGET="esp32s3"
+        default -1 if IDF_TARGET="esp32"
+    
+    config SD_SPI_MISO
+        int "SD Card SPI MISO (GPIO)"
+        default 40 if IDF_TARGET="esp32s3"
+        default -1 if IDF_TARGET="esp32"
+
+    config SD_SPI_MOSI
+        int "SD Card SPI MOSI (GPIO)"
+        default 41 if IDF_TARGET="esp32s3"
+        default -1 if IDF_TARGET="esp32"
+
+    config SD_SPI_CS
+        int "SD Card SPI CS (GPIO)"
+        default 2 if IDF_TARGET="esp32s3"
+        default -1 if IDF_TARGET="esp32"
+
+    config SD_CD
+        int "SD Card CD (GPIO)"
+        default 1 if IDF_TARGET="esp32s3"
+        default -1 if IDF_TARGET="esp32"
+
+    config LCD_SPI_CLK
+        int "LCD SPI CLK (GPIO)"
+        default 11 if IDF_TARGET="esp32s3"
+        default -1 if IDF_TARGET="esp32"
+
+    config LCD_SPI_MOSI
+        int "LCD SPI MOSI (GPIO)"
+        default 9 if IDF_TARGET="esp32s3"
+        default -1 if IDF_TARGET="esp32"
+
+    config LCD_SPI_CS
+        int "LCD SPI CS (GPIO)"
+        default 10 if IDF_TARGET="esp32s3"
+        default -1 if IDF_TARGET="esp32"
+
+    config LCD_DC
+        int "LCD DC (GPIO)"
+        default 12 if IDF_TARGET="esp32s3"
+        default -1 if IDF_TARGET="esp32"
+
+    config RTC_I2C_SDA
+        int "RV3028C8 RTC I2C SDA Pin (GPIO)"
+        default 47 if IDF_TARGET="esp32s3"
+        default -1 if IDF_TARGET="esp32"
+
+    config RTC_I2C_SCL
+        int "RV3028C8 RTC I2C SCL Pin (GPIO)"
+        default 21 if IDF_TARGET="esp32s3"
+        default -1 if IDF_TARGET="esp32"
+
 endmenu
