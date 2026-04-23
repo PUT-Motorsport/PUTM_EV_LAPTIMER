@@ -114,6 +114,7 @@ static esp_err_t sdcard_get_config(sdmmc_card_t** card_pointer) {
     }
 
     if(xSemaphoreTake(config_mutex, portMAX_DELAY) == pdTRUE) {
+        config_temp.update = config_main.update + 1;
         memcpy(&config_main, &config_temp, sizeof(config_main));
         xSemaphoreGive(config_mutex);
     }
@@ -247,32 +248,48 @@ static esp_err_t
  * @brief SD card task initializes sd card and file system, then in loop:
  * - Tries to save laptime received from queue
  * - Deinitalizes sd card if save failed
- * - Tries to reinitialize card when receive semaphore from laptimer_task
+ * - Tries to reinitialize card when inserted
  */
 void sdcard_task(void* args) {
     sdmmc_card_t* card_handle = NULL;
-    Driver_list driver_list_local;
+    Config config_local;
+    TickType_t reset_tick = xTaskGetTickCount();
 
     if(sdcard_spi_init() == ESP_FAIL)
         vTaskDelete(NULL);
 
     for(;;) {
         // Update driver list from config
-        if(driver_list_local.driver_count !=
-           config_main.driver_list.driver_count) {
+        // Update driver list from config
+        if(config_local.update != config_main.update) {
             if(xSemaphoreTake(config_mutex, 0) == pdTRUE) {
-                memcpy(&driver_list_local, &config_main.driver_list,
-                       sizeof(driver_list_local));
+                memcpy(&config_local, &config_main, sizeof(config_local));
                 xSemaphoreGive(config_mutex);
             }
         }
 
         sd_detect_flag = !gpio_get_level((gpio_num_t)SD_CD);
 
-        if(sd_detect_flag == false && sd_active_flag == true) // SD removed
+        TickType_t tick = xTaskGetTickCount();
+
+        if(sd_detect_flag == false && sd_active_flag == true &&
+           (tick - reset_tick) > pdMS_TO_TICKS(1000)) // SD removed
         {
+            reset_tick = tick;
             sdcard_deinit(&card_handle);
             sd_active_flag = false;
+        }
+
+        if(sd_detect_flag == true && sd_active_flag == false &&
+           (tick - reset_tick) > pdMS_TO_TICKS(1000)) // SD inserted
+        {
+            reset_tick = tick;
+            if(sdcard_init(&card_handle) == ESP_OK)
+                sd_active_flag = true;
+            else {
+                sdcard_deinit(&card_handle);
+                sd_active_flag = false;
+            }
         }
 
         if(sd_detect_flag == true && sd_active_flag == true) // SD ok
@@ -280,17 +297,10 @@ void sdcard_task(void* args) {
             Laptime laptime_saved;
             if(xQueueReceive(laptime_saved_queue_sd, &laptime_saved, 0) ==
                pdTRUE) {
-                sd_active_flag =
-                    !sdcard_save_laptime(laptime_saved, &driver_list_local);
+                sd_active_flag = !sdcard_save_laptime(
+                    laptime_saved, &config_local.driver_list);
                 // sdcard_check_integrity(laptime_saved_str);
             }
-        }
-        if(sd_detect_flag == true && sd_active_flag == false) // SD inserted
-        {
-            if(sdcard_init(&card_handle) == ESP_OK)
-                sd_active_flag = true;
-            else
-                sd_active_flag = false;
         }
         vTaskDelay(100 / portTICK_PERIOD_MS);
     }

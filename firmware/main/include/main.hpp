@@ -29,10 +29,8 @@
 
 #define DRIVER_TAG_LENGTH 4
 
-#define DRIVER_LIST_DEFAULT        \
-    {                              \
-        "---", "AAA", "BBB", "CCC" \
-    }
+#define DRIVER_LIST_DEFAULT \
+    { "---", "AAA", "BBB", "CCC" }
 
 #define LAPTIME_STR_DEFAULT "--, --:--.--"
 #define PENALTY_STR_DEFAULT "+00:00"
@@ -58,9 +56,8 @@
  * @brief Laptime class contains all properties of every laptime measurement.
  */
 
-class Laptime
-{
-public:
+class Laptime {
+  public:
     volatile uint16_t count = 1;
     volatile uint32_t time = 0;
 
@@ -84,42 +81,45 @@ public:
     void convert_string_count(char count_str[COUNT_STR_LENGTH], size_t size);
 
     /**
-     * @brief Converts laptime from int measured in 10ms to string that contains count and time
+     * @brief Converts laptime from int measured in 10ms to string that contains
+     * count and time
      * @param laptime_str String for converted laptime
      * @param size Size of string
      */
     void convert_string_full(char laptime_str[LAPTIME_STR_LENGTH], size_t size);
 
     /**
-     * @brief Converts laptime from int measured in 10ms to string that contains only time
+     * @brief Converts laptime from int measured in 10ms to string that contains
+     * only time
      * @param laptime_str String for converted laptime
      * @param size Size of string
      */
     void convert_string_time(char laptime_str[LAPTIME_STR_LENGTH], size_t size);
 
     /**
-     * @brief Converts penalty time from int measured in 10ms to string that contains penalty time
+     * @brief Converts penalty time from int measured in 10ms to string that
+     * contains penalty time
      * @param laptime_str String for converted laptime
      * @param size Size of string
      */
-    void convert_string_penalty(char laptime_str[PENALTY_TIME_STR_LENGTH], size_t size);
+    void convert_string_penalty(char laptime_str[PENALTY_TIME_STR_LENGTH],
+                                size_t size);
 };
 
 /**
  * @brief Contains list of three letter driver tags and number of drivers
  */
-struct Driver_list
-{
-    std::array<char[DRIVER_TAG_LENGTH], DRIVER_MAX_COUNT> list = {DRIVER_LIST_DEFAULT};
+struct Driver_list {
+    std::array<char[DRIVER_TAG_LENGTH], DRIVER_MAX_COUNT> list = {
+        DRIVER_LIST_DEFAULT};
     uint8_t driver_count = 3;
 };
 
 /**
- * @brief Contains laptimer configuration settings for wifi, driver list, time etc.
- * Configuration is retrieved from sdcard or wifi webpage.
+ * @brief Contains laptimer configuration settings for wifi, driver list, time
+ * etc. Configuration is retrieved from sdcard or wifi webpage.
  */
-struct Config
-{
+struct Config {
     bool two_gate_mode = false;
     Driver_list driver_list;
     wifi_mode_t wifi_mode = WIFI_MODE_DEFAULT;
@@ -129,13 +129,13 @@ struct Config
     char date_set[DATE_STR_LENGTH] = DATE_STR_DEFAULT;
     // uint8_t wifi_channel = WIFI_CHANNEL_DEFAULT;
     // uint8_t wifi_max_connection = WIFI_MAX_CONN_DEFAULT;
+    volatile uint32_t update = 0;
 };
 
 /**
  * @brief Possible states for resetting wifi webpage
  */
-enum Wifi_reset
-{
+enum Wifi_reset {
     WIFI_NO_RESET,
     WIFI_RESET_CONFIG,
     WIFI_RESET_DEFAULTS,
@@ -159,18 +159,21 @@ extern SemaphoreHandle_t config_mutex;
 extern QueueHandle_t laptime_saved_queue_sd;
 
 /**
- * @brief Queue passes current laptime from main logic laptimer_task to lcd_task and wifi_task
+ * @brief Queue passes current laptime from main logic laptimer_task to lcd_task
+ * and wifi_task
  */
 extern QueueHandle_t laptime_current_queue_lcd;
 extern QueueHandle_t laptime_current_queue_wifi;
 
 /**
- * @brief Mutex used by tasks to read: laptime_list_top, laptime_list_last, laptime_list_driver
+ * @brief Mutex used by tasks to read: laptime_list_top, laptime_list_last,
+ * laptime_list_driver
  */
 extern SemaphoreHandle_t laptime_lists_mutex;
 
 /**
- * @brief Queue used to send ip from wifi task to lcd task which displays ip address on screen
+ * @brief Queue used to send ip from wifi task to lcd task which displays ip
+ * address on screen
  */
 extern QueueHandle_t ip_queue;
 
@@ -181,7 +184,8 @@ extern QueueHandle_t ip_queue;
  */
 
 /**
- * @brief Main configuration, tasks refresh local configuration using config_mutex
+ * @brief Main configuration, tasks refresh local configuration using
+ * config_mutex
  */
 extern Config config_main;
 
@@ -207,8 +211,8 @@ extern std::array<Laptime, DRIVER_MAX_COUNT> laptime_list_driver;
 extern volatile bool sd_active_flag;
 
 /**
- * @brief Indicates stopped laptime, in this state current laptime is 0 and does not refesh.
- * Set by laptimer_task with button ISR.
+ * @brief Indicates stopped laptime, in this state current laptime is 0 and does
+ * not refesh. Set by laptimer_task with button ISR.
  */
 extern volatile bool stop_flag;
 
@@ -226,7 +230,8 @@ extern volatile wifi_mode_t wifi_mode_flag;
 
 /**
  * @brief Indicates refresh of laptime lists on lcd display.
- * Set by laptimer_task after saving laptime and unset by lcd_task after refreshing lists.
+ * Set by laptimer_task after saving laptime and unset by lcd_task after
+ * refreshing lists.
  * @}
  */
 extern volatile bool lists_refresh_lcd_flag;
