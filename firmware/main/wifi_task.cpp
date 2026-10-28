@@ -360,28 +360,24 @@ static esp_err_t config_post_handler(httpd_req_t* req) {
     }
 
     if(root["wifi_ssid"].is<const char*>()) {
-        strncpy(config_temp.wifi_ssid, root["wifi_ssid"].as<const char*>(),
-                sizeof(config_temp.wifi_ssid) - 1);
-        config_temp.wifi_ssid[sizeof(config_temp.wifi_ssid) - 1] = '\0';
+        strlcpy(config_temp.wifi_ssid, root["wifi_ssid"].as<const char*>(),
+                sizeof(config_temp.wifi_ssid));
     }
 
     if(root["wifi_password"].is<const char*>()) {
-        strncpy(config_temp.wifi_password,
+        strlcpy(config_temp.wifi_password,
                 root["wifi_password"].as<const char*>(),
-                sizeof(config_temp.wifi_password) - 1);
-        config_temp.wifi_password[sizeof(config_temp.wifi_password) - 1] = '\0';
+                sizeof(config_temp.wifi_password));
     }
 
     if(root["time_set"].is<const char*>()) {
-        strncpy(config_temp.time_set, root["time_set"].as<const char*>(),
-                sizeof(config_temp.time_set) - 1);
-        config_temp.time_set[sizeof(config_temp.time_set) - 1] = '\0';
+        strlcpy(config_temp.time_set, root["time_set"].as<const char*>(),
+                sizeof(config_temp.time_set));
     }
 
     if(root["date_set"].is<const char*>()) {
-        strncpy(config_temp.date_set, root["date_set"].as<const char*>(),
-                sizeof(config_temp.date_set) - 1);
-        config_temp.date_set[sizeof(config_temp.date_set) - 1] = '\0';
+        strlcpy(config_temp.date_set, root["date_set"].as<const char*>(),
+                sizeof(config_temp.date_set));
     }
 
     system_set_time(config_temp.time_set, config_temp.date_set);
@@ -399,10 +395,8 @@ static esp_err_t config_post_handler(httpd_req_t* req) {
         // We overwrite from index 1
         for(int i = 0; i < count; i++) {
             if(drivers[i].is<const char*>()) {
-                strncpy(config_temp.driver_list.list[i + 1],
-                        drivers[i].as<const char*>(), DRIVER_TAG_LENGTH - 1);
-                config_temp.driver_list.list[i + 1][DRIVER_TAG_LENGTH - 1] =
-                    '\0';
+                strlcpy(config_temp.driver_list.list[i + 1],
+                        drivers[i].as<const char*>(), DRIVER_TAG_LENGTH);
             }
         }
     }
